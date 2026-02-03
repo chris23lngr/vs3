@@ -17,8 +17,6 @@ export function createDeleteRoute<O extends StorageOptions>(options: O) {
 			const { key } = body;
 			const metadata = body.metadata;
 
-			console.log("Deleting file:", key, "with metadata:", metadata);
-
 			// Use metadata for authorization checks
 			// const adapter = context.$options.adapter;
 			// await adapter.delete(key);

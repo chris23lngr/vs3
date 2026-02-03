@@ -28,3 +28,26 @@ s.api.download({
 		key: "test.tex",
 	},
 });
+
+const sM = createStorage({
+	bucket: "test",
+	adapter: aws({
+		client: new S3Client({
+			region: "us-east-1",
+			credentials: {
+				accessKeyId: "test",
+				secretAccessKey: "test",
+			},
+		}),
+	}),
+	metadataSchema: z.object({
+		userId: z.string(),
+		orgId: z.string().optional(),
+	}),
+});
+
+sM.api.download({
+	body: {
+		key: "test.tex",
+	},
+});

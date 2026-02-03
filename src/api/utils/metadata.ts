@@ -9,11 +9,19 @@ export function createMetadataValidator<S extends StandardSchemaV1>(
 	schema: S,
 ): z.ZodType<StandardSchemaV1.InferInput<S>> {
 	return z.custom(
-		async (val) => {
-			const result = await schema["~standard"].validate(val);
-			if (result.issues) {
+		(val) => {
+			const result = schema["~standard"].validate(val);
+			if (result && typeof (result as Promise<unknown>).then === "function") {
 				throw new Error(
-					result.issues.map((issue) => issue.message).join(", "),
+					"Async metadata validation is not supported in sync parsing.",
+				);
+			}
+			const syncResult = result as StandardSchemaV1.Result<
+				StandardSchemaV1.InferInput<S>
+			>;
+			if (syncResult.issues) {
+				throw new Error(
+					syncResult.issues.map((issue) => issue.message).join(", "),
 				);
 			}
 			return true;
@@ -42,4 +50,48 @@ export function withMetadata<
 		} as any);
 	}
 	return baseSchema;
+}
+
+/**
+ * Normalize metadata values to strings for adapters.
+ */
+export function normalizeMetadata(
+	input: unknown,
+): Record<string, string> | undefined {
+	if (input == null) {
+		return undefined;
+	}
+	if (typeof input !== "object" || Array.isArray(input)) {
+		throw new Error("Metadata must be an object.");
+	}
+
+	const out: Record<string, string> = {};
+	for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+		if (value === undefined) {
+			continue;
+		}
+		if (value instanceof Date) {
+			out[key] = value.toISOString();
+			continue;
+		}
+
+		const valueType = typeof value;
+		if (
+			valueType === "string" ||
+			valueType === "number" ||
+			valueType === "boolean" ||
+			valueType === "bigint"
+		) {
+			out[key] = String(value);
+			continue;
+		}
+
+		try {
+			out[key] = JSON.stringify(value);
+		} catch {
+			throw new Error(`Metadata value for "${key}" is not serializable.`);
+		}
+	}
+
+	return out;
 }
