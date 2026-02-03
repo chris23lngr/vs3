@@ -282,7 +282,7 @@ metadataSchema: type({
 
 ## Examples
 
-Check the `/examples` directory for complete examples:
+Check the `/packages/vs3/examples` directory for complete examples:
 
 - `route-aware-usage.ts` - Route-based uploads with metadata
 - `different-libraries.ts` - Using different schema validation libraries
@@ -366,11 +366,11 @@ pnpm install
 # Build the project
 pnpm build
 
-# Run type checking
-pnpm check
+# Run linting
+pnpm lint
 
 # Format code
-pnpm check:write
+pnpm format
 ```
 
 ## License

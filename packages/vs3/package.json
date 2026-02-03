@@ -1,0 +1,62 @@
+{
+	"name": "vs3",
+	"version": "1.0.0",
+	"description": "",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./client": {
+			"types": "./dist/client/index.d.ts",
+			"default": "./dist/client/index.js"
+		},
+		"./client/react": {
+			"types": "./dist/client/react/index.d.ts",
+			"default": "./dist/client/react/index.js"
+		}
+	},
+	"scripts": {
+		"build": "tsc",
+		"dev": "ts-node src/index.ts",
+		"dev:test": "ts-node src/test.ts",
+		"lint": "biome check $TURBO_ROOT$",
+		"format": "biome check --write $TURBO_ROOT$",
+		"format:unsafe": "biome check --write --unsafe $TURBO_ROOT$",
+		"start": "node dist/index.js",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:ui": "vitest --ui"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@aws-sdk/client-s3": "^3.981.0",
+		"@types/node": "^25.2.0",
+		"@types/react": "^18.3.27",
+		"@vitest/ui": "^4.0.18",
+		"react": "^19.2.4",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.18"
+	},
+	"dependencies": {
+		"@aws-sdk/s3-request-presigner": "^3.981.0",
+		"@nanostores/react": "^1.0.0",
+		"better-call": "^1.2.1",
+		"nanostores": "^1.1.0",
+		"zod": "^4.3.6"
+	},
+	"peerDependencies": {
+		"@aws-sdk/client-s3": "^3.981.0",
+		"react": ">=18"
+	},
+	"peerDependenciesMeta": {
+		"react": {
+			"optional": true
+		}
+	}
+}
