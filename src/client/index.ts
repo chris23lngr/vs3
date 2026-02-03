@@ -1,11 +1,5 @@
-export { createStorage } from "./storage";
-export { aws } from "./adapters";
 export { createStorageClient, createStorageClientFromServer } from "./client";
-export { MetadataValidationError, StorageClientResponseError } from "./client";
-
-export type { Storage } from "./types/storage";
-export type { StorageOptions } from "./types/options";
-export type { Adapter } from "./types/adapter";
+export { MetadataValidationError, StorageClientResponseError } from "./errors";
 export type {
 	ClientRequestOptions,
 	ClientSchema,
@@ -26,4 +20,4 @@ export type {
 	UploadResult,
 	UploadUrlInput,
 	WithClientMetadata,
-} from "./client";
+} from "./types";

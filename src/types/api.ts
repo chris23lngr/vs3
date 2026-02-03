@@ -1,4 +1,5 @@
 import type { StorageOptions } from "./options";
+import type { FileInfo } from "./file";
 import type { StandardSchemaV1 } from "./standard-schema";
 
 /**
@@ -35,7 +36,10 @@ export type StorageAPI<O extends StorageOptions> = {
 	 * Generate a presigned upload URL
 	 * Requires metadata if metadataSchema is defined
 	 */
-	upload: APIMethod<WithMetadata<{ file: File }, O, true>, { uploadUrl: string }>;
+	upload: APIMethod<
+		WithMetadata<{ file: File | FileInfo }, O, true>,
+		{ uploadUrl: string }
+	>;
 
 	/**
 	 * Delete a file
