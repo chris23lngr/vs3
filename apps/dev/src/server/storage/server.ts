@@ -1,0 +1,43 @@
+import { S3Client } from "@aws-sdk/client-s3";
+import { aws, createStorage } from "vs3";
+import { env } from "@/env";
+
+/**
+ * S3 client for fetching files from storage
+ */
+function createS3Client(): S3Client {
+	const host = env.STORAGE_HOST;
+	const region = env.STORAGE_REGION;
+	const secure = env.STORAGE_SECURE;
+	const forcePathStyle = env.STORAGE_FORCE_PATH_STYLE;
+
+	const protocol = secure ? "https" : "http";
+	const endpoint = `${protocol}://${host}`;
+
+	return new S3Client({
+		region,
+		endpoint,
+		forcePathStyle,
+		credentials: {
+			accessKeyId: env.STORAGE_ACCESS_KEY_ID,
+			secretAccessKey: env.STORAGE_ACCESS_KEY,
+		},
+	});
+}
+
+// Lazy-initialized S3 client
+let s3Client: S3Client | null = null;
+
+export function getS3Client(): S3Client {
+	if (!s3Client) {
+		s3Client = createS3Client();
+	}
+	return s3Client;
+}
+
+export const storage = createStorage({
+	bucket: "spesen-tool-dev1",
+	adapter: aws({
+		client: getS3Client(),
+	}),
+});

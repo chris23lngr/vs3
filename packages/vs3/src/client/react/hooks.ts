@@ -4,6 +4,8 @@ import { StorageClientResponseError } from "../errors";
 import type {
 	ClientRequestOptions,
 	ClientSchema,
+	DebugEvent,
+	DebugOptions,
 	ErrorResponse,
 	StorageClient,
 	StorageClientOptions,
@@ -85,6 +87,126 @@ function parseResponseText(text: string | null) {
 	}
 }
 
+function appendHeaders(target: Headers, source?: HeadersInit) {
+	if (!source) {
+		return;
+	}
+	if (source instanceof Headers) {
+		source.forEach((value, key) => {
+			target.set(key, value);
+		});
+		return;
+	}
+	if (Array.isArray(source)) {
+		for (const [key, value] of source) {
+			target.set(key, value);
+		}
+		return;
+	}
+	for (const [key, value] of Object.entries(source)) {
+		if (value !== undefined) {
+			target.set(key, String(value));
+		}
+	}
+}
+
+function mergeHeaders(defaults?: HeadersInit, overrides?: HeadersInit) {
+	const headers = new Headers();
+	appendHeaders(headers, defaults);
+	appendHeaders(headers, overrides);
+	return headers;
+}
+
+type DebugConfig = {
+	logger: (event: DebugEvent) => void;
+	includeHeaders: boolean;
+	includeBody: boolean;
+	includeResponseBody: boolean;
+	maxBodyLength: number;
+};
+
+function normalizeDebug(input?: DebugOptions | boolean): DebugOptions | undefined {
+	if (input === undefined) {
+		return undefined;
+	}
+	if (typeof input === "boolean") {
+		return { enabled: input };
+	}
+	return input;
+}
+
+function resolveDebug(
+	overrides?: DebugOptions | boolean,
+): DebugConfig | undefined {
+	const next = normalizeDebug(overrides);
+	if (next?.enabled === false) {
+		return undefined;
+	}
+	const enabled = next?.enabled ?? false;
+	if (!enabled) {
+		return undefined;
+	}
+	const logger =
+		next?.logger ??
+		((event: DebugEvent) => {
+			if (typeof console !== "undefined" && console.debug) {
+				console.debug("[vs3]", event);
+				return;
+			}
+			if (typeof console !== "undefined") {
+				console.log("[vs3]", event);
+			}
+		});
+	return {
+		logger,
+		includeHeaders: next?.includeHeaders ?? true,
+		includeBody: next?.includeBody ?? false,
+		includeResponseBody: next?.includeResponseBody ?? false,
+		maxBodyLength: next?.maxBodyLength ?? 2_000,
+	};
+}
+
+function headersToObject(headers: Headers) {
+	const out: Record<string, string> = {};
+	headers.forEach((value, key) => {
+		out[key] = value;
+	});
+	return out;
+}
+
+function parseResponseHeaders(raw: string) {
+	const out: Record<string, string> = {};
+	if (!raw) {
+		return out;
+	}
+	for (const line of raw.trim().split(/[\r\n]+/)) {
+		const index = line.indexOf(":");
+		if (index === -1) {
+			continue;
+		}
+		const key = line.slice(0, index).trim().toLowerCase();
+		const value = line.slice(index + 1).trim();
+		if (key) {
+			out[key] = value;
+		}
+	}
+	return out;
+}
+
+function truncateBody(input: unknown, max: number) {
+	if (typeof input === "string") {
+		return input.length > max ? `${input.slice(0, max)}…` : input;
+	}
+	return input;
+}
+
+function emitDebug(debug: DebugConfig | undefined, event: DebugEvent) {
+	if (!debug) {
+		return;
+	}
+	debug.logger(event);
+}
+
 function isErrorResponse(data: unknown): data is ErrorResponse {
 	if (!data || typeof data !== "object") {
 		return false;
@@ -94,6 +216,49 @@ function isErrorResponse(data: unknown): data is ErrorResponse {
 		typeof (data as any).error?.code === "string" &&
 		typeof (data as any).error?.message === "string"
 	);
+}
+
+function formatHookError(error: unknown) {
+	if (error instanceof StorageClientResponseError) {
+		return {
+			name: error.name,
+			message: error.message,
+			status: error.status,
+			statusText: error.statusText,
+			url: error.url,
+			errorCode: error.errorCode,
+			errorDetails: error.errorDetails,
+			body: error.body,
+		};
+	}
+	if (error instanceof DOMException) {
+		return {
+			name: error.name,
+			message: error.message,
+		};
+	}
+	if (error instanceof Error) {
+		return {
+			name: error.name,
+			message: error.message,
+		};
+	}
+	return error;
+}
+
+function buildNetworkErrorBody(url?: string) {
+	return {
+		error: {
+			code: "NETWORK_ERROR",
+			message:
+				"Network error while uploading. This is commonly caused by a CORS configuration issue on the storage bucket.",
+			details: {
+				likelyCors: true,
+				hint: "Check bucket CORS rules for PUT/OPTIONS and allow your app origin.",
+				url,
+			},
+		},
+	};
 }
 
 async function xhrUpload(
@@ -107,6 +272,7 @@ async function xhrUpload(
 		attempt += 1;
 		try {
 			return await new Promise((resolve, reject) => {
+				const debug = resolveDebug(options?.debug);
 				const xhr = new XMLHttpRequest();
 				xhr.open("PUT", url, true);
 
@@ -116,6 +282,14 @@ async function xhrUpload(
 				}
 				headers.forEach((value, key) => {
 					xhr.setRequestHeader(key, value);
+				});
+
+				emitDebug(debug, {
+					scope: "upload",
+					phase: "request",
+					url,
+					method: "PUT",
+					headers: debug?.includeHeaders ? headersToObject(headers) : undefined,
 				});
 
 				if (options?.withCredentials) {
@@ -134,6 +308,17 @@ async function xhrUpload(
 						progress.percent = event.total ? event.loaded / event.total : undefined;
 					}
 					options.onProgress(progress);
+					emitDebug(debug, {
+						scope: "upload",
+						phase: "progress",
+						url,
+						method: "PUT",
+						extra: {
+							loaded: progress.loaded,
+							total: progress.total,
+							percent: progress.percent,
+						},
+					});
 				};
 
 				const cleanup = () => {
@@ -142,9 +327,46 @@ async function xhrUpload(
 					}
 				};
 
+				xhr.onreadystatechange = () => {
+					emitDebug(debug, {
+						scope: "upload",
+						phase: "state",
+						url,
+						method: "PUT",
+						status: xhr.status,
+						statusText: xhr.statusText,
+						extra: {
+							readyState: xhr.readyState,
+							responseURL: xhr.responseURL,
+						},
+					});
+				};
+
 				xhr.onerror = () => {
-					const errorBody = parseResponseText(xhr.responseText);
+					const rawBody = parseResponseText(xhr.responseText);
+					const errorBody =
+						xhr.status === 0 && !rawBody
+							? buildNetworkErrorBody(xhr.responseURL || url)
+							: rawBody;
 					const contract = isErrorResponse(errorBody) ? errorBody.error : undefined;
+					emitDebug(debug, {
+						scope: "upload",
+						phase: "error",
+						url,
+						method: "PUT",
+						status: xhr.status,
+						statusText: xhr.statusText,
+						headers: debug?.includeHeaders
+							? parseResponseHeaders(xhr.getAllResponseHeaders())
+							: undefined,
+						body: debug?.includeResponseBody
+							? truncateBody(errorBody, debug.maxBodyLength)
+							: undefined,
+						extra: {
+							responseURL: xhr.responseURL,
+							readyState: xhr.readyState,
+						},
+					});
 					cleanup();
 					reject(
 						new StorageClientResponseError(
@@ -159,6 +381,18 @@ async function xhrUpload(
 				};
 
 				xhr.onabort = () => {
+					emitDebug(debug, {
+						scope: "upload",
+						phase: "error",
+						url,
+						method: "PUT",
+						status: xhr.status,
+						statusText: xhr.statusText,
+						extra: {
+							aborted: true,
+							readyState: xhr.readyState,
+						},
+					});
 					cleanup();
 					reject(new DOMException("Upload aborted", "AbortError"));
 				};
@@ -166,16 +400,54 @@ async function xhrUpload(
 				xhr.onload = () => {
 					const response = parseResponseText(xhr.responseText);
 					if (xhr.status >= 200 && xhr.status < 300) {
+						emitDebug(debug, {
+							scope: "upload",
+							phase: "response",
+							url,
+							method: "PUT",
+							status: xhr.status,
+							statusText: xhr.statusText,
+							headers: debug?.includeHeaders
+								? parseResponseHeaders(xhr.getAllResponseHeaders())
+								: undefined,
+							body: debug?.includeResponseBody
+								? truncateBody(response, debug.maxBodyLength)
+								: undefined,
+							extra: {
+								responseURL: xhr.responseURL,
+							},
+						});
 						cleanup();
 						resolve({ uploadUrl: url, status: xhr.status, response });
 						return;
 					}
-					const contract = isErrorResponse(response) ? response.error : undefined;
+					const errorBody =
+						xhr.status === 0 && !response
+							? buildNetworkErrorBody(xhr.responseURL || url)
+							: response;
+					const contract = isErrorResponse(errorBody) ? errorBody.error : undefined;
+					emitDebug(debug, {
+						scope: "upload",
+						phase: "error",
+						url,
+						method: "PUT",
+						status: xhr.status,
+						statusText: xhr.statusText,
+						headers: debug?.includeHeaders
+							? parseResponseHeaders(xhr.getAllResponseHeaders())
+							: undefined,
+						body: debug?.includeResponseBody
+							? truncateBody(errorBody, debug.maxBodyLength)
+							: undefined,
+						extra: {
+							responseURL: xhr.responseURL,
+						},
+					});
 					cleanup();
 					reject(
 						new StorageClientResponseError(
 							xhr.status,
-							response,
+							errorBody,
 							xhr.statusText,
 							xhr.responseURL,
 							contract?.code,
@@ -241,7 +513,7 @@ export function useUpload<M extends ClientSchema>(
 			setProgress(undefined);
 
 			try {
-				const { uploadUrl } = await client.uploadUrl(
+				const { uploadUrl, uploadHeaders } = await client.uploadUrl(
 					{
 						...(input as any),
 						file: {
@@ -253,8 +525,14 @@ export function useUpload<M extends ClientSchema>(
 					uploadOptions,
 				);
 
+				const mergedUploadHeaders = mergeHeaders(
+					uploadOptions?.uploadHeaders,
+					uploadHeaders,
+				);
+
 				const result = await xhrUpload(uploadUrl, input.file, {
 					...uploadOptions,
+					uploadHeaders: mergedUploadHeaders,
 					onProgress: (next) => {
 						setProgress(next);
 						uploadOptions?.onProgress?.(next);
@@ -266,7 +544,7 @@ export function useUpload<M extends ClientSchema>(
 				return result;
 			} catch (err) {
 				setStatus("error");
-				setError(err);
+				setError(formatHookError(err));
 				throw err;
 			}
 		},
@@ -316,7 +594,7 @@ export function useDelete<M extends ClientSchema>(
 				return result;
 			} catch (err) {
 				setStatus("error");
-				setError(err);
+				setError(formatHookError(err));
 				throw err;
 			}
 		},
@@ -366,7 +644,7 @@ export function useDownloadUrl<M extends ClientSchema>(
 				return result;
 			} catch (err) {
 				setStatus("error");
-				setError(err);
+				setError(formatHookError(err));
 				throw err;
 			}
 		},

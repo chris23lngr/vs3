@@ -36,7 +36,7 @@ export type StorageAPI<O extends StorageOptions> = {
 	 */
 	upload: APIMethod<
 		WithMetadata<{ file: File | FileInfo }, O, true>,
-		{ uploadUrl: string }
+		{ uploadUrl: string; uploadHeaders?: Record<string, string> }
 	>;
 
 	/**

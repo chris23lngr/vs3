@@ -16,6 +16,7 @@ export type StorageClientOptions<M extends ClientSchema = ClientSchema> = {
 	validateMetadata?: boolean;
 	retry?: RetryOptions;
 	hooks?: ClientHooks;
+	debug?: DebugOptions | boolean;
 };
 
 export type ClientRequestOptions = {
@@ -24,6 +25,7 @@ export type ClientRequestOptions = {
 	validateMetadata?: boolean;
 	retry?: RetryOptions;
 	hooks?: ClientHooks;
+	debug?: DebugOptions | boolean;
 };
 
 export type ErrorContract = {
@@ -34,6 +36,28 @@ export type ErrorContract = {
 
 export type ErrorResponse = {
 	error: ErrorContract;
+};
+
+export type DebugEvent = {
+	scope: "api" | "upload";
+	phase: "request" | "response" | "error" | "state" | "progress";
+	url: string;
+	method?: string;
+	status?: number;
+	statusText?: string;
+	headers?: Record<string, string>;
+	body?: unknown;
+	error?: unknown;
+	extra?: Record<string, unknown>;
+};
+
+export type DebugOptions = {
+	enabled?: boolean;
+	logger?: (event: DebugEvent) => void;
+	includeHeaders?: boolean;
+	includeBody?: boolean;
+	includeResponseBody?: boolean;
+	maxBodyLength?: number;
 };
 
 export type RetryOptions = {
@@ -126,7 +150,7 @@ export type StorageClient<M extends ClientSchema = ClientSchema> = {
 	uploadUrl: (
 		input: UploadUrlInput<M>,
 		options?: ClientRequestOptions,
-	) => Promise<{ uploadUrl: string }>;
+	) => Promise<{ uploadUrl: string; uploadHeaders?: Record<string, string> }>;
 	upload: (
 		input: UploadInput<M>,
 		options?: ClientRequestOptions,

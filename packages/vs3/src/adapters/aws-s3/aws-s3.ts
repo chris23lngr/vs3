@@ -28,19 +28,30 @@ export function createAwsS3Adapter(
 	return {
 		async generatePresignedUploadUrl(key, fileInfo, requestOptions) {
 			const {
-				acl = "private",
+				acl,
 				expiresIn = 3600,
 				metadata = {},
 				contentType,
 				bucket,
 			} = requestOptions ?? {};
 
+			const resolvedContentType =
+				contentType && contentType.trim().length > 0
+					? contentType
+					: fileInfo.contentType?.trim().length
+						? fileInfo.contentType
+						: undefined;
+
+			const metadataEntries = Object.entries(metadata ?? {}).filter(
+				([, value]) => value !== undefined,
+			);
+
 			const command = new PutObjectCommand({
 				Bucket: resolveBucket(bucket),
 				Key: key,
-				ContentType: contentType ?? fileInfo.contentType,
+				ContentType: resolvedContentType,
 				ACL: acl,
-				Metadata: metadata,
+				Metadata: metadataEntries.length ? Object.fromEntries(metadataEntries) : undefined,
 			});
 
 			return getSignedUrl(options.client, command, { expiresIn });

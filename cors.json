@@ -1,0 +1,14 @@
+{
+	"CORSRules": [
+		{
+			"AllowedOrigins": [
+				"http://localhost:3000",
+				"https://spesen-tool.vercel.app"
+			],
+			"AllowedMethods": ["GET", "PUT", "POST", "HEAD"],
+			"AllowedHeaders": ["*"],
+			"ExposeHeaders": ["ETag"],
+			"MaxAgeSeconds": 3000
+		}
+	]
+}

@@ -16,6 +16,10 @@
 		"./client/react": {
 			"types": "./dist/client/react/index.d.ts",
 			"default": "./dist/client/react/index.js"
+		},
+		"./integrations/next-js": {
+			"types": "./dist/integrations/next-js/index.d.ts",
+			"default": "./dist/integrations/next-js/index.js"
 		}
 	},
 	"scripts": {

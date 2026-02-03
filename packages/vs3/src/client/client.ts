@@ -7,6 +7,8 @@ import type {
 	ClientHooks,
 	ClientRequestOptions,
 	ClientSchema,
+	DebugEvent,
+	DebugOptions,
 	DeleteInput,
 	DownloadInput,
 	ErrorHookContext,
@@ -83,6 +85,21 @@ function isErrorResponse(data: unknown): data is ErrorResponse {
 	);
 }
 
+function buildNetworkErrorBody(url?: string) {
+	return {
+		error: {
+			code: "NETWORK_ERROR",
+			message:
+				"Network error while uploading. This is commonly caused by a CORS configuration issue on the storage bucket.",
+			details: {
+				likelyCors: true,
+				hint: "Check bucket CORS rules for PUT/OPTIONS and allow your app origin.",
+				url,
+			},
+		},
+	};
+}
+
 async function resolveHeaders(source?: ClientHeaders) {
 	if (!source) {
 		return undefined;
@@ -118,6 +135,81 @@ function mergeHeaders(defaults?: HeadersInit, overrides?: HeadersInit) {
 	appendHeaders(headers, defaults);
 	appendHeaders(headers, overrides);
 	return headers;
+}
+
+type DebugConfig = {
+	logger: (event: DebugEvent) => void;
+	includeHeaders: boolean;
+	includeBody: boolean;
+	includeResponseBody: boolean;
+	maxBodyLength: number;
+};
+
+function normalizeDebug(input?: DebugOptions | boolean): DebugOptions | undefined {
+	if (input === undefined) {
+		return undefined;
+	}
+	if (typeof input === "boolean") {
+		return { enabled: input };
+	}
+	return input;
+}
+
+function resolveDebug(
+	defaults?: DebugOptions | boolean,
+	overrides?: DebugOptions | boolean,
+): DebugConfig | undefined {
+	const base = normalizeDebug(defaults);
+	const next = normalizeDebug(overrides);
+	if (next?.enabled === false) {
+		return undefined;
+	}
+	const enabled = (next?.enabled ?? base?.enabled) ?? false;
+	if (!enabled) {
+		return undefined;
+	}
+	const logger =
+		next?.logger ??
+		base?.logger ??
+		((event: DebugEvent) => {
+			if (typeof console !== "undefined" && console.debug) {
+				console.debug("[vs3]", event);
+				return;
+			}
+			if (typeof console !== "undefined") {
+				console.log("[vs3]", event);
+			}
+		});
+	return {
+		logger,
+		includeHeaders: next?.includeHeaders ?? base?.includeHeaders ?? true,
+		includeBody: next?.includeBody ?? base?.includeBody ?? false,
+		includeResponseBody:
+			next?.includeResponseBody ?? base?.includeResponseBody ?? false,
+		maxBodyLength: next?.maxBodyLength ?? base?.maxBodyLength ?? 2_000,
+	};
+}
+
+function headersToObject(headers: Headers) {
+	const out: Record<string, string> = {};
+	headers.forEach((value, key) => {
+		out[key] = value;
+	});
+	return out;
+}
+
+function truncateBody(input: unknown, max: number) {
+	if (typeof input === "string") {
+		return input.length > max ? `${input.slice(0, max)}…` : input;
+	}
+	return input;
+}
+
+function emitDebug(debug: DebugConfig | undefined, event: DebugEvent) {
+	if (!debug) {
+		return;
+	}
+	debug.logger(event);
 }
 
 function getRetryDelay(options: RetryOptions, attempt: number) {
@@ -213,9 +305,11 @@ async function requestJson<T>(
 	defaultHeaders?: ClientHeaders,
 	defaultHooks?: ClientHooks,
 	defaultRetry?: RetryOptions,
+	defaultDebug?: DebugOptions | boolean,
 ) {
 	const hooks = mergeHooks(defaultHooks, options?.hooks);
 	const retry = options?.retry ?? defaultRetry;
+	const debug = resolveDebug(defaultDebug, options?.debug);
 
 	return withRetry(async () => {
 		const resolvedDefaults = await resolveHeaders(defaultHeaders);
@@ -223,6 +317,14 @@ async function requestJson<T>(
 		if (!headers.has("content-type")) {
 			headers.set("content-type", "application/json");
 		}
+		emitDebug(debug, {
+			scope: "api",
+			phase: "request",
+			url,
+			method: "POST",
+			headers: debug?.includeHeaders ? headersToObject(headers) : undefined,
+			body: debug?.includeBody ? truncateBody(body, debug.maxBodyLength) : undefined,
+		});
 		const requestContext: RequestHookContext = {
 			url,
 			method: "POST",
@@ -240,6 +342,20 @@ async function requestJson<T>(
 
 		const data = await readResponseBody(response);
 		if (!response.ok) {
+			emitDebug(debug, {
+				scope: "api",
+				phase: "error",
+				url,
+				method: "POST",
+				status: response.status,
+				statusText: response.statusText,
+				headers: debug?.includeHeaders
+					? headersToObject(response.headers)
+					: undefined,
+				body: debug?.includeResponseBody
+					? truncateBody(data, debug.maxBodyLength)
+					: undefined,
+			});
 			const contract = isErrorResponse(data) ? data.error : undefined;
 			const error = new StorageClientResponseError(
 				response.status,
@@ -258,6 +374,21 @@ async function requestJson<T>(
 			});
 			throw error;
 		}
+
+		emitDebug(debug, {
+			scope: "api",
+			phase: "response",
+			url,
+			method: "POST",
+			status: response.status,
+			statusText: response.statusText,
+			headers: debug?.includeHeaders
+				? headersToObject(response.headers)
+				: undefined,
+			body: debug?.includeResponseBody
+				? truncateBody(data, debug.maxBodyLength)
+				: undefined,
+		});
 
 		await hooks?.onResponse?.({
 			url,
@@ -300,6 +431,7 @@ export function createStorageClient<M extends ClientSchema>(
 	const defaultHeaders = options.headers;
 	const defaultHooks = options.hooks;
 	const defaultRetry = options.retry;
+	const defaultDebug = options.debug;
 
 	const uploadUrl = async (
 		input: UploadUrlInput<M>,
@@ -314,7 +446,7 @@ export function createStorageClient<M extends ClientSchema>(
 			metadata,
 		};
 		const url = buildUrl(baseUrl, apiPath, "/generate-upload-url");
-		return requestJson<{ uploadUrl: string }>(
+		return requestJson<{ uploadUrl: string; uploadHeaders?: Record<string, string> }>(
 			fetcher,
 			url,
 			payload,
@@ -322,6 +454,7 @@ export function createStorageClient<M extends ClientSchema>(
 			defaultHeaders,
 			defaultHooks,
 			defaultRetry,
+			defaultDebug,
 		);
 	};
 
@@ -330,25 +463,69 @@ export function createStorageClient<M extends ClientSchema>(
 		requestOptions?: ClientRequestOptions,
 	): Promise<UploadResult> => {
 		const fileInfo = normalizeFileInfo(input.file);
-		const { uploadUrl: presignedUrl } = await uploadUrl(
+		const { uploadUrl: presignedUrl, uploadHeaders } = await uploadUrl(
 			{ ...(input as any), file: fileInfo },
 			requestOptions,
 		);
 		const resolvedDefaults = await resolveHeaders(defaultHeaders);
-		const headers = mergeHeaders(resolvedDefaults, requestOptions?.headers);
+		const headers = mergeHeaders(
+			mergeHeaders(resolvedDefaults, requestOptions?.headers),
+			uploadHeaders,
+		);
 		if (input.file.type && !headers.has("content-type")) {
 			headers.set("content-type", input.file.type);
 		}
+		const debug = resolveDebug(defaultDebug, requestOptions?.debug);
 		const retry = requestOptions?.retry ?? defaultRetry;
 		const response = await withRetry(async () => {
-			const res = await fetcher(presignedUrl, {
-				method: "PUT",
-				body: input.file,
-				headers,
-				signal: requestOptions?.signal,
-			});
+			let res: Response;
+			try {
+				emitDebug(debug, {
+					scope: "upload",
+					phase: "request",
+					url: presignedUrl,
+					method: "PUT",
+					headers: debug?.includeHeaders ? headersToObject(headers) : undefined,
+				});
+				res = await fetcher(presignedUrl, {
+					method: "PUT",
+					body: input.file,
+					headers,
+					signal: requestOptions?.signal,
+				});
+			} catch (error) {
+				emitDebug(debug, {
+					scope: "upload",
+					phase: "error",
+					url: presignedUrl,
+					method: "PUT",
+					error,
+				});
+				throw new StorageClientResponseError(
+					0,
+					buildNetworkErrorBody(presignedUrl),
+					"Network Error",
+					presignedUrl,
+					"NETWORK_ERROR",
+					{ cause: error },
+				);
+			}
 			if (!res.ok) {
 				const body = await readResponseBody(res);
+				emitDebug(debug, {
+					scope: "upload",
+					phase: "error",
+					url: presignedUrl,
+					method: "PUT",
+					status: res.status,
+					statusText: res.statusText,
+					headers: debug?.includeHeaders
+						? headersToObject(res.headers)
+						: undefined,
+					body: debug?.includeResponseBody
+						? truncateBody(body, debug.maxBodyLength)
+						: undefined,
+				});
 				const contract = isErrorResponse(body) ? body.error : undefined;
 				throw new StorageClientResponseError(
 					res.status,
@@ -359,6 +536,17 @@ export function createStorageClient<M extends ClientSchema>(
 					contract?.details,
 				);
 			}
+			emitDebug(debug, {
+				scope: "upload",
+				phase: "response",
+				url: presignedUrl,
+				method: "PUT",
+				status: res.status,
+				statusText: res.statusText,
+				headers: debug?.includeHeaders
+					? headersToObject(res.headers)
+					: undefined,
+			});
 			return res;
 		}, retry);
 

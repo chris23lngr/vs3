@@ -19,6 +19,7 @@ export function createUploadRoute<O extends StorageOptions>(options: O) {
 		}),
 		requireMetadata: true, // Metadata required
 		handler: async ({ body, context, endpoint }) => {
+			console.log("createUploadRoute", body, context, endpoint);
 			const { file } = body;
 			const metadataSchema = options.metadataSchema;
 			const rawMetadata = body.metadata;
@@ -122,6 +123,10 @@ export function createUploadRoute<O extends StorageOptions>(options: O) {
 			}
 
 			const adapter = context.$options.adapter;
+			const resolvedContentType =
+				fileInfo.contentType?.trim().length ? fileInfo.contentType : undefined;
+			const uploadMetadata =
+				metadata && Object.keys(metadata).length ? metadata : undefined;
 			const uploadUrl = await adapter.generatePresignedUploadUrl(
 				key,
 				{
@@ -130,16 +135,31 @@ export function createUploadRoute<O extends StorageOptions>(options: O) {
 					contentType: fileInfo.contentType,
 				},
 				{
-					contentType: fileInfo.contentType,
-					metadata,
+					contentType: resolvedContentType,
+					metadata: uploadMetadata,
 				},
 			);
+
+			const uploadHeaders: Record<string, string> = {};
+			if (resolvedContentType) {
+				uploadHeaders["content-type"] = resolvedContentType;
+			}
+			if (uploadMetadata) {
+				for (const [metaKey, metaValue] of Object.entries(uploadMetadata)) {
+					uploadHeaders[`x-amz-meta-${metaKey}`] = metaValue;
+				}
+			}
 
 			if (options.hooks?.afterUpload) {
 				await options.hooks.afterUpload(fileInfo, resolvedMetadata as any, key);
 			}
 
-			return { uploadUrl };
+			return {
+				uploadUrl,
+				uploadHeaders: Object.keys(uploadHeaders).length
+					? uploadHeaders
+					: undefined,
+			};
 		},
 	});
 }
