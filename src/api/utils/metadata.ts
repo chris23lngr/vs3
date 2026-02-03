@@ -30,6 +30,24 @@ export function createMetadataValidator<S extends StandardSchemaV1>(
 	) as any;
 }
 
+export async function validateMetadata<S extends StandardSchemaV1>(
+	schema: S,
+	input: unknown,
+): Promise<
+	| { ok: true; value: StandardSchemaV1.InferOutput<S> }
+	| { ok: false; issues: ReadonlyArray<StandardSchemaV1.Issue> }
+> {
+	const result = await schema["~standard"].validate(input, undefined);
+	if (result.issues) {
+		return { ok: false, issues: result.issues };
+	}
+	const value =
+		(result as StandardSchemaV1.SuccessResult<
+			StandardSchemaV1.InferOutput<S>
+		>).value ?? (input as StandardSchemaV1.InferOutput<S>);
+	return { ok: true, value };
+}
+
 /**
  * Extends a body schema with metadata field if needed
  * @param baseSchema - The base Zod schema for the route body

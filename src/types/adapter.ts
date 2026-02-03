@@ -25,6 +25,7 @@ export type Adapter = {
 			contentType: string;
 			acl: ACL;
 			metadata: Record<string, string>;
+			bucket: string;
 		}>,
 	): string | Promise<string>;
 
@@ -38,6 +39,17 @@ export type Adapter = {
 		key: string,
 		options?: Partial<{
 			expiresIn: number;
+			bucket: string;
 		}>,
 	): string | Promise<string>;
+
+	/**
+	 * Delete an object by key.
+	 */
+	deleteObject(
+		key: string,
+		options?: Partial<{
+			bucket: string;
+		}>,
+	): void | Promise<void>;
 };

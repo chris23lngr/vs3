@@ -14,6 +14,9 @@ const adapter = {
 	async generatePresignedDownloadUrl() {
 		return "https://example.com/download";
 	},
+	async deleteObject() {
+		return;
+	},
 };
 
 function createSchema() {
@@ -112,6 +115,36 @@ describe("hooks", () => {
 
 		expect(onRequest).toHaveBeenCalledTimes(1);
 		expect(onResponse).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("headers", () => {
+	it("merges headers from defaults and request options across all HeadersInit shapes", async () => {
+		const fetchMock = vi.fn().mockResolvedValueOnce(
+			new Response(JSON.stringify({ downloadUrl: "ok" }), {
+				status: 200,
+				headers: { "content-type": "application/json" },
+			}),
+		);
+
+		const defaults = new Headers([["x-default", "a"]]);
+		const client = createStorageClient({
+			fetch: fetchMock,
+			headers: defaults,
+		});
+
+		await client.downloadUrl(
+			{ key: "file" },
+			{
+				headers: [["x-request", "b"]],
+			},
+		);
+
+		const call = fetchMock.mock.calls[0];
+		const options = call?.[1] as RequestInit | undefined;
+		const headers = new Headers(options?.headers);
+		expect(headers.get("x-default")).toBe("a");
+		expect(headers.get("x-request")).toBe("b");
 	});
 });
 

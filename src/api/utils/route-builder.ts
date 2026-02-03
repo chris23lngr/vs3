@@ -1,7 +1,6 @@
-import type { EndpointOptions } from "better-call";
+import type { EndpointContext, EndpointOptions } from "better-call";
 import z from "zod";
 import type { StorageOptions } from "../../types/options";
-import type { StorageContext } from "../../types/context";
 import { createStorageEndpoint } from "../create-storage-endpoint";
 import { withMetadata } from "./metadata";
 
@@ -24,6 +23,7 @@ export interface RouteConfig<
 	handler: (ctx: {
 		body: any;
 		context: any;
+		endpoint: EndpointContext<string, EndpointOptions, any>;
 	}) => Promise<TResponse>;
 }
 
@@ -74,6 +74,7 @@ export function createRoute<
 			return handler({
 				body: ctx.body,
 				context: ctx.context as any,
+				endpoint: ctx as EndpointContext<string, EndpointOptions, any>,
 			});
 		},
 	);

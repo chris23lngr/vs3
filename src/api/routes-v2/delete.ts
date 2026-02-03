@@ -18,8 +18,8 @@ export function createDeleteRoute<O extends StorageOptions>(options: O) {
 			const metadata = body.metadata;
 
 			// Use metadata for authorization checks
-			// const adapter = context.$options.adapter;
-			// await adapter.delete(key);
+			const adapter = context.$options.adapter;
+			await adapter.deleteObject(key);
 
 			return { success: true };
 		},

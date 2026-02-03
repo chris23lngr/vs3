@@ -1,5 +1,6 @@
 import { useStore } from "@nanostores/react";
 import { useCallback, useMemo, useState } from "react";
+import { StorageClientResponseError } from "../errors";
 import type {
 	ClientSchema,
 	ErrorResponse,
@@ -7,7 +8,6 @@ import type {
 	StorageClientOptions,
 	UploadInput,
 } from "../types";
-import { StorageClientResponseError } from "../errors";
 import { $storageClient, initStorageClient } from "./store";
 import type {
 	DeleteHook,
@@ -27,7 +27,9 @@ function getRetryDelay(attempt: number, options?: UploadHookOptions["retry"]) {
 	const strategy = options.strategy ?? "exponential";
 	const max = options.maxDelayMs ?? 5_000;
 	const delay =
-		strategy === "linear" ? base * attempt : Math.min(max, base * 2 ** (attempt - 1));
+		strategy === "linear"
+			? base * attempt
+			: Math.min(max, base * 2 ** (attempt - 1));
 	if (!options.jitter) {
 		return delay;
 	}
@@ -41,7 +43,9 @@ async function sleep(ms: number) {
 	await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-type ClientOrOptions<M extends ClientSchema> = StorageClient<M> | StorageClientOptions<M>;
+type ClientOrOptions<M extends ClientSchema> =
+	| StorageClient<M>
+	| StorageClientOptions<M>;
 
 function isClient<M extends ClientSchema>(
 	value: ClientOrOptions<M>,
@@ -100,89 +104,89 @@ async function xhrUpload(
 		attempt += 1;
 		try {
 			return await new Promise((resolve, reject) => {
-			const xhr = new XMLHttpRequest();
-			xhr.open("PUT", url, true);
+				const xhr = new XMLHttpRequest();
+				xhr.open("PUT", url, true);
 
-		const headers = new Headers(options?.uploadHeaders);
-		if (file.type && !headers.has("content-type")) {
-			headers.set("content-type", file.type);
-		}
-		for (const [key, value] of headers.entries()) {
-			xhr.setRequestHeader(key, value);
-		}
+				const headers = new Headers(options?.uploadHeaders);
+				if (file.type && !headers.has("content-type")) {
+					headers.set("content-type", file.type);
+				}
+				for (const [key, value] of headers.entries()) {
+					xhr.setRequestHeader(key, value);
+				}
 
-		if (options?.withCredentials) {
-			xhr.withCredentials = true;
-		}
+				if (options?.withCredentials) {
+					xhr.withCredentials = true;
+				}
 
-		xhr.upload.onprogress = (event) => {
-			if (!options?.onProgress) {
-				return;
-			}
-			const progress: UploadProgress = {
-				loaded: event.loaded,
-			};
-			if (event.lengthComputable) {
-				progress.total = event.total;
-				progress.percent = event.total ? event.loaded / event.total : undefined;
-			}
-			options.onProgress(progress);
-		};
+				xhr.upload.onprogress = (event) => {
+					if (!options?.onProgress) {
+						return;
+					}
+					const progress: UploadProgress = {
+						loaded: event.loaded,
+					};
+					if (event.lengthComputable) {
+						progress.total = event.total;
+						progress.percent = event.total ? event.loaded / event.total : undefined;
+					}
+					options.onProgress(progress);
+				};
 
-		xhr.onerror = () => {
-			const errorBody = xhr.response;
-			const contract = isErrorResponse(errorBody) ? errorBody.error : undefined;
-			reject(
-				new StorageClientResponseError(
-					xhr.status || 0,
-					errorBody,
-					xhr.statusText,
-					xhr.responseURL,
-					contract?.code,
-					contract?.details,
-				),
-			);
-		};
+				xhr.onerror = () => {
+					const errorBody = xhr.response;
+					const contract = isErrorResponse(errorBody) ? errorBody.error : undefined;
+					reject(
+						new StorageClientResponseError(
+							xhr.status || 0,
+							errorBody,
+							xhr.statusText,
+							xhr.responseURL,
+							contract?.code,
+							contract?.details,
+						),
+					);
+				};
 
-		xhr.onabort = () => {
-			reject(new DOMException("Upload aborted", "AbortError"));
-		};
+				xhr.onabort = () => {
+					reject(new DOMException("Upload aborted", "AbortError"));
+				};
 
-		xhr.onload = () => {
-			const response = parseResponseText(xhr.responseText);
-			if (xhr.status >= 200 && xhr.status < 300) {
-				resolve({ uploadUrl: url, status: xhr.status, response });
-				return;
-			}
-			const contract = isErrorResponse(response) ? response.error : undefined;
-			reject(
-				new StorageClientResponseError(
-					xhr.status,
-					response,
-					xhr.statusText,
-					xhr.responseURL,
-					contract?.code,
-					contract?.details,
-				),
-			);
-		};
+				xhr.onload = () => {
+					const response = parseResponseText(xhr.responseText);
+					if (xhr.status >= 200 && xhr.status < 300) {
+						resolve({ uploadUrl: url, status: xhr.status, response });
+						return;
+					}
+					const contract = isErrorResponse(response) ? response.error : undefined;
+					reject(
+						new StorageClientResponseError(
+							xhr.status,
+							response,
+							xhr.statusText,
+							xhr.responseURL,
+							contract?.code,
+							contract?.details,
+						),
+					);
+				};
 
-		if (options?.signal) {
-			if (options.signal.aborted) {
-				xhr.abort();
-				return;
-			}
-			options.signal.addEventListener(
-				"abort",
-				() => {
-					xhr.abort();
-				},
-				{ once: true },
-			);
-		}
+				if (options?.signal) {
+					if (options.signal.aborted) {
+						xhr.abort();
+						return;
+					}
+					options.signal.addEventListener(
+						"abort",
+						() => {
+							xhr.abort();
+						},
+						{ once: true },
+					);
+				}
 
-			xhr.send(file);
-		});
+				xhr.send(file);
+			});
 		} catch (error) {
 			const retryOn = options?.retry?.retryOn;
 			const canRetry =
@@ -209,7 +213,9 @@ export function useUpload<M extends ClientSchema>(
 	const [status, setStatus] = useState<HookStatus>("idle");
 	const [error, setError] = useState<unknown>(undefined);
 	const [data, setData] = useState<XhrUploadResult | undefined>(undefined);
-	const [progress, setProgress] = useState<UploadProgress | undefined>(undefined);
+	const [progress, setProgress] = useState<UploadProgress | undefined>(
+		undefined,
+	);
 
 	const upload = useCallback(
 		async (input: UploadInput<M>, uploadOptions?: UploadHookOptions) => {
@@ -322,7 +328,9 @@ export function useDownloadUrl<M extends ClientSchema>(
 	const client = useResolvedClient(input);
 	const [status, setStatus] = useState<HookStatus>("idle");
 	const [error, setError] = useState<unknown>(undefined);
-	const [data, setData] = useState<{ downloadUrl: string } | undefined>(undefined);
+	const [data, setData] = useState<{ downloadUrl: string } | undefined>(
+		undefined,
+	);
 
 	const downloadUrl = useCallback(
 		async (input: Parameters<typeof client.downloadUrl>[0], requestOptions) => {

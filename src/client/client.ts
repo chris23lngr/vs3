@@ -89,6 +89,36 @@ async function resolveHeaders(source?: ClientHeaders) {
 	return typeof source === "function" ? await source() : source;
 }
 
+function appendHeaders(target: Headers, source?: HeadersInit) {
+	if (!source) {
+		return;
+	}
+	if (source instanceof Headers) {
+		for (const [key, value] of source.entries()) {
+			target.set(key, value);
+		}
+		return;
+	}
+	if (Array.isArray(source)) {
+		for (const [key, value] of source) {
+			target.set(key, value);
+		}
+		return;
+	}
+	for (const [key, value] of Object.entries(source)) {
+		if (value !== undefined) {
+			target.set(key, String(value));
+		}
+	}
+}
+
+function mergeHeaders(defaults?: HeadersInit, overrides?: HeadersInit) {
+	const headers = new Headers();
+	appendHeaders(headers, defaults);
+	appendHeaders(headers, overrides);
+	return headers;
+}
+
 function getRetryDelay(options: RetryOptions, attempt: number) {
 	const base = options.delayMs ?? 250;
 	const strategy = options.strategy ?? "exponential";
@@ -189,10 +219,7 @@ async function requestJson<T>(
 
 	return withRetry(async () => {
 		const resolvedDefaults = await resolveHeaders(defaultHeaders);
-		const headers = new Headers({
-			...(resolvedDefaults ?? {}),
-			...options?.headers,
-		});
+		const headers = mergeHeaders(resolvedDefaults, options?.headers);
 		if (!headers.has("content-type")) {
 			headers.set("content-type", "application/json");
 		}
@@ -310,10 +337,7 @@ export function createStorageClient<M extends ClientSchema>(
 			requestOptions,
 		);
 		const resolvedDefaults = await resolveHeaders(defaultHeaders);
-		const headers = new Headers({
-			...(resolvedDefaults ?? {}),
-			...requestOptions?.headers,
-		});
+		const headers = mergeHeaders(resolvedDefaults, requestOptions?.headers);
 		if (input.file.type && !headers.has("content-type")) {
 			headers.set("content-type", input.file.type);
 		}
