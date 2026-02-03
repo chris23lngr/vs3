@@ -1,8 +1,8 @@
 import z from "zod";
 import { fileInfoSchema } from "../../schemas/file";
 import type { StorageOptions } from "../../types/options";
-import { createRoute } from "../utils/route-builder";
 import { normalizeMetadata, validateMetadata } from "../utils/metadata";
+import { createRoute } from "../utils/route-builder";
 
 /**
  * Upload route - simplified using route builder
@@ -48,9 +48,7 @@ export function createUploadRoute<O extends StorageOptions>(options: O) {
 					},
 				});
 			}
-			const metadataOutput = metadataResult && metadataResult.ok
-				? metadataResult.value
-				: undefined;
+			const metadataOutput = metadataResult?.ok ? metadataResult.value : undefined;
 			const metadata = normalizeMetadata(metadataOutput ?? rawMetadata);
 
 			const fileInfo =
@@ -103,10 +101,7 @@ export function createUploadRoute<O extends StorageOptions>(options: O) {
 			const resolvedMetadata =
 				metadataOutput ?? (rawMetadata as typeof metadataOutput);
 			const key = options.generateKey
-				? await options.generateKey(
-						fileInfo,
-						resolvedMetadata as any,
-					)
+				? await options.generateKey(fileInfo, resolvedMetadata as any)
 				: fileInfo.name;
 
 			if (options.hooks?.beforeUpload) {
@@ -141,11 +136,7 @@ export function createUploadRoute<O extends StorageOptions>(options: O) {
 			);
 
 			if (options.hooks?.afterUpload) {
-				await options.hooks.afterUpload(
-					fileInfo,
-					resolvedMetadata as any,
-					key,
-				);
+				await options.hooks.afterUpload(fileInfo, resolvedMetadata as any, key);
 			}
 
 			return { uploadUrl };

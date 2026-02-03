@@ -1,9 +1,12 @@
 import { atom } from "nanostores";
-import { createStorageClient } from "../client";
-import type { ClientSchema, StorageClient, StorageClientOptions } from "../types";
-import type { Storage } from "../../types/storage";
 import type { StorageOptions } from "../../types/options";
-import { createStorageClientFromServer } from "../client";
+import type { Storage } from "../../types/storage";
+import { createStorageClient, createStorageClientFromServer } from "../client";
+import type {
+	ClientSchema,
+	StorageClient,
+	StorageClientOptions,
+} from "../types";
 
 export const $storageClient = atom<StorageClient<any> | null>(null);
 

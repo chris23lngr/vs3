@@ -54,7 +54,7 @@ const storage = v({
 });
 
 // Example 1: Upload profile image with user metadata
-async function uploadProfileImage() {
+async function _uploadProfileImage() {
 	const profileImage = new File(["image data"], "avatar.jpg", {
 		type: "image/jpeg",
 	});
@@ -81,7 +81,7 @@ async function uploadProfileImage() {
 }
 
 // Example 2: Upload legal document with case information
-async function uploadLegalDocument() {
+async function _uploadLegalDocument() {
 	const contractPdf = new File(["pdf data"], "contract.pdf", {
 		type: "application/pdf",
 	});
@@ -100,7 +100,7 @@ async function uploadLegalDocument() {
 }
 
 // Example 3: Upload public file (no metadata needed)
-async function uploadPublicFile() {
+async function _uploadPublicFile() {
 	const publicFile = new File(["public data"], "readme.txt", {
 		type: "text/plain",
 	});
@@ -115,7 +115,7 @@ async function uploadPublicFile() {
 }
 
 // Example 4: Upload media file
-async function uploadMediaFile() {
+async function _uploadMediaFile() {
 	const videoFile = new File(["video data"], "vacation.mp4", {
 		type: "video/mp4",
 	});
@@ -134,8 +134,8 @@ async function uploadMediaFile() {
 }
 
 // Example 5: Type errors caught at compile-time
-function demonstrateTypeErrors() {
-	const file = new File(["data"], "file.txt");
+function _demonstrateTypeErrors() {
+	const _file = new File(["data"], "file.txt");
 
 	// ❌ TypeScript Error: Property 'avatar' does not exist
 	// storage.api.avatar.uploadUrl({ body: { file } });
@@ -163,18 +163,15 @@ function demonstrateTypeErrors() {
 }
 
 // Example 6: Runtime validation errors
-async function demonstrateRuntimeValidation() {
+async function _demonstrateRuntimeValidation() {
 	const file = new File(["data"], "file.txt");
 
 	try {
 		// Runtime error: Invalid UUID format
-		await storage.api.profile.uploadUrl(
-			{ body: { file } },
-			{
-				userId: "invalid-uuid",
-				username: "test",
-			} as never,
-		);
+		await storage.api.profile.uploadUrl({ body: { file } }, {
+			userId: "invalid-uuid",
+			username: "test",
+		} as never);
 	} catch (error) {
 		console.error("Validation error:", error);
 		// Error: Metadata validation failed: Invalid uuid
@@ -182,13 +179,10 @@ async function demonstrateRuntimeValidation() {
 
 	try {
 		// Runtime error: Username too short
-		await storage.api.profile.uploadUrl(
-			{ body: { file } },
-			{
-				userId: "123e4567-e89b-12d3-a456-426614174000",
-				username: "ab", // Too short (min 3)
-			} as never,
-		);
+		await storage.api.profile.uploadUrl({ body: { file } }, {
+			userId: "123e4567-e89b-12d3-a456-426614174000",
+			username: "ab", // Too short (min 3)
+		} as never);
 	} catch (error) {
 		console.error("Validation error:", error);
 		// Error: Metadata validation failed: String must contain at least 3 character(s)
@@ -196,13 +190,10 @@ async function demonstrateRuntimeValidation() {
 
 	try {
 		// Runtime error: Invalid case ID format
-		await storage.api.documents.uploadUrl(
-			{ body: { file } },
-			{
-				documentType: "contract",
-				caseId: "invalid-format",
-			} as never,
-		);
+		await storage.api.documents.uploadUrl({ body: { file } }, {
+			documentType: "contract",
+			caseId: "invalid-format",
+		} as never);
 	} catch (error) {
 		console.error("Validation error:", error);
 		// Error: Metadata validation failed: Invalid

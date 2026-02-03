@@ -27,7 +27,10 @@ export type XhrUploadResult = {
 };
 
 export type UploadHook<M extends ClientSchema> = {
-	upload: (input: UploadInput<M>, options?: UploadHookOptions) => Promise<XhrUploadResult>;
+	upload: (
+		input: UploadInput<M>,
+		options?: UploadHookOptions,
+	) => Promise<XhrUploadResult>;
 	status: HookStatus;
 	progress?: UploadProgress;
 	error: unknown;
@@ -36,7 +39,10 @@ export type UploadHook<M extends ClientSchema> = {
 };
 
 export type DeleteHook<M extends ClientSchema> = {
-	deleteFile: (input: DeleteInput<M>, options?: ClientRequestOptions) => Promise<{ success: boolean }>;
+	deleteFile: (
+		input: DeleteInput<M>,
+		options?: ClientRequestOptions,
+	) => Promise<{ success: boolean }>;
 	status: HookStatus;
 	error: unknown;
 	data?: { success: boolean };
@@ -44,7 +50,10 @@ export type DeleteHook<M extends ClientSchema> = {
 };
 
 export type DownloadHook<M extends ClientSchema> = {
-	downloadUrl: (input: DownloadInput<M>, options?: ClientRequestOptions) => Promise<{ downloadUrl: string }>;
+	downloadUrl: (
+		input: DownloadInput<M>,
+		options?: ClientRequestOptions,
+	) => Promise<{ downloadUrl: string }>;
 	status: HookStatus;
 	error: unknown;
 	data?: { downloadUrl: string };

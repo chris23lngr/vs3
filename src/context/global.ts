@@ -8,7 +8,7 @@ interface Vs3Global {
 }
 
 const symbol = Symbol.for("vs3:global");
-let bind: Vs3Global | null = null;
+let _bind: Vs3Global | null = null;
 
 const __context: Record<string, AsyncLocalStorage<unknown>> = {};
 
@@ -18,8 +18,8 @@ export function __getVs3Global(): Vs3Global {
 			epoch: 1,
 			context: __context,
 		};
-		bind = (globalThis as any)[symbol] as Vs3Global;
+		_bind = (globalThis as any)[symbol] as Vs3Global;
 	}
-	bind = (globalThis as any)[symbol] as Vs3Global;
+	_bind = (globalThis as any)[symbol] as Vs3Global;
 	return (globalThis as any)[symbol] as Vs3Global;
 }

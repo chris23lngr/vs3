@@ -32,6 +32,9 @@
 			"correctness": {
 				"noChildrenProp": "off"
 			},
+			"suspicious": {
+				"noExplicitAny": "off"
+			},
 			"nursery": {
 				"useSortedClasses": {
 					"level": "warn",

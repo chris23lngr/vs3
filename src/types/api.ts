@@ -1,5 +1,5 @@
-import type { StorageOptions } from "./options";
 import type { FileInfo } from "./file";
+import type { StorageOptions } from "./options";
 import type { StandardSchemaV1 } from "./standard-schema";
 
 /**
@@ -15,10 +15,8 @@ export type WithMetadata<
 > = RequireMetadata extends true
 	? O["metadataSchema"] extends StandardSchemaV1
 		? BaseBody & {
-				metadata: StandardSchemaV1.InferInput<
-					NonNullable<O["metadataSchema"]>
-				>;
-		  }
+				metadata: StandardSchemaV1.InferInput<NonNullable<O["metadataSchema"]>>;
+			}
 		: BaseBody
 	: BaseBody;
 
@@ -45,11 +43,17 @@ export type StorageAPI<O extends StorageOptions> = {
 	 * Delete a file
 	 * Requires metadata if metadataSchema is defined
 	 */
-	delete: APIMethod<WithMetadata<{ key: string }, O, true>, { success: boolean }>;
+	delete: APIMethod<
+		WithMetadata<{ key: string }, O, true>,
+		{ success: boolean }
+	>;
 
 	/**
 	 * Generate a presigned download URL
 	 * Never requires metadata
 	 */
-	download: APIMethod<WithMetadata<{ key: string }, O, false>, { downloadUrl: string }>;
+	download: APIMethod<
+		WithMetadata<{ key: string }, O, false>,
+		{ downloadUrl: string }
+	>;
 };

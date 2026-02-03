@@ -1,11 +1,10 @@
 import { S3Client } from "@aws-sdk/client-s3";
-import { aws } from "../src/adapters";
-import { createStorage } from "../src/storage";
-
 // ============================================================================
 // Example 1: User uses ZOD for metadata
 // ============================================================================
 import { z } from "zod";
+import { aws } from "../src/adapters";
+import { createStorage } from "../src/storage";
 
 const storageWithZod = createStorage({
 	bucket: "test",

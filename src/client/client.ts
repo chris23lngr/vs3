@@ -1,23 +1,20 @@
 import type { FileInfo } from "../types/file";
-import type { Storage } from "../types/storage";
 import type { StorageOptions } from "../types/options";
-import {
-	MetadataValidationError,
-	StorageClientResponseError,
-} from "./errors";
+import type { Storage } from "../types/storage";
+import { MetadataValidationError, StorageClientResponseError } from "./errors";
 import type {
-	ClientRequestOptions,
-	ClientSchema,
 	ClientHeaders,
 	ClientHooks,
+	ClientRequestOptions,
+	ClientSchema,
 	DeleteInput,
 	DownloadInput,
+	ErrorHookContext,
 	ErrorResponse,
-	RetryContext,
-	RetryOptions,
 	RequestHookContext,
 	ResponseHookContext,
-	ErrorHookContext,
+	RetryContext,
+	RetryOptions,
 	StorageClient,
 	StorageClientOptions,
 	UploadInput,
@@ -40,7 +37,11 @@ function joinPath(...parts: Array<string | undefined>) {
 	return `/${stripped.filter(Boolean).join("/")}`;
 }
 
-function buildUrl(baseUrl: string | undefined, apiPath: string | undefined, path: string) {
+function buildUrl(
+	baseUrl: string | undefined,
+	apiPath: string | undefined,
+	path: string,
+) {
 	const combinedPath = joinPath(apiPath, path);
 	if (!baseUrl) {
 		return combinedPath;
@@ -94,9 +95,9 @@ function appendHeaders(target: Headers, source?: HeadersInit) {
 		return;
 	}
 	if (source instanceof Headers) {
-		for (const [key, value] of source.entries()) {
+		source.forEach((value, key) => {
 			target.set(key, value);
-		}
+		});
 		return;
 	}
 	if (Array.isArray(source)) {
@@ -124,7 +125,9 @@ function getRetryDelay(options: RetryOptions, attempt: number) {
 	const strategy = options.strategy ?? "exponential";
 	const max = options.maxDelayMs ?? 5_000;
 	const delay =
-		strategy === "linear" ? base * attempt : Math.min(max, base * 2 ** (attempt - 1));
+		strategy === "linear"
+			? base * attempt
+			: Math.min(max, base * 2 ** (attempt - 1));
 	if (!options.jitter) {
 		return delay;
 	}
@@ -162,10 +165,7 @@ async function runHooks(hook?: (ctx: any) => void | Promise<void>, ctx?: any) {
 	await hook(ctx);
 }
 
-async function withRetry<T>(
-	fn: () => Promise<T>,
-	options?: RetryOptions,
-) {
+async function withRetry<T>(fn: () => Promise<T>, options?: RetryOptions) {
 	let attempt = 0;
 	while (true) {
 		attempt += 1;
@@ -280,9 +280,7 @@ async function validateMetadata<M extends ClientSchema>(
 		return metadata;
 	}
 	if (metadata == null) {
-		throw new MetadataValidationError([
-			{ message: "Metadata is required." },
-		]);
+		throw new MetadataValidationError([{ message: "Metadata is required." }]);
 	}
 	const result = await schema["~standard"].validate(metadata, undefined);
 	if (result.issues) {

@@ -1,5 +1,5 @@
 import type { EndpointContext, EndpointOptions } from "better-call";
-import z from "zod";
+import type z from "zod";
 import type { StorageOptions } from "../../types/options";
 import { createStorageEndpoint } from "../create-storage-endpoint";
 import { withMetadata } from "./metadata";
@@ -7,10 +7,7 @@ import { withMetadata } from "./metadata";
 /**
  * Configuration for a storage route
  */
-export interface RouteConfig<
-	TBaseSchema extends z.ZodRawShape,
-	TResponse,
-> {
+export interface RouteConfig<TBaseSchema extends z.ZodRawShape, TResponse> {
 	/** Route path */
 	path: string;
 	/** HTTP method */
@@ -50,19 +47,9 @@ export function createRoute<
 	TBaseSchema extends z.ZodRawShape,
 	TResponse,
 >(options: O, config: RouteConfig<TBaseSchema, TResponse>) {
-	const {
-		path,
-		method,
-		bodySchema,
-		requireMetadata = true,
-		handler,
-	} = config;
+	const { path, method, bodySchema, requireMetadata = true, handler } = config;
 
-	const finalBodySchema = withMetadata(
-		bodySchema,
-		options,
-		requireMetadata,
-	);
+	const finalBodySchema = withMetadata(bodySchema, options, requireMetadata);
 
 	return createStorageEndpoint(
 		path,

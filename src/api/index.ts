@@ -5,7 +5,7 @@ import {
 	createDeleteRoute,
 	createDownloadRoute,
 	createUploadRoute,
-} from "./routes-v2";
+} from "./routes";
 import { toStorageEndpoints } from "./to-storage-endpoints";
 
 export function getEndpoints<O extends StorageOptions>(

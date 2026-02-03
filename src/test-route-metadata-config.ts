@@ -1,7 +1,7 @@
 import { S3Client } from "@aws-sdk/client-s3";
+import z from "zod";
 import { aws } from "./adapters";
 import { createStorage } from "./storage";
-import z from "zod";
 
 // Storage with metadata schema defined
 const storage = createStorage({

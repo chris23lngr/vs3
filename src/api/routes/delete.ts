@@ -15,7 +15,7 @@ export function createDeleteRoute<O extends StorageOptions>(options: O) {
 		requireMetadata: true, // Metadata required for authorization
 		handler: async ({ body, context }) => {
 			const { key } = body;
-			const metadata = body.metadata;
+			const _metadata = body.metadata;
 
 			// Use metadata for authorization checks
 			const adapter = context.$options.adapter;

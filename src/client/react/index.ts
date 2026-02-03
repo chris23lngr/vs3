@@ -1,11 +1,18 @@
 export {
-\tinitStorageClient,
-\tinitStorageClientFromServer,
-\tsetStorageClient,
-\tgetStorageClient,
-\t$storageClient,
+	useDelete,
+	useDownloadUrl,
+	useStorageClient,
+	useUpload,
+} from "./hooks";
+
+export {
+	$storageClient,
+	getStorageClient,
+	initStorageClient,
+	initStorageClientFromServer,
+	setStorageClient,
 } from "./store";
-export { useStorageClient, useUpload, useDelete, useDownloadUrl } from "./hooks";
+
 export type {
 	DeleteHook,
 	DownloadHook,

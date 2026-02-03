@@ -1,6 +1,6 @@
 import z from "zod";
-import type { StandardSchemaV1 } from "../../types/standard-schema";
 import type { StorageOptions } from "../../types/options";
+import type { StandardSchemaV1 } from "../../types/standard-schema";
 
 /**
  * Creates a Zod schema that validates using StandardSchemaV1
@@ -20,9 +20,7 @@ export function createMetadataValidator<S extends StandardSchemaV1>(
 				StandardSchemaV1.InferInput<S>
 			>;
 			if (syncResult.issues) {
-				throw new Error(
-					syncResult.issues.map((issue) => issue.message).join(", "),
-				);
+				throw new Error(syncResult.issues.map((issue) => issue.message).join(", "));
 			}
 			return true;
 		},
@@ -42,9 +40,8 @@ export async function validateMetadata<S extends StandardSchemaV1>(
 		return { ok: false, issues: result.issues };
 	}
 	const value =
-		(result as StandardSchemaV1.SuccessResult<
-			StandardSchemaV1.InferOutput<S>
-		>).value ?? (input as StandardSchemaV1.InferOutput<S>);
+		(result as StandardSchemaV1.SuccessResult<StandardSchemaV1.InferOutput<S>>)
+			.value ?? (input as StandardSchemaV1.InferOutput<S>);
 	return { ok: true, value };
 }
 
@@ -54,10 +51,7 @@ export async function validateMetadata<S extends StandardSchemaV1>(
  * @param options - Storage options containing metadataSchema
  * @param requireMetadata - Whether this route requires metadata (default: true)
  */
-export function withMetadata<
-	T extends z.ZodRawShape,
-	O extends StorageOptions,
->(
+export function withMetadata<T extends z.ZodRawShape, O extends StorageOptions>(
 	baseSchema: z.ZodObject<T>,
 	options: O,
 	requireMetadata = true,

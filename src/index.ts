@@ -1,25 +1,18 @@
-export { createStorage } from "./storage";
 export { aws } from "./adapters";
-export { createStorageClient, createStorageClientFromServer } from "./client";
-export { MetadataValidationError, StorageClientResponseError } from "./client";
-
-export type { Storage } from "./types/storage";
-export type { StorageOptions } from "./types/options";
-export type { Adapter } from "./types/adapter";
 export type {
-	ClientRequestOptions,
-	ClientSchema,
 	ClientHeaders,
 	ClientHooks,
+	ClientRequestOptions,
+	ClientSchema,
+	DeleteInput,
+	DownloadInput,
 	ErrorContract,
+	ErrorHookContext,
 	ErrorResponse,
 	RequestHookContext,
 	ResponseHookContext,
-	ErrorHookContext,
 	RetryContext,
 	RetryOptions,
-	DeleteInput,
-	DownloadInput,
 	StorageClient,
 	StorageClientOptions,
 	UploadInput,
@@ -27,3 +20,13 @@ export type {
 	UploadUrlInput,
 	WithClientMetadata,
 } from "./client";
+export {
+	createStorageClient,
+	createStorageClientFromServer,
+	MetadataValidationError,
+	StorageClientResponseError,
+} from "./client";
+export { createStorage } from "./storage";
+export type { Adapter } from "./types/adapter";
+export type { StorageOptions } from "./types/options";
+export type { Storage } from "./types/storage";

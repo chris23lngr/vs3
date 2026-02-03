@@ -4,9 +4,9 @@ import type {
 	InputContext,
 } from "better-call";
 import { runWithEndpointContext } from "../context/endpoint-context";
+import type { StorageAPI } from "../types/api";
 import type { StorageContext } from "../types/context";
 import type { StorageOptions } from "../types/options";
-import type { StorageAPI } from "../types/api";
 import type { StorageEndpoint } from "./create-storage-endpoint";
 
 type InternalContext = Partial<
@@ -30,7 +30,10 @@ export function toStorageEndpoints<
 		string,
 		Omit<StorageEndpoint<string, EndpointOptions, any>, "wrap">
 	>,
->(endpoints: E, ctx: StorageContext<O> | Promise<StorageContext<O>>): StorageAPI<O> {
+>(
+	endpoints: E,
+	ctx: StorageContext<O> | Promise<StorageContext<O>>,
+): StorageAPI<O> {
 	const api: Record<
 		string,
 		((

@@ -89,7 +89,7 @@ export type WithClientMetadata<
 	? M extends StandardSchemaV1
 		? BaseBody & {
 				metadata: StandardSchemaV1.InferInput<NonNullable<M>>;
-		  }
+			}
 		: BaseBody
 	: BaseBody;
 

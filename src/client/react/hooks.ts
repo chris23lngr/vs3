@@ -2,6 +2,7 @@ import { useStore } from "@nanostores/react";
 import { useCallback, useMemo, useState } from "react";
 import { StorageClientResponseError } from "../errors";
 import type {
+	ClientRequestOptions,
 	ClientSchema,
 	ErrorResponse,
 	StorageClient,
@@ -56,10 +57,12 @@ function isClient<M extends ClientSchema>(
 function useResolvedClient<M extends ClientSchema>(
 	input?: ClientOrOptions<M>,
 ): StorageClient<M> {
+	const client = useStore($storageClient);
+
 	if (input && isClient(input)) {
 		return input;
 	}
-	const client = useStore($storageClient);
+
 	if (!client) {
 		if (input) {
 			return initStorageClient(input);
@@ -111,9 +114,9 @@ async function xhrUpload(
 				if (file.type && !headers.has("content-type")) {
 					headers.set("content-type", file.type);
 				}
-				for (const [key, value] of headers.entries()) {
+				headers.forEach((value, key) => {
 					xhr.setRequestHeader(key, value);
-				}
+				});
 
 				if (options?.withCredentials) {
 					xhr.withCredentials = true;
@@ -133,9 +136,16 @@ async function xhrUpload(
 					options.onProgress(progress);
 				};
 
+				const cleanup = () => {
+					if (options?.signal && abortHandler) {
+						options.signal.removeEventListener("abort", abortHandler);
+					}
+				};
+
 				xhr.onerror = () => {
-					const errorBody = xhr.response;
+					const errorBody = parseResponseText(xhr.responseText);
 					const contract = isErrorResponse(errorBody) ? errorBody.error : undefined;
+					cleanup();
 					reject(
 						new StorageClientResponseError(
 							xhr.status || 0,
@@ -149,16 +159,19 @@ async function xhrUpload(
 				};
 
 				xhr.onabort = () => {
+					cleanup();
 					reject(new DOMException("Upload aborted", "AbortError"));
 				};
 
 				xhr.onload = () => {
 					const response = parseResponseText(xhr.responseText);
 					if (xhr.status >= 200 && xhr.status < 300) {
+						cleanup();
 						resolve({ uploadUrl: url, status: xhr.status, response });
 						return;
 					}
 					const contract = isErrorResponse(response) ? response.error : undefined;
+					cleanup();
 					reject(
 						new StorageClientResponseError(
 							xhr.status,
@@ -171,23 +184,26 @@ async function xhrUpload(
 					);
 				};
 
+				let abortHandler: (() => void) | undefined;
 				if (options?.signal) {
 					if (options.signal.aborted) {
 						xhr.abort();
 						return;
 					}
-					options.signal.addEventListener(
-						"abort",
-						() => {
-							xhr.abort();
-						},
-						{ once: true },
-					);
+					abortHandler = () => {
+						xhr.abort();
+					};
+					options.signal.addEventListener("abort", abortHandler, {
+						once: true,
+					});
 				}
 
 				xhr.send(file);
 			});
 		} catch (error) {
+			if (error instanceof DOMException && error.name === "AbortError") {
+				throw error;
+			}
 			const retryOn = options?.retry?.retryOn;
 			const canRetry =
 				attempt <= maxAttempts &&
@@ -286,7 +302,10 @@ export function useDelete<M extends ClientSchema>(
 	const [data, setData] = useState<{ success: boolean } | undefined>(undefined);
 
 	const deleteFile = useCallback(
-		async (input: Parameters<typeof client.delete>[0], requestOptions) => {
+		async (
+			input: Parameters<typeof client.delete>[0],
+			requestOptions?: ClientRequestOptions,
+		) => {
 			setStatus("loading");
 			setError(undefined);
 			setData(undefined);
@@ -333,7 +352,10 @@ export function useDownloadUrl<M extends ClientSchema>(
 	);
 
 	const downloadUrl = useCallback(
-		async (input: Parameters<typeof client.downloadUrl>[0], requestOptions) => {
+		async (
+			input: Parameters<typeof client.downloadUrl>[0],
+			requestOptions?: ClientRequestOptions,
+		) => {
 			setStatus("loading");
 			setError(undefined);
 			setData(undefined);
