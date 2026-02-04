@@ -12,6 +12,9 @@ export function createDeleteRoute<O extends StorageOptions>(options: O) {
 		bodySchema: z.object({
 			key: z.string(),
 		}),
+		outputSchema: z.object({
+			success: z.boolean(),
+		}),
 		requireMetadata: true, // Metadata required for authorization
 		handler: async ({ body, context }) => {
 			const { key } = body;

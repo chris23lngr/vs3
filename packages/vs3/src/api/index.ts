@@ -18,6 +18,10 @@ export function getEndpoints<O extends StorageOptions>(
 		download: createDownloadRoute(options),
 	} as const;
 
+	endpoints.delete({
+		
+	})
+
 	const api = toStorageEndpoints<O, typeof endpoints>(endpoints, context);
 
 	return {

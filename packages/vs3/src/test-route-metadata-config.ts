@@ -30,7 +30,8 @@ storage.api.upload({
 	body: {
 		file: new File([], "test.txt"),
 		metadata: {
-			userId: "123",
+			userId: "sdf",
+			orgId: "sdf",
 		},
 	},
 });
@@ -40,6 +41,7 @@ storage.api.upload({
 	// @ts-expect-error - Property 'metadata' is missing
 	body: {
 		file: new File([], "test.txt"),
+		
 	},
 });
 

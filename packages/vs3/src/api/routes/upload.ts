@@ -17,6 +17,10 @@ export function createUploadRoute<O extends StorageOptions>(options: O) {
 		bodySchema: z.object({
 			file: z.union([fileSchema, fileInfoSchema]),
 		}),
+		outputSchema: z.object({
+			uploadUrl: z.string(),
+			uploadHeaders: z.record(z.string()).optional(),
+		}),
 		requireMetadata: true, // Metadata required
 		handler: async ({ body, context, endpoint }) => {
 			console.log("createUploadRoute", body, context, endpoint);
@@ -123,8 +127,9 @@ export function createUploadRoute<O extends StorageOptions>(options: O) {
 			}
 
 			const adapter = context.$options.adapter;
-			const resolvedContentType =
-				fileInfo.contentType?.trim().length ? fileInfo.contentType : undefined;
+			const resolvedContentType = fileInfo.contentType?.trim().length
+				? fileInfo.contentType
+				: undefined;
 			const uploadMetadata =
 				metadata && Object.keys(metadata).length ? metadata : undefined;
 			const uploadUrl = await adapter.generatePresignedUploadUrl(

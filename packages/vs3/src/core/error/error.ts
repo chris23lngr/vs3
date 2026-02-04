@@ -1,18 +1,18 @@
 import z from "zod";
 import { StorageErrorCode } from "./codes";
 
-const errorSchema = z.object({
+export const errorSchema = z.object({
 	origin: z.enum(["client", "server"]),
 	message: z.string(),
 	code: z.enum(Object.values(StorageErrorCode)),
 	details: z.unknown(),
 });
 
-const clientErrorSchema = errorSchema.omit({
+export const clientErrorSchema = errorSchema.omit({
 	origin: true,
 });
 
-const serverErrorSchema = errorSchema.omit({
+export const serverErrorSchema = errorSchema.omit({
 	origin: true,
 });
 

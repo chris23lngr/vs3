@@ -13,6 +13,9 @@ export function createDownloadRoute<O extends StorageOptions>(options: O) {
 		bodySchema: z.object({
 			key: z.string(),
 		}),
+		outputSchema: z.object({
+			downloadUrl: z.string(),
+		}),
 		requireMetadata: false, // No metadata needed for download
 		handler: async ({ body, context }) => {
 			const { key } = body;

@@ -1,5 +1,6 @@
 import type { EndpointContext, EndpointOptions } from "better-call";
 import { createEndpoint, createMiddleware } from "better-call";
+import z from "zod";
 import { runWithEndpointContext } from "../context/endpoint-context";
 import type { StorageContext } from "../types/context";
 
@@ -12,19 +13,20 @@ export const optionsMiddleware = createMiddleware(async () => {
 	return {} as StorageContext;
 });
 
-export const createStorageMiddleware = createMiddleware.create({
-	use: [
-		optionsMiddleware,
-		/**
-		 * Only use for post hooks
-		 */
-		createMiddleware(async () => {
-			return {} as {
-				returned?: unknown | undefined;
-				responseHeaders?: Headers | undefined;
-			};
+export const metadataMiddleware = createMiddleware(
+	{
+		body: z.object({
+			metadata: z.object({
+				userId: z.string(),
+				orgId: z.string().optional(),
+			}),
 		}),
-	],
+	},
+	async (ctx) => {},
+);
+
+export const createStorageMiddleware = createMiddleware.create({
+	use: [optionsMiddleware, metadataMiddleware],
 });
 
 const use = [optionsMiddleware];
@@ -44,7 +46,7 @@ export function createStorageEndpoint<
 		path,
 		{
 			...options,
-			use: [...(options?.use || []), ...use],
+			use,
 		},
 		async (ctx) => runWithEndpointContext(ctx as any, () => handler(ctx)),
 	);
