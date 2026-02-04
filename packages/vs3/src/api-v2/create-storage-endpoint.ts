@@ -54,16 +54,8 @@ export function createStorageEndpoint<
 	options: Options & {
 		metadataSchema: M;
 	},
-	handler: EndpointHandler<
-		Path,
-		Options & { body: ExtendSchemaWithMetadata<Options["body"], M> },
-		Response
-	>,
-): StrictEndpoint<
-	Path,
-	Options & { body: ExtendSchemaWithMetadata<Options["body"], M> },
-	Response
-> {
+	handler: EndpointHandler<Path, ExtendedOptions<Options, M>, Response>,
+): StrictEndpoint<Path, ExtendedOptions<Options, M>, Response> {
 	const { metadataSchema, ...endpointOptions } = options;
 
 	const bodySchema = endpointOptions.body
@@ -79,49 +71,7 @@ export function createStorageEndpoint<
 		{
 			...endpointOptions,
 			body: bodySchema,
-		} as unknown as Options & {
-			body: ExtendSchemaWithMetadata<Options["body"], M>;
-		},
+		} as unknown as ExtendedOptions<Options, M>,
 		handler,
-	) as unknown as StrictEndpoint<
-		Path,
-		Options & { body: ExtendSchemaWithMetadata<Options["body"], M> },
-		any
-	>;
+	) as unknown as StrictEndpoint<Path, ExtendedOptions<Options, M>, any>;
 }
-
-const testEndpoint = createStorageEndpoint(
-	"/test",
-	{
-		method: "POST",
-
-		body: z.object({
-			randomTestField: z.string(),
-		}),
-
-		metadataSchema: z.object({
-			userId: z.string(),
-			age: z.number(),
-		}),
-		outputSchema: z.object({
-			randomTestField: z.string(),
-		}),
-	},
-	async (ctx) => {
-		ctx.body.randomTestField;
-
-		return {
-			randomTestField: "dsdfsdf",
-		};
-	},
-);
-
-testEndpoint({
-	body: {
-		randomTestField: "sdfsdf",
-		metadata: {
-			userId: "dsfsdf",
-			age: 123,
-		},
-	},
-}).then((res) => {});
