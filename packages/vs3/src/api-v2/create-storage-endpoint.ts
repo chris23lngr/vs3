@@ -11,9 +11,7 @@ type EndpointHandler<
 	Path extends string,
 	Options extends EndpointOptions,
 	R,
-> = (
-	context: EndpointContext<Path, Options, { randomNumberField: number }>,
-) => Promise<R>;
+> = (context: EndpointContext<Path, Options, R>) => Promise<R>;
 
 // Utility type to extend a StandardSchema with a metadata field
 type ExtendSchemaWithMetadata<
@@ -37,20 +35,34 @@ type ExtendSchemaWithMetadata<
 			}
 		>;
 
-export function createStorageEndpoint<
-	Path extends string,
+type ExtendedOptions<
 	Options extends EndpointOptions,
 	M extends StandardSchemaV1,
+> = Options & {
+	body: ExtendSchemaWithMetadata<Options["body"], M>;
+};
+
+export function createStorageEndpoint<
+	Path extends string,
+	Options extends EndpointOptions & { outputSchema?: StandardSchemaV1 },
+	M extends StandardSchemaV1,
+	Response extends StandardSchemaV1.InferOutput<
+		NonNullable<Options["outputSchema"]>
+	>,
 >(
 	path: Path,
 	options: Options & {
 		metadataSchema: M;
 	},
-	handler: EndpointHandler<Path, Options, any>,
+	handler: EndpointHandler<
+		Path,
+		Options & { body: ExtendSchemaWithMetadata<Options["body"], M> },
+		Response
+	>,
 ): StrictEndpoint<
 	Path,
 	Options & { body: ExtendSchemaWithMetadata<Options["body"], M> },
-	any
+	Response
 > {
 	const { metadataSchema, ...endpointOptions } = options;
 
@@ -67,9 +79,11 @@ export function createStorageEndpoint<
 		{
 			...endpointOptions,
 			body: bodySchema,
-		} as any,
+		} as unknown as Options & {
+			body: ExtendSchemaWithMetadata<Options["body"], M>;
+		},
 		handler,
-	) as StrictEndpoint<
+	) as unknown as StrictEndpoint<
 		Path,
 		Options & { body: ExtendSchemaWithMetadata<Options["body"], M> },
 		any
@@ -81,21 +95,33 @@ const testEndpoint = createStorageEndpoint(
 	{
 		method: "POST",
 
+		body: z.object({
+			randomTestField: z.string(),
+		}),
+
 		metadataSchema: z.object({
 			userId: z.string(),
+			age: z.number(),
+		}),
+		outputSchema: z.object({
+			randomTestField: z.string(),
 		}),
 	},
 	async (ctx) => {
+		ctx.body.randomTestField;
+
 		return {
-			randomTestField: ctx.body.randomTestField,
+			randomTestField: "dsdfsdf",
 		};
 	},
 );
 
 testEndpoint({
 	body: {
+		randomTestField: "sdfsdf",
 		metadata: {
 			userId: "dsfsdf",
+			age: 123,
 		},
 	},
-});
+}).then((res) => {});
