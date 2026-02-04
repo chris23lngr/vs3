@@ -8,6 +8,7 @@ function createUploadUrlRoute() {
 	const metadataSchema = z.object({
 		userId: z.string(),
 		userEmail: z.string(),
+		age: z.number().optional(),
 	});
 
 	return createStorageEndpoint(
@@ -59,7 +60,7 @@ describe("createStorageEndpoint", () => {
 				file: { name: "test.txt", size: 100, contentType: "text/plain" },
 				metadata: {
 					userId: "User123ABC",
-					userEmail: "sdf",
+					userEmail: "sdfsdf",
 				},
 			},
 		});

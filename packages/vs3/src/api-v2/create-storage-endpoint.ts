@@ -42,10 +42,15 @@ type ExtendedOptions<
 	body: ExtendSchemaWithMetadata<Options["body"], M>;
 };
 
+type StorageEndpointOptions<M extends StandardSchemaV1> = EndpointOptions & {
+	outputSchema?: StandardSchemaV1;
+	metadataSchema: M;
+};
+
 export function createStorageEndpoint<
 	Path extends string,
-	Options extends EndpointOptions & { outputSchema?: StandardSchemaV1 },
 	M extends StandardSchemaV1,
+	Options extends StorageEndpointOptions<M>,
 	Response extends StandardSchemaV1.InferOutput<
 		NonNullable<Options["outputSchema"]>
 	>,
