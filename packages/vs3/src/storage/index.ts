@@ -1,6 +1,7 @@
 import { getEndpoints, router } from "../api";
 import { createContext } from "../context/create-context";
 import type { StorageOptions } from "../types/options";
+import type { StandardSchemaV1 } from "../types/standard-schema";
 import type { Storage } from "../types/storage";
 
 export function createStorage<O extends StorageOptions>(options: O) {
@@ -14,5 +15,11 @@ export function createStorage<O extends StorageOptions>(options: O) {
 		api,
 		handler,
 		"~options": options,
+		$Infer: {
+			metadata: options.metadataSchema as unknown as StandardSchemaV1<
+				StandardSchemaV1.InferInput<NonNullable<O["metadataSchema"]>>,
+				StandardSchemaV1.InferOutput<NonNullable<O["metadataSchema"]>>
+			>,
+		},
 	} satisfies Storage<O>;
 }

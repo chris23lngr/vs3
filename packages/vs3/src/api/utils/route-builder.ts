@@ -49,7 +49,7 @@ export function createRoute<
 >(options: O, config: RouteConfig<TBaseSchema, TResponse>) {
 	const { path, method, bodySchema, requireMetadata = true, handler } = config;
 
-	const finalBodySchema = withMetadata(bodySchema, options, requireMetadata);
+	const finalBodySchema = withMetadata(bodySchema, options.metadataSchema, requireMetadata);
 
 	return createStorageEndpoint(
 		path,

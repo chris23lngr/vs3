@@ -51,14 +51,17 @@ export async function validateMetadata<S extends StandardSchemaV1>(
  * @param options - Storage options containing metadataSchema
  * @param requireMetadata - Whether this route requires metadata (default: true)
  */
-export function withMetadata<T extends z.ZodRawShape, O extends StorageOptions>(
+export function withMetadata<
+	T extends z.ZodRawShape,
+	M extends StandardSchemaV1,
+>(
 	baseSchema: z.ZodObject<T>,
-	options: O,
+	metadataSchema?: M,
 	requireMetadata = true,
 ): z.ZodObject<T> | z.ZodObject<T & { metadata: z.ZodType }> {
-	if (requireMetadata && options.metadataSchema) {
+	if (requireMetadata && metadataSchema) {
 		return baseSchema.extend({
-			metadata: createMetadataValidator(options.metadataSchema),
+			metadata: createMetadataValidator(metadataSchema),
 		} as any);
 	}
 	return baseSchema;

@@ -7,4 +7,8 @@ export type Storage<O extends StorageOptions> = {
 	handler: (req: Request) => Promise<Response>;
 
 	"~options": O;
+
+	$Infer: {
+		readonly metadata: O["metadataSchema"];
+	};
 };

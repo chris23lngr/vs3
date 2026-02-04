@@ -51,6 +51,7 @@
 		"@aws-sdk/s3-request-presigner": "^3.981.0",
 		"@nanostores/react": "^1.0.0",
 		"better-call": "^1.2.1",
+		"better-fetch": "^1.1.2",
 		"nanostores": "^1.1.0",
 		"zod": "^4.3.6"
 	},
