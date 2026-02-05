@@ -109,9 +109,19 @@ export function mergeSchema<
 	standardSchema: S,
 ): z.ZodType<WithMetadataOutput<Z, S>, WithMetadataInput<Z, S>> {
 	const metadataSchema = standardSchemaToZod(standardSchema);
-	const merged = zodSchema.extend({
-		metadata: metadataSchema,
-	});
+	const merged = zodSchema
+		.extend({
+			metadata: metadataSchema,
+		})
+		.superRefine((value, ctx) => {
+			if (value.metadata === undefined) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					message: "Required",
+					path: ["metadata"],
+				});
+			}
+		});
 
 	return merged as unknown as z.ZodType<
 		WithMetadataOutput<Z, S>,

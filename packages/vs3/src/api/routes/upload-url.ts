@@ -20,8 +20,6 @@ export function createUploadUrlRoute<M extends StandardSchemaV1>(
 			outputSchema: schemas.output,
 		},
 		async (ctx) => {
-			console.log("Request received", ctx);
-
 			if (ctx.context.$options === undefined) {
 				throw new StorageServerError({
 					code: StorageErrorCode.INTERNAL_SERVER_ERROR,
@@ -63,8 +61,14 @@ export function createUploadUrlRoute<M extends StandardSchemaV1>(
 			const url = await adapter.generatePresignedUploadUrl(key, fileInfo, {
 				expiresIn,
 				contentType: fileInfo.contentType,
-				// TODO: Safely parse metadata from the request body and turn it into a record of string values
-				// metadata: internalMetdata,
+				metadata:
+					internalMetdata && typeof internalMetdata === "object"
+						? Object.fromEntries(
+								Object.entries(internalMetdata as Record<string, unknown>).map(
+									([key, value]) => [key, value == null ? "" : String(value)],
+								),
+							)
+						: undefined,
 				acl,
 			});
 

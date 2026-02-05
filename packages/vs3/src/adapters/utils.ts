@@ -12,8 +12,10 @@ import type { FileInfo } from "../types/file";
  * @param metadata
  */
 export function generateObjectKey({ name }: FileInfo) {
-	const extension = name.split(".").pop();
-	const fileName = name.split(".").shift();
+	const lastDot = name.lastIndexOf(".");
+	const extension =
+		lastDot > 0 && lastDot < name.length - 1 ? name.slice(lastDot + 1) : "";
+	const fileName = lastDot > 0 ? name.slice(0, lastDot) : "";
 
 	if (!extension) {
 		throw new StorageServerError({
