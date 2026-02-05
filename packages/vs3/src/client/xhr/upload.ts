@@ -66,7 +66,12 @@ export async function xhrUpload(
 		maxAttempts = DEFAULT_RETRY_ATTEMPTS;
 	}
 
+	// Ensure at least one attempt is made
+	maxAttempts = Math.max(1, maxAttempts);
+
 	let attempt = 0;
+	let lastError: Error | DOMException | undefined;
+
 	while (attempt < maxAttempts) {
 		try {
 			return await new Promise((resolve, reject) => {
@@ -83,7 +88,6 @@ export async function xhrUpload(
 				xhr.appendProgressHandler(onProgress);
 
 				xhr.appendErrorHandler((status, statusText, cleanup) => {
-					console.log("error occurred", status, statusText);
 					cleanup();
 					reject(new Error(`Error occurred: ${statusText}`));
 				});
@@ -111,16 +115,24 @@ export async function xhrUpload(
 				xhr.send(file);
 			});
 		} catch (error) {
+			lastError = error as Error | DOMException;
 			attempt++;
 
+			// Abort errors should not be retried
 			if (error instanceof DOMException && error.name === "AbortError") {
 				throw error;
 			}
 
-			throw error;
+			// If we've exhausted all retry attempts, throw the error
+			if (attempt >= maxAttempts) {
+				throw error;
+			}
+
+			// Otherwise, continue to the next retry attempt
 		}
 	}
 
-	// This should never be reached, but TypeScript requires a return
-	throw new Error("Upload failed: max attempts reached");
+	// This should only be reached if maxAttempts is 0 or negative after validation
+	// which should not happen due to Math.max(1, maxAttempts) above
+	throw lastError ?? new Error("Upload failed: no attempts made");
 }
