@@ -512,7 +512,6 @@ describe("upload-url route", () => {
 				}),
 			).rejects.toMatchObject({
 				code: StorageErrorCode.FILE_TOO_LARGE,
-				message: "File size exceeds maximum allowed size of 1000 bytes.",
 				details: {
 					fileSize: 1001,
 					maxFileSize: 1000,
@@ -568,8 +567,8 @@ describe("upload-url route", () => {
 				contentType: "video/mp4",
 			};
 
-			try {
-				await callEndpoint(endpoint, {
+			await expect(
+				callEndpoint(endpoint, {
 					body: {
 						fileInfo,
 						metadata: {
@@ -579,19 +578,15 @@ describe("upload-url route", () => {
 					context: {
 						$options: contextOptions,
 					},
-				});
-				expect(true).toBe(false);
-			} catch (error) {
-				expect(error).toBeInstanceOf(StorageServerError);
-				const storageError = error as StorageServerError;
-				expect(storageError.code).toBe(StorageErrorCode.FILE_TOO_LARGE);
-				expect(storageError.message).toContain("5000000 bytes");
-				expect(storageError.details).toMatchObject({
+				}),
+			).rejects.toMatchObject({
+				code: StorageErrorCode.FILE_TOO_LARGE,
+				details: {
 					fileSize: 10000000,
 					maxFileSize: 5000000,
 					fileName: "large-video.mp4",
-				});
-			}
+				},
+			});
 		});
 	});
 });

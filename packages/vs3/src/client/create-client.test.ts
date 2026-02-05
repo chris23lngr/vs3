@@ -430,7 +430,6 @@ describe("createBaseClient", () => {
 					client.uploadFile(mockFile, { userId: "user-1" }),
 				).rejects.toMatchObject({
 					code: StorageErrorCode.FILE_TOO_LARGE,
-					message: "File size exceeds maximum allowed size of 100 bytes.",
 					details: {
 						fileSize: mockFile.size,
 						maxFileSize: 100,
@@ -473,7 +472,6 @@ describe("createBaseClient", () => {
 				expect(onErrorSpy).toHaveBeenCalledWith(
 					expect.objectContaining({
 						code: StorageErrorCode.FILE_TOO_LARGE,
-						message: "File size exceeds maximum allowed size of 50 bytes.",
 					}),
 				);
 

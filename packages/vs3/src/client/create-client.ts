@@ -6,10 +6,38 @@ import {
 	StorageClientError,
 	StorageError,
 } from "../core/error/error";
+import { formatFileSize } from "../core/utils/format-file-size";
 import type { StandardSchemaV1 } from "../types/standard-schema";
 import { createFetchSchema } from "./fetch-schema";
 import type { StorageClientOptions } from "./types";
 import { xhrUpload } from "./xhr/upload";
+
+/**
+ * Validates client options at configuration time.
+ * @param maxFileSize - The maximum file size in bytes
+ * @throws {StorageClientError} If maxFileSize is invalid
+ */
+function validateClientOptions(maxFileSize: number | undefined): void {
+	if (maxFileSize === undefined) {
+		return;
+	}
+
+	if (!Number.isFinite(maxFileSize)) {
+		throw new StorageClientError({
+			code: StorageErrorCode.INVALID_FILE_INFO,
+			message: "Invalid maxFileSize configuration.",
+			details: "maxFileSize must be a finite number.",
+		});
+	}
+
+	if (maxFileSize <= 0) {
+		throw new StorageClientError({
+			code: StorageErrorCode.INVALID_FILE_INFO,
+			message: "Invalid maxFileSize configuration.",
+			details: "maxFileSize must be greater than 0.",
+		});
+	}
+}
 
 /**
  * Result returned from uploadFile operation.
@@ -37,6 +65,8 @@ export function createBaseClient<
 	O extends StorageClientOptions<M> = StorageClientOptions<M>,
 >(options: O) {
 	const { baseURL = DEFAULT_BASE_URL, apiPath = DEFAULT_API_PATH, maxFileSize } = options;
+
+	validateClientOptions(maxFileSize);
 
 	const apiUrl = new URL(apiPath, baseURL);
 
@@ -80,7 +110,7 @@ export function createBaseClient<
 			if (maxFileSize !== undefined && file.size > maxFileSize) {
 				const error = new StorageClientError({
 					code: StorageErrorCode.FILE_TOO_LARGE,
-					message: `File size exceeds maximum allowed size of ${maxFileSize} bytes.`,
+					message: `File size ${formatFileSize(file.size)} exceeds maximum allowed size of ${formatFileSize(maxFileSize)} (${maxFileSize} bytes).`,
 					details: {
 						fileSize: file.size,
 						maxFileSize,

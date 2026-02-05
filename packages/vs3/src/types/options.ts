@@ -8,6 +8,16 @@ export type StorageOptions<M extends StandardSchemaV1 = StandardSchemaV1> = {
 
 	adapter: Adapter;
 
+	/**
+	 * Maximum allowed file size in bytes.
+	 * Files exceeding this limit will be rejected with a FILE_TOO_LARGE error.
+	 * Must be a positive number. If not specified, no size limit is enforced.
+	 *
+	 * @example
+	 * ```typescript
+	 * maxFileSize: 5 * 1024 * 1024, // 5 MB
+	 * ```
+	 */
 	maxFileSize?: number;
 
 	allowedFileTypes?: string[];
