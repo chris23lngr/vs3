@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as retryModule from "../../core/resilience/retry";
 import type { RetryConfig } from "../../core/resilience/retry";
 
@@ -16,33 +16,52 @@ describe("xhrUpload retry logic", () => {
 
 		let attemptCount = 0;
 
+		vi.resetModules();
+
 		// Mock XhrFactory to fail first 2 attempts, succeed on 3rd
 		vi.doMock("./xhr-factory", () => ({
 			XhrFactory: class MockXhrFactory {
+				private errorHandler:
+					| ((status: number, statusText: string, cleanup: () => void) => void)
+					| undefined;
+				private loadHandler:
+					| ((success: boolean, status: number, statusText: string, cleanup: () => void) => void)
+					| undefined;
+
 				open() {}
 				appendHeaders() {}
 				appendProgressHandler() {}
-				appendErrorHandler(handler: (status: number, statusText: string, cleanup: () => void) => void) {
-					const onError = handler;
-					this.errorHandler = onError;
+				appendErrorHandler(
+					handler: (status: number, statusText: string, cleanup: () => void) => void,
+				) {
+					this.errorHandler = handler;
 				}
 				appendAbortHandler() {}
-				appendLoadHandler(handler: (success: boolean, status: number, statusText: string, cleanup: () => void) => void) {
-					const onLoad = handler;
-					this.loadHandler = onLoad;
+				appendLoadHandler(
+					handler: (
+						success: boolean,
+						status: number,
+						statusText: string,
+						cleanup: () => void,
+					) => void,
+				) {
+					this.loadHandler = handler;
 				}
 				send() {
 					attemptCount++;
+					if (!this.errorHandler || !this.loadHandler) {
+						throw new Error("Handlers not initialized");
+					}
 					if (attemptCount < 3) {
 						this.errorHandler(500, "Internal Server Error", () => {});
 					} else {
 						this.loadHandler(true, 200, "OK", () => {});
 					}
 				}
-				errorHandler: any;
-				loadHandler: any;
 			},
 		}));
+
+		const { xhrUpload } = await import("./upload");
 
 		const mockFile = new File(["test"], "test.txt", { type: "text/plain" });
 
@@ -53,19 +72,17 @@ describe("xhrUpload retry logic", () => {
 			maxJitterMs: 0,
 		};
 
-		try {
-			await xhrUpload("https://example.com/upload", mockFile, {
-				retry: 3,
-				retryConfig,
-			});
-		} catch (e) {
-			// May fail due to mocking complexity, but we can still verify sleep was called
-		}
+		await xhrUpload("https://example.com/upload", mockFile, {
+			retry: 3,
+			retryConfig,
+		});
 
-		// Verify sleep was called (meaning retries happened with delays)
-		if (sleepSpy.mock.calls.length > 0) {
-			expect(sleepSpy).toHaveBeenCalled();
-		}
+		expect(sleepSpy).toHaveBeenCalledTimes(2);
+		expect(sleepSpy).toHaveBeenNthCalledWith(1, 100);
+		expect(sleepSpy).toHaveBeenNthCalledWith(2, 200);
+
+		vi.doUnmock("./xhr-factory");
+		vi.resetModules();
 	});
 
 	it("should use calculateRetryDelay function for delays", () => {
