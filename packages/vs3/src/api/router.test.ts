@@ -128,38 +128,4 @@ describe("router", () => {
 		// Verify the adapter was called (which means context was available)
 		expect(adapter.generatePresignedUploadUrl).toHaveBeenCalled();
 	});
-
-	it("does not throw context missing error when using proper API", async () => {
-		const adapter = createAdapter();
-		const options = {
-			bucket: "test-bucket",
-			adapter,
-			metadataSchema: z.object({
-				userId: z.string(),
-			}),
-		};
-		const context = createContext(options);
-		const { handler } = router(options, context);
-
-		const request = new Request("http://localhost/upload-url", {
-			method: "POST",
-			headers: {
-				"content-type": "application/json",
-			},
-			body: JSON.stringify({
-				fileInfo: {
-					name: "test.png",
-					size: 100,
-					contentType: "image/png",
-				},
-				metadata: {
-					userId: "user-id",
-				},
-			}),
-		});
-
-		// Should not throw any context-related errors
-		const response = await handler(request);
-		expect(response.status).toBe(200);
-	});
 });

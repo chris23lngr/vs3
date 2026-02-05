@@ -1,5 +1,7 @@
 import type { EndpointContext, InputContext } from "better-call";
 import { runWithEndpointContext } from "../context/endpoint-context";
+import { StorageErrorCode } from "../core/error/codes";
+import { StorageServerError } from "../core/error/error";
 import type { StorageContext } from "../types/context";
 import type { StorageOptions } from "../types/options";
 import type { StandardSchemaV1 } from "../types/standard-schema";
@@ -50,11 +52,19 @@ export function toStorageEndpoints<
 				const storageContext = await ctx;
 
 				// Validate that storageContext has the required $options property
-				if (!storageContext || !storageContext.$options) {
-					throw new Error(
-						"Invalid storage context: $options is missing. This is likely a programming error. " +
+				if (
+					storageContext === null ||
+					storageContext === undefined ||
+					storageContext.$options === null ||
+					storageContext.$options === undefined
+				) {
+					throw new StorageServerError({
+						code: StorageErrorCode.INTERNAL_SERVER_ERROR,
+						message: "Invalid storage context.",
+						details:
+							"Storage context or $options is missing. This is a programming error. " +
 							"Ensure you are using createContext() to create the storage context and passing it to the router.",
-					);
+					});
 				}
 
 				const internalContext: InternalContext = {

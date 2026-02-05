@@ -179,10 +179,14 @@ describe("upload-url route", () => {
 			});
 			// Should not reach here
 			expect(true).toBe(false);
-		} catch (error: any) {
-			expect(error.message).toContain("Storage context is not available");
-			expect(error.details).toContain("createStorage()");
-			expect(error.details).toContain("not calling raw endpoint handlers directly");
+		} catch (error) {
+			expect(error).toBeInstanceOf(StorageServerError);
+			const storageError = error as StorageServerError;
+			expect(storageError.message).toContain("Storage context is not available");
+			expect(storageError.details).toContain("createStorage()");
+			expect(storageError.details).toContain(
+				"not calling raw endpoint handlers directly",
+			);
 		}
 	});
 
