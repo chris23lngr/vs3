@@ -339,7 +339,7 @@
   - **Files:** `src/api/routes/upload-url.ts`, `src/client/create-client.ts`
   - **Estimated Time:** 3 hours
 
-- [ ] 2.1.2 **File Type Validation**
+- [x] 2.1.2 **File Type Validation**
   - Implement and enforce `allowedFileTypes`
   - Support MIME type checking
   - Support file extension checking
@@ -349,7 +349,7 @@
   - **Files:** `src/core/validation/file-validator.ts`, `src/api/routes/upload-url.ts`
   - **Estimated Time:** 4 hours
 
-- [ ] 2.1.3 **Filename Sanitization**
+- [x] 2.1.3 **Filename Sanitization**
   - Sanitize filenames to prevent path traversal
   - Remove null bytes and control characters
   - Limit filename length
@@ -359,7 +359,7 @@
 
 - [ ] 2.1.4 **Content Validation Hooks**
   - Allow custom validation functions
-  - Support async validators (e.g., virus scanning)
+  - Support async validators
   - Add validation result types
   - Add examples for common validators
   - **Files:** `src/types/validation.ts`, `src/core/validation/index.ts`
