@@ -30,6 +30,7 @@
 		"format": "biome check --write $TURBO_ROOT$",
 		"format:unsafe": "biome check --write --unsafe $TURBO_ROOT$",
 		"start": "node dist/index.js",
+		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:ui": "vitest --ui"

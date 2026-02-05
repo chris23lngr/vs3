@@ -20,7 +20,8 @@ type MagicType = {
 
 const MAGIC_BYTE_LENGTH = 12;
 
-const CONTROL_CHAR_REGEX = /[\u0000-\u001F\u007F]/;
+// biome-ignore lint/suspicious/noControlCharactersInRegex: intentionally matching control characters for security validation
+const CONTROL_CHAR_REGEX = /[\x00-\x1F\x7F]/;
 const MIME_PATTERN = /^[a-z0-9.+-]+\/[a-z0-9.+*-]+$/i;
 
 /**

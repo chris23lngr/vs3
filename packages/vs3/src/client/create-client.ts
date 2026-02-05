@@ -1,4 +1,5 @@
 import { createFetch } from "@better-fetch/fetch";
+import z from "zod";
 import { DEFAULT_API_PATH, DEFAULT_BASE_URL } from "../core/consts";
 import { StorageErrorCode } from "../core/error/codes";
 import {
@@ -35,6 +36,11 @@ type UploadValidationInput = {
 type UploadValidationResult = {
 	fileInfo: FileInfo;
 };
+
+const uploadUrlResponseSchema = z.object({
+	key: z.string(),
+	presignedUrl: z.string(),
+});
 
 function createClientValidationError(
 	issue: FileValidationIssue,
@@ -161,7 +167,16 @@ async function executeUploadRequest<M extends StandardSchemaV1>(
 		});
 	}
 
-	const { key, presignedUrl } = response.data;
+	const parsedResponse = uploadUrlResponseSchema.safeParse(response.data);
+	if (!parsedResponse.success) {
+		throw new StorageClientError({
+			code: StorageErrorCode.UNKNOWN_ERROR,
+			message: "Invalid upload URL response.",
+			details: parsedResponse.error.flatten().fieldErrors,
+		});
+	}
+
+	const { key, presignedUrl } = parsedResponse.data;
 	const uploadResult = await xhrUpload(presignedUrl, file, {
 		onProgress,
 	});
