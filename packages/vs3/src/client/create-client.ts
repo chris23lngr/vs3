@@ -63,7 +63,7 @@ function buildFileInfo(file: File): FileInfo {
 	return {
 		contentType: file.type,
 		name: file.name,
-		size: file.size ?? 0,
+		size: file.size,
 	};
 }
 
@@ -113,8 +113,11 @@ async function readFileBytesForValidation(
 	} catch (error) {
 		const storageError = new StorageClientError({
 			code: StorageErrorCode.INVALID_FILE_INFO,
-			message: "Failed to read file bytes for validation.",
-			details: error instanceof Error ? error.message : String(error),
+			message: "Failed to read file for type validation. The file may be inaccessible or corrupted.",
+			details: {
+				fileName: file.name,
+				error: error instanceof Error ? error.message : String(error),
+			},
 		});
 		failValidation(storageError, onError);
 	}
