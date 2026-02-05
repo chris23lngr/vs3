@@ -26,3 +26,34 @@ export type {
 	NamedContentValidator,
 	RunContentValidatorsOptions,
 } from "./types/validation";
+
+// Security exports - Request signing and verification
+export {
+	createRequestSigner,
+	generateNonce,
+	createInMemoryNonceStore,
+} from "./core/security";
+
+export {
+	createVerifySignatureMiddleware,
+	createClientRequestSigner,
+} from "./middleware";
+
+export type {
+	RequestSigningConfig,
+	SignRequestInput,
+	SignRequestResult,
+	SignatureHeaders,
+	VerifyRequestInput,
+	VerifyRequestResult,
+	VerificationFailureReason,
+	NonceStore,
+	AuthHook,
+	AuthHookContext,
+	AuthHookResult,
+} from "./types/security";
+
+export type {
+	VerifySignatureMiddlewareConfig,
+	VerificationResult,
+} from "./middleware";
