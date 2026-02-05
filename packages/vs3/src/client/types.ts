@@ -6,4 +6,5 @@ export type StorageClientOptions<
 	baseURL?: string;
 	apiPath?: string;
 	metadataSchema?: M;
+	maxFileSize?: number;
 };

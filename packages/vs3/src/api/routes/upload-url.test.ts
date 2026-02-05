@@ -414,4 +414,184 @@ describe("upload-url route", () => {
 			presignedUrl: "https://example.com/upload",
 		});
 	});
+
+	describe("file size validation", () => {
+		it("accepts file within size limit", async () => {
+			const metadataSchema = z.object({
+				userId: z.string(),
+			});
+
+			const endpoint = createUploadUrlRoute(metadataSchema);
+			const contextOptions = {
+				...createContextOptions(metadataSchema),
+				maxFileSize: 1000,
+			};
+
+			const fileInfo = {
+				...baseFileInfo,
+				size: 500,
+			};
+
+			await expect(
+				callEndpoint(endpoint, {
+					body: {
+						fileInfo,
+						metadata: {
+							userId: "user-1",
+						},
+					},
+					context: {
+						$options: contextOptions,
+					},
+				}),
+			).resolves.toMatchObject({
+				presignedUrl: "https://example.com/upload",
+			});
+		});
+
+		it("accepts file exactly at size limit", async () => {
+			const metadataSchema = z.object({
+				userId: z.string(),
+			});
+
+			const endpoint = createUploadUrlRoute(metadataSchema);
+			const contextOptions = {
+				...createContextOptions(metadataSchema),
+				maxFileSize: 1000,
+			};
+
+			const fileInfo = {
+				...baseFileInfo,
+				size: 1000,
+			};
+
+			await expect(
+				callEndpoint(endpoint, {
+					body: {
+						fileInfo,
+						metadata: {
+							userId: "user-1",
+						},
+					},
+					context: {
+						$options: contextOptions,
+					},
+				}),
+			).resolves.toMatchObject({
+				presignedUrl: "https://example.com/upload",
+			});
+		});
+
+		it("rejects file exceeding size limit", async () => {
+			const metadataSchema = z.object({
+				userId: z.string(),
+			});
+
+			const endpoint = createUploadUrlRoute(metadataSchema);
+			const contextOptions = {
+				...createContextOptions(metadataSchema),
+				maxFileSize: 1000,
+			};
+
+			const fileInfo = {
+				...baseFileInfo,
+				size: 1001,
+			};
+
+			await expect(
+				callEndpoint(endpoint, {
+					body: {
+						fileInfo,
+						metadata: {
+							userId: "user-1",
+						},
+					},
+					context: {
+						$options: contextOptions,
+					},
+				}),
+			).rejects.toMatchObject({
+				code: StorageErrorCode.FILE_TOO_LARGE,
+				message: "File size exceeds maximum allowed size of 1000 bytes.",
+				details: {
+					fileSize: 1001,
+					maxFileSize: 1000,
+					fileName: baseFileInfo.name,
+				},
+			});
+		});
+
+		it("accepts any file size when maxFileSize is not configured", async () => {
+			const metadataSchema = z.object({
+				userId: z.string(),
+			});
+
+			const endpoint = createUploadUrlRoute(metadataSchema);
+			const contextOptions = createContextOptions(metadataSchema);
+
+			const fileInfo = {
+				...baseFileInfo,
+				size: 999999999,
+			};
+
+			await expect(
+				callEndpoint(endpoint, {
+					body: {
+						fileInfo,
+						metadata: {
+							userId: "user-1",
+						},
+					},
+					context: {
+						$options: contextOptions,
+					},
+				}),
+			).resolves.toMatchObject({
+				presignedUrl: "https://example.com/upload",
+			});
+		});
+
+		it("includes comprehensive error details when file is too large", async () => {
+			const metadataSchema = z.object({
+				userId: z.string(),
+			});
+
+			const endpoint = createUploadUrlRoute(metadataSchema);
+			const contextOptions = {
+				...createContextOptions(metadataSchema),
+				maxFileSize: 5000000,
+			};
+
+			const fileInfo = {
+				name: "large-video.mp4",
+				size: 10000000,
+				contentType: "video/mp4",
+			};
+
+			try {
+				await callEndpoint(endpoint, {
+					body: {
+						fileInfo,
+						metadata: {
+							userId: "user-1",
+						},
+					},
+					context: {
+						$options: contextOptions,
+					},
+				});
+				expect(true).toBe(false);
+			} catch (error) {
+				expect(error).toBeInstanceOf(StorageServerError);
+				const storageError = error as StorageServerError;
+				expect(storageError.code).toBe(StorageErrorCode.FILE_TOO_LARGE);
+				expect(storageError.message).toContain("5000000 bytes");
+				expect(storageError.details).toMatchObject({
+					fileSize: 10000000,
+					maxFileSize: 5000000,
+					fileName: "large-video.mp4",
+				});
+			}
+		});
+	});
 });

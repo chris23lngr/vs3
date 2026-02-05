@@ -36,7 +36,7 @@ export function createBaseClient<
 	M extends StandardSchemaV1 = StandardSchemaV1,
 	O extends StorageClientOptions<M> = StorageClientOptions<M>,
 >(options: O) {
-	const { baseURL = DEFAULT_BASE_URL, apiPath = DEFAULT_API_PATH } = options;
+	const { baseURL = DEFAULT_BASE_URL, apiPath = DEFAULT_API_PATH, maxFileSize } = options;
 
 	const apiUrl = new URL(apiPath, baseURL);
 
@@ -76,6 +76,20 @@ export function createBaseClient<
 			>,
 		): Promise<UploadFileResult> => {
 			const { onError, onSuccess, onProgress } = options ?? {};
+
+			if (maxFileSize !== undefined && file.size > maxFileSize) {
+				const error = new StorageClientError({
+					code: StorageErrorCode.FILE_TOO_LARGE,
+					message: `File size exceeds maximum allowed size of ${maxFileSize} bytes.`,
+					details: {
+						fileSize: file.size,
+						maxFileSize,
+						fileName: file.name,
+					},
+				});
+				onError?.(error);
+				throw error;
+			}
 
 			try {
 				const response = await $fetch("/upload-url", {

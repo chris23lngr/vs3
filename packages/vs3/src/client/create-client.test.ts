@@ -312,5 +312,216 @@ describe("createBaseClient", () => {
 				}),
 			);
 		});
+
+		describe("client-side file size validation", () => {
+			it("accepts file within size limit", async () => {
+				const metadataSchema = z.object({
+					userId: z.string(),
+				});
+
+				const { createFetch } = await import("@better-fetch/fetch");
+				const mockFetchFn = vi.fn().mockResolvedValue({
+					error: null,
+					data: {
+						key: "uploads/test.txt",
+						presignedUrl: "https://s3.example.com/upload",
+					},
+				});
+
+				(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+				const client = createBaseClient({
+					baseURL: mockBaseURL,
+					apiPath: mockApiPath,
+					metadataSchema,
+					maxFileSize: 1000,
+				});
+
+				const mockFile = new File(["test"], "test.txt", {
+					type: "text/plain",
+				});
+
+				const mockUploadResult = {
+					uploadUrl: "https://s3.example.com/upload",
+					status: 200,
+					statusText: "OK",
+				};
+
+				vi.spyOn(xhrUploadModule, "xhrUpload").mockResolvedValue(mockUploadResult);
+
+				await expect(
+					client.uploadFile(mockFile, { userId: "user-1" }),
+				).resolves.toMatchObject({
+					key: "uploads/test.txt",
+					status: 200,
+				});
+			});
+
+			it("accepts file exactly at size limit", async () => {
+				const metadataSchema = z.object({
+					userId: z.string(),
+				});
+
+				const { createFetch } = await import("@better-fetch/fetch");
+				const mockFetchFn = vi.fn().mockResolvedValue({
+					error: null,
+					data: {
+						key: "uploads/test.txt",
+						presignedUrl: "https://s3.example.com/upload",
+					},
+				});
+
+				(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+				const maxFileSize = 100;
+				const client = createBaseClient({
+					baseURL: mockBaseURL,
+					apiPath: mockApiPath,
+					metadataSchema,
+					maxFileSize,
+				});
+
+				const content = "a".repeat(maxFileSize);
+				const mockFile = new File([content], "test.txt", {
+					type: "text/plain",
+				});
+
+				const mockUploadResult = {
+					uploadUrl: "https://s3.example.com/upload",
+					status: 200,
+					statusText: "OK",
+				};
+
+				vi.spyOn(xhrUploadModule, "xhrUpload").mockResolvedValue(mockUploadResult);
+
+				await expect(
+					client.uploadFile(mockFile, { userId: "user-1" }),
+				).resolves.toMatchObject({
+					key: "uploads/test.txt",
+					status: 200,
+				});
+			});
+
+			it("rejects file exceeding size limit before making request", async () => {
+				const metadataSchema = z.object({
+					userId: z.string(),
+				});
+
+				const { createFetch } = await import("@better-fetch/fetch");
+				const mockFetchFn = vi.fn();
+
+				(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+				const client = createBaseClient({
+					baseURL: mockBaseURL,
+					apiPath: mockApiPath,
+					metadataSchema,
+					maxFileSize: 100,
+				});
+
+				const content = "a".repeat(101);
+				const mockFile = new File([content], "large.txt", {
+					type: "text/plain",
+				});
+
+				const xhrUploadSpy = vi.spyOn(xhrUploadModule, "xhrUpload");
+
+				await expect(
+					client.uploadFile(mockFile, { userId: "user-1" }),
+				).rejects.toMatchObject({
+					code: StorageErrorCode.FILE_TOO_LARGE,
+					message: "File size exceeds maximum allowed size of 100 bytes.",
+					details: {
+						fileSize: mockFile.size,
+						maxFileSize: 100,
+						fileName: "large.txt",
+					},
+				});
+
+				expect(mockFetchFn).not.toHaveBeenCalled();
+				expect(xhrUploadSpy).not.toHaveBeenCalled();
+			});
+
+			it("calls onError callback when file exceeds size limit", async () => {
+				const metadataSchema = z.object({
+					userId: z.string(),
+				});
+
+				const { createFetch } = await import("@better-fetch/fetch");
+				const mockFetchFn = vi.fn();
+
+				(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+				const client = createBaseClient({
+					baseURL: mockBaseURL,
+					apiPath: mockApiPath,
+					metadataSchema,
+					maxFileSize: 50,
+				});
+
+				const content = "a".repeat(100);
+				const mockFile = new File([content], "large.txt", {
+					type: "text/plain",
+				});
+
+				const onErrorSpy = vi.fn();
+
+				await expect(
+					client.uploadFile(mockFile, { userId: "user-1" }, { onError: onErrorSpy }),
+				).rejects.toThrow();
+
+				expect(onErrorSpy).toHaveBeenCalledWith(
+					expect.objectContaining({
+						code: StorageErrorCode.FILE_TOO_LARGE,
+						message: "File size exceeds maximum allowed size of 50 bytes.",
+					}),
+				);
+
+				expect(mockFetchFn).not.toHaveBeenCalled();
+			});
+
+			it("accepts any file size when maxFileSize is not configured", async () => {
+				const metadataSchema = z.object({
+					userId: z.string(),
+				});
+
+				const { createFetch } = await import("@better-fetch/fetch");
+				const mockFetchFn = vi.fn().mockResolvedValue({
+					error: null,
+					data: {
+						key: "uploads/huge.txt",
+						presignedUrl: "https://s3.example.com/upload",
+					},
+				});
+
+				(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+				const client = createBaseClient({
+					baseURL: mockBaseURL,
+					apiPath: mockApiPath,
+					metadataSchema,
+				});
+
+				const content = "a".repeat(10000000);
+				const mockFile = new File([content], "huge.txt", {
+					type: "text/plain",
+				});
+
+				const mockUploadResult = {
+					uploadUrl: "https://s3.example.com/upload",
+					status: 200,
+					statusText: "OK",
+				};
+
+				vi.spyOn(xhrUploadModule, "xhrUpload").mockResolvedValue(mockUploadResult);
+
+				await expect(
+					client.uploadFile(mockFile, { userId: "user-1" }),
+				).resolves.toMatchObject({
+					key: "uploads/huge.txt",
+					status: 200,
+				});
+			});
+		});
 	});
 });

@@ -37,8 +37,20 @@ export function createUploadUrlRoute<M extends StandardSchemaV1>(
 				});
 			}
 
-			const { adapter, metadataSchema, generateKey } = ctx.context.$options;
+			const { adapter, metadataSchema, generateKey, maxFileSize } = ctx.context.$options;
 			const { fileInfo, acl, expiresIn } = ctx.body;
+
+			if (maxFileSize !== undefined && fileInfo.size > maxFileSize) {
+				throw new StorageServerError({
+					code: StorageErrorCode.FILE_TOO_LARGE,
+					message: `File size exceeds maximum allowed size of ${maxFileSize} bytes.`,
+					details: {
+						fileSize: fileInfo.size,
+						maxFileSize,
+						fileName: fileInfo.name,
+					},
+				});
+			}
 
 			let internalMetdata: unknown = {};
 
