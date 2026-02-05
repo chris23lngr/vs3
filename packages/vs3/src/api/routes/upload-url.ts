@@ -7,10 +7,12 @@ import {
 	getFileNameValidationIssue,
 	getFileTypeValidationIssue,
 	getObjectKeyValidationIssue,
+	runContentValidators,
 	type FileValidationIssue,
-} from "../../core/validation/file-validator";
+} from "../../core/validation";
 import type { FileInfo } from "../../types/file";
 import type { StandardSchemaV1 } from "../../types/standard-schema";
+import type { ContentValidatorInput } from "../../types/validation";
 import { createStorageEndpoint } from "../create-storage-endpoint";
 import { routeRegistry } from "../registry";
 
@@ -38,6 +40,44 @@ function validateFileSize(
 function throwIfIssue(issue: FileValidationIssue | null): void {
 	if (issue) {
 		throw new StorageServerError(issue);
+	}
+}
+
+/**
+ * Runs custom content validators if configured.
+ * @throws {StorageServerError} If any validator fails
+ */
+async function runCustomValidators<TMetadata>(
+	fileInfo: FileInfo,
+	metadata: TMetadata,
+	validators: ContentValidatorInput<TMetadata>[] | undefined,
+	timeoutMs: number | undefined,
+): Promise<void> {
+	if (!validators || validators.length === 0) {
+		return;
+	}
+
+	const result = await runContentValidators({
+		validators,
+		context: { fileInfo, metadata },
+		timeoutMs,
+	});
+
+	if (!result.valid && result.failure) {
+		const validatorName = result.failure.validatorName
+			? ` (${result.failure.validatorName})`
+			: "";
+
+		throw new StorageServerError({
+			code: StorageErrorCode.CONTENT_VALIDATION_ERROR,
+			message: `Content validation failed${validatorName}: ${result.failure.reason}`,
+			details: {
+				validatorName: result.failure.validatorName,
+				validatorIndex: result.failure.validatorIndex,
+				reason: result.failure.reason,
+				fileName: fileInfo.name,
+			},
+		});
 	}
 }
 
@@ -117,7 +157,14 @@ export function createUploadUrlRoute<M extends StandardSchemaV1>(
 				});
 			}
 
-			const { adapter, metadataSchema, generateKey, maxFileSize } = ctx.context.$options;
+			const {
+				adapter,
+				metadataSchema,
+				generateKey,
+				maxFileSize,
+				contentValidators,
+				contentValidatorTimeoutMs,
+			} = ctx.context.$options;
 			const { fileInfo, acl, expiresIn } = ctx.body;
 
 			throwIfIssue(getFileNameValidationIssue(fileInfo.name));
@@ -132,6 +179,14 @@ export function createUploadUrlRoute<M extends StandardSchemaV1>(
 			);
 
 			const internalMetadata = await parseMetadata(metadataSchema, ctx.body.metadata);
+
+			// Run custom content validators after built-in validations
+			await runCustomValidators(
+				fileInfo,
+				internalMetadata,
+				contentValidators,
+				contentValidatorTimeoutMs,
+			);
 
 			const key = generateKey
 				? await generateKey(fileInfo, internalMetadata)
