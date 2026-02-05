@@ -1,5 +1,5 @@
 import { createSchema } from "@better-fetch/fetch";
-import { routeRegistry } from "../api-v2/registry";
+import { routeRegistry } from "../api/registry";
 import type { StandardSchemaV1 } from "../types/standard-schema";
 import type { StorageClientOptions } from "./types";
 
