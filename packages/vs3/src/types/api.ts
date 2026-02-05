@@ -26,7 +26,7 @@ export type WithMetadata<
 type APIMethod<Body, Response> = (context: { body: Body }) => Promise<Response>;
 
 /**
- * Storage API with all endpoints
+ * Storage API with all available endpoints
  * Routes are automatically typed based on whether they require metadata
  */
 export type StorageAPI<O extends StorageOptions> = {
@@ -34,26 +34,16 @@ export type StorageAPI<O extends StorageOptions> = {
 	 * Generate a presigned upload URL
 	 * Requires metadata if metadataSchema is defined
 	 */
-	upload: APIMethod<
-		WithMetadata<{ file: File | FileInfo }, O, true>,
-		{ uploadUrl: string; uploadHeaders?: Record<string, string> }
-	>;
-
-	/**
-	 * Delete a file
-	 * Requires metadata if metadataSchema is defined
-	 */
-	delete: APIMethod<
-		WithMetadata<{ key: string }, O, true>,
-		{ success: boolean }
-	>;
-
-	/**
-	 * Generate a presigned download URL
-	 * Never requires metadata
-	 */
-	download: APIMethod<
-		WithMetadata<{ key: string }, O, false>,
-		{ downloadUrl: string }
+	uploadUrl: APIMethod<
+		WithMetadata<
+			{
+				fileInfo: FileInfo;
+				expiresIn?: number;
+				acl?: "public-read" | "private";
+			},
+			O,
+			true
+		>,
+		{ presignedUrl: string; key: string }
 	>;
 };
