@@ -112,6 +112,7 @@ export type VerificationFailureReason =
 	| "timestamp_expired"
 	| "timestamp_invalid"
 	| "nonce_missing"
+	| "nonce_store_missing"
 	| "nonce_reused";
 
 /**

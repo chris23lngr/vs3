@@ -363,6 +363,32 @@ describe("createRequestSigner", () => {
 				expect(result).toEqual({ valid: false, reason: "nonce_missing" });
 			});
 
+			it("rejects when nonce store is missing", async () => {
+				const signer = createRequestSigner({
+					secret: testSecret,
+					requireNonce: true,
+				});
+				const timestamp = Date.now();
+				const nonce = "missing-store-nonce";
+
+				const signed = await signer.sign({
+					method: "POST",
+					path: "/test",
+					timestamp,
+					nonce,
+				});
+
+				const result = await signer.verify({
+					method: "POST",
+					path: "/test",
+					signature: signed.signature,
+					timestamp,
+					nonce,
+				});
+
+				expect(result).toEqual({ valid: false, reason: "nonce_store_missing" });
+			});
+
 			it("verifies with valid nonce", async () => {
 				const signer = createRequestSigner({
 					secret: testSecret,

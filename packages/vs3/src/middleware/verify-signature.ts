@@ -89,6 +89,10 @@ const VERIFICATION_ERROR_MAP: Record<
 		code: StorageErrorCode.NONCE_MISSING,
 		message: "Request nonce is required but missing.",
 	},
+	nonce_store_missing: {
+		code: StorageErrorCode.NONCE_STORE_MISSING,
+		message: "Nonce validation is required but no nonce store is configured.",
+	},
 	nonce_reused: {
 		code: StorageErrorCode.NONCE_REUSED,
 		message: "Request nonce has already been used. Each request must have a unique nonce.",

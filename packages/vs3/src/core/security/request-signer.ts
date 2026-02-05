@@ -231,6 +231,10 @@ async function validateNonce(
 		return "nonce_missing";
 	}
 
+	if (context.requireNonce && !context.nonceStore) {
+		return "nonce_store_missing";
+	}
+
 	if (!context.input.nonce || !context.nonceStore) {
 		return null;
 	}

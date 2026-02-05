@@ -18,6 +18,8 @@ export enum StorageErrorCode {
 	NONCE_REUSED = "NONCE_REUSED",
 	/** Request nonce is missing when required */
 	NONCE_MISSING = "NONCE_MISSING",
+	/** Request nonce store is missing while nonce is required */
+	NONCE_STORE_MISSING = "NONCE_STORE_MISSING",
 	/** Authentication token is missing */
 	UNAUTHORIZED = "UNAUTHORIZED",
 	/** Authentication token is invalid or expired */
