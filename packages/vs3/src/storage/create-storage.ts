@@ -1,4 +1,4 @@
-import { getEndpoints, router } from "../api-v2/router";
+import { getEndpoints, router } from "../api/router";
 import { createContext } from "../context/create-context";
 import type { StorageOptions } from "../types/options";
 import type { StandardSchemaV1 } from "../types/standard-schema";

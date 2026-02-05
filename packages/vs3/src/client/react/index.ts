@@ -1,24 +1,14 @@
-export {
-	useDelete,
-	useDownloadUrl,
-	useStorageClient,
-	useUpload,
-} from "./hooks";
+import type { StandardSchemaV1 } from "../../types/standard-schema";
+import { createBaseClient } from "../create-client";
+import type { StorageClientOptions } from "../types";
+import { createUseUpload } from "./hooks/use-upload";
 
-export {
-	$storageClient,
-	getStorageClient,
-	initStorageClient,
-	initStorageClientFromServer,
-	setStorageClient,
-} from "./store";
+export function createStorageClient<
+	M extends StandardSchemaV1 = StandardSchemaV1,
+>(options?: StorageClientOptions<M>) {
+	const client = createBaseClient(options ?? {});
 
-export type {
-	DeleteHook,
-	DownloadHook,
-	HookStatus,
-	UploadHook,
-	UploadHookOptions,
-	UploadProgress,
-	XhrUploadResult,
-} from "./types";
+	return {
+		useUpload: createUseUpload<M>(client),
+	};
+}
