@@ -177,6 +177,54 @@ function collapseReplacementChars(
 	return value.replace(consecutiveRegex, replacementChar);
 }
 
+function applySanitizationSteps(
+	filename: string,
+	replacementChar: string,
+): { value: string; applied: SanitizationOperation[] } {
+	const applied: SanitizationOperation[] = [];
+	let current = filename;
+
+	const nullByteResult = removeNullBytes(current);
+	if (nullByteResult.modified) {
+		applied.push("removed_null_bytes");
+	}
+	current = nullByteResult.result;
+
+	const controlCharResult = removeControlCharacters(current, replacementChar);
+	if (controlCharResult.modified) {
+		applied.push("removed_control_characters");
+	}
+	current = controlCharResult.result;
+
+	const pathSepResult = removePathSeparators(current, replacementChar);
+	if (pathSepResult.modified) {
+		applied.push("removed_path_separators");
+	}
+	current = pathSepResult.result;
+
+	const traversalResult = removePathTraversal(current);
+	if (traversalResult.modified) {
+		applied.push("removed_path_traversal");
+	}
+	current = traversalResult.result;
+
+	const trimmed = current.trim();
+	if (trimmed !== current) {
+		applied.push("trimmed_whitespace");
+	}
+	current = trimmed;
+
+	current = collapseReplacementChars(current, replacementChar);
+
+	if (replacementChar) {
+		const escaped = replacementChar.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		const leadingTrailingRegex = new RegExp(`^${escaped}+|${escaped}+$`, "g");
+		current = current.replace(leadingTrailingRegex, "");
+	}
+
+	return { value: current, applied };
+}
+
 /**
  * Sanitizes a filename by removing dangerous characters and patterns.
  *
@@ -203,53 +251,9 @@ export function sanitizeFilename(
 		replacementChar = "_",
 	} = options;
 
-	const appliedOperations: SanitizationOperation[] = [];
-	let current = filename;
-
-	// Step 1: Remove null bytes (high priority security concern)
-	const nullByteResult = removeNullBytes(current);
-	if (nullByteResult.modified) {
-		appliedOperations.push("removed_null_bytes");
-	}
-	current = nullByteResult.result;
-
-	// Step 2: Remove/replace control characters
-	const controlCharResult = removeControlCharacters(current, replacementChar);
-	if (controlCharResult.modified) {
-		appliedOperations.push("removed_control_characters");
-	}
-	current = controlCharResult.result;
-
-	// Step 3: Remove/replace path separators
-	const pathSepResult = removePathSeparators(current, replacementChar);
-	if (pathSepResult.modified) {
-		appliedOperations.push("removed_path_separators");
-	}
-	current = pathSepResult.result;
-
-	// Step 4: Remove path traversal sequences
-	const traversalResult = removePathTraversal(current);
-	if (traversalResult.modified) {
-		appliedOperations.push("removed_path_traversal");
-	}
-	current = traversalResult.result;
-
-	// Step 5: Trim whitespace
-	const trimmed = current.trim();
-	if (trimmed !== current) {
-		appliedOperations.push("trimmed_whitespace");
-	}
-	current = trimmed;
-
-	// Step 6: Collapse consecutive replacement characters
-	current = collapseReplacementChars(current, replacementChar);
-
-	// Step 7: Remove leading/trailing replacement characters
-	if (replacementChar) {
-		const escaped = replacementChar.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-		const leadingTrailingRegex = new RegExp(`^${escaped}+|${escaped}+$`, "g");
-		current = current.replace(leadingTrailingRegex, "");
-	}
+	const sanitized = applySanitizationSteps(filename, replacementChar);
+	const appliedOperations = sanitized.applied;
+	let current = sanitized.value;
 
 	// Step 8: Truncate to max length
 	const truncateResult = truncateFilename(current, maxLength);
