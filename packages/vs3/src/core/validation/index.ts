@@ -82,14 +82,25 @@ function extractValidator<TMetadata>(
 }
 
 /**
- * Creates a promise that rejects after the specified timeout.
+ * Creates a timeout that can be cleaned up.
+ * Returns both the promise and a cleanup function to clear the timer.
  */
-function createTimeoutPromise(timeoutMs: number): Promise<never> {
-	return new Promise((_, reject) => {
-		setTimeout(() => {
+function createTimeoutWithCleanup(timeoutMs: number): {
+	promise: Promise<never>;
+	clear: () => void;
+} {
+	let timerId: ReturnType<typeof setTimeout>;
+
+	const promise = new Promise<never>((_, reject) => {
+		timerId = setTimeout(() => {
 			reject(new Error(`Validator timed out after ${timeoutMs}ms`));
 		}, timeoutMs);
 	});
+
+	return {
+		promise,
+		clear: () => clearTimeout(timerId),
+	};
 }
 
 /**
@@ -112,8 +123,14 @@ async function runSingleValidator<TMetadata>(
 		return await resultOrPromise;
 	}
 
-	// Race between the validator and timeout
-	return await Promise.race([resultOrPromise, createTimeoutPromise(timeoutMs)]);
+	// Race between the validator and timeout, ensuring cleanup
+	const timeout = createTimeoutWithCleanup(timeoutMs);
+
+	try {
+		return await Promise.race([resultOrPromise, timeout.promise]);
+	} finally {
+		timeout.clear();
+	}
 }
 
 /**
