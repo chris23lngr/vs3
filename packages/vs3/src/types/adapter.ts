@@ -12,10 +12,7 @@ export type Adapter = {
 	/**
 	 * Generated a presigned upload url for a given key.
 	 *
-	 * @param key - The key to generate a presigned upload url for.
-	 * @param fileInfo - The file info to generate a presigned upload url for. The
-	 * file info is used to validate the file before uploading.
-	 * @param options - The options for the presigned upload url.
+	 * @throws {StorageServerError} If the adapter fails to generate a presigned upload url.
 	 */
 	generatePresignedUploadUrl(
 		key: string,

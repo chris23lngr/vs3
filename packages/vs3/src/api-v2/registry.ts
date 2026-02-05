@@ -12,6 +12,18 @@ type RouteRegistry = Record<
 >;
 
 export const routeRegistry = {
+	"/upload-url": {
+		body: z.object({
+			fileInfo: fileInfoSchema,
+			expiresIn: z.number().optional(),
+			acl: z.enum(["public-read", "private"]).optional(),
+		}),
+		requireMetadata: true,
+		output: z.object({
+			presignedUrl: z.string(),
+			key: z.string(),
+		}),
+	},
 	"/test": {
 		body: z.object({
 			fileInfo: fileInfoSchema,
