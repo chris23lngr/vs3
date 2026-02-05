@@ -12,8 +12,6 @@ describe("xhrUpload retry logic", () => {
 	});
 
 	it("should apply exponential backoff on retries", async () => {
-		const { xhrUpload } = await import("./upload");
-
 		let attemptCount = 0;
 
 		vi.resetModules();
