@@ -1,6 +1,6 @@
 "use client";
 
-import { useStorageClient, useUpload } from "vs3/client/react";
+import { useUpload } from "vs3/client/react";
 import { storageClient } from "@/server/storage/client";
 
 export function StorageClientDemo() {

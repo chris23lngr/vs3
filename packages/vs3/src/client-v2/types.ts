@@ -7,5 +7,3 @@ export type StorageClientOptions<
 	apiPath?: string;
 	metadataSchema?: M;
 };
-
-export type StorageClient<O extends StorageClientOptions> = {};

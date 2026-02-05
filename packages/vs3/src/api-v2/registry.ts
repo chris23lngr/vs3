@@ -24,13 +24,4 @@ export const routeRegistry = {
 			key: z.string(),
 		}),
 	},
-	"/test": {
-		body: z.object({
-			fileInfo: fileInfoSchema,
-		}),
-		requireMetadata: true,
-		output: z.object({
-			name: z.string(),
-		}),
-	},
 } as const satisfies RouteRegistry;

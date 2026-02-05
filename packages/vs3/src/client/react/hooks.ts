@@ -125,7 +125,9 @@ type DebugConfig = {
 	maxBodyLength: number;
 };
 
-function normalizeDebug(input?: DebugOptions | boolean): DebugOptions | undefined {
+function normalizeDebug(
+	input?: DebugOptions | boolean,
+): DebugOptions | undefined {
 	if (input === undefined) {
 		return undefined;
 	}

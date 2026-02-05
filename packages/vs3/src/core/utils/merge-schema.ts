@@ -60,10 +60,7 @@ function addIssues(
  */
 function standardSchemaToZod<S extends StandardSchemaV1>(
 	standardSchema: S,
-): z.ZodType<
-	StandardSchemaV1.InferOutput<S>,
-	StandardSchemaV1.InferInput<S>
-> {
+): z.ZodType<StandardSchemaV1.InferOutput<S>, StandardSchemaV1.InferInput<S>> {
 	const schema = z.any().superRefine((value, ctx) => {
 		try {
 			const result = standardSchema["~standard"].validate(value);
@@ -75,8 +72,7 @@ function standardSchemaToZod<S extends StandardSchemaV1>(
 						}
 					})
 					.catch((error) => {
-						const message =
-							error instanceof Error ? error.message : "Unknown error";
+						const message = error instanceof Error ? error.message : "Unknown error";
 						ctx.addIssue({
 							code: z.ZodIssueCode.custom,
 							message,
@@ -87,8 +83,7 @@ function standardSchemaToZod<S extends StandardSchemaV1>(
 				addIssues(ctx, result.issues);
 			}
 		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : "Unknown error";
+			const message = error instanceof Error ? error.message : "Unknown error";
 			ctx.addIssue({
 				code: z.ZodIssueCode.custom,
 				message,

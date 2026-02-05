@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import z from "zod";
 import { fileInfoSchema } from "../schemas/file";
-import type { StandardSchemaV1 } from "../types/standard-schema";
 import { createStorageEndpoint } from "./create-storage-endpoint";
 
 function createUploadUrlRoute() {

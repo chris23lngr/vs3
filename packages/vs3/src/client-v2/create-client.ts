@@ -1,7 +1,11 @@
 import { createFetch } from "@better-fetch/fetch";
-import z from "zod";
 import { DEFAULT_API_PATH, DEFAULT_BASE_URL } from "../core/consts";
-import { errorSchema, StorageError } from "../core/error/error";
+import { StorageErrorCode } from "../core/error/codes";
+import {
+	errorSchema,
+	StorageClientError,
+	StorageError,
+} from "../core/error/error";
 import type { StandardSchemaV1 } from "../types/standard-schema";
 import { createFetchSchema } from "./fetch-schema";
 import type { StorageClientOptions } from "./types";
@@ -31,10 +35,18 @@ export function createBaseClient<
 		uploadFile: async (
 			file: File,
 			metadata: StandardSchemaV1.InferInput<NonNullable<O["metadataSchema"]>>,
-			options?: Partial<ClientFnOptions>,
+			options?: Partial<
+				ClientFnOptions & {
+					retry?: undefined | true | number;
+					onProgress?: (progress: number) => void;
+					abort: () => void;
+				}
+			>,
 		) => {
+			const { onError, onSuccess } = options ?? {};
+
 			try {
-				const response = await $fetch("/test", {
+				const response = await $fetch("/upload-url", {
 					body: {
 						fileInfo: {
 							contentType: file.type,
@@ -44,9 +56,21 @@ export function createBaseClient<
 						metadata,
 					},
 				});
+
+				if (response.error) {
+					throw new StorageClientError({
+						code: StorageErrorCode.UNKNOWN_ERROR,
+						details: `${response.error.status}: ${response.error.message ?? "Unknown error"}`,
+						message: response.error.message ?? "Unknown error",
+					});
+				}
+
+				const { key } = response.data;
+
+				onSuccess?.(key);
 			} catch (error) {
 				if (error instanceof StorageError) {
-					options?.onError?.(error);
+					onError?.(error);
 				}
 
 				throw error;
@@ -55,23 +79,7 @@ export function createBaseClient<
 	};
 }
 
-const client = createBaseClient({
-	metadataSchema: z.object({
-		userId: z.string(),
-	}),
-});
-
-client.$fetch("/test", {
-	body: {
-		fileInfo: {
-			name: "test.txt",
-			size: 100,
-			contentType: "text/plain",
-		},
-		metadata: {},
-	},
-});
-
-client.uploadFile(new File([], "test.txt"), {
-	userId: "234",
-});
+export type BaseStorageClient<
+	M extends StandardSchemaV1 = StandardSchemaV1,
+	O extends StorageClientOptions<M> = StorageClientOptions<M>,
+> = ReturnType<typeof createBaseClient<M, O>>;

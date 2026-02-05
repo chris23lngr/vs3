@@ -1,7 +1,6 @@
 "use client";
 
-import { createStorageClient, createStorageClientFromServer } from "vs3";
-import { storage } from "./server";
+import { createStorageClient } from "vs3";
 
 export const storageClient = createStorageClient({
 	apiPath: "/api/storage",

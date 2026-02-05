@@ -12,7 +12,7 @@ export function createUploadUrlRoute<M extends StandardSchemaV1>(
 	const schemas = routeRegistry["/upload-url"];
 
 	return createStorageEndpoint(
-		"/test",
+		"/upload-url",
 		{
 			method: "POST",
 			metadataSchema: metadataSchema ?? z.undefined(),

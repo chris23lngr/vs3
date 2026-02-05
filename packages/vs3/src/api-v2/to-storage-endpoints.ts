@@ -1,10 +1,5 @@
-import type {
-	EndpointContext,
-	EndpointOptions,
-	InputContext,
-} from "better-call";
+import type { EndpointContext, InputContext } from "better-call";
 import { runWithEndpointContext } from "../context/endpoint-context";
-import type { StorageAPI } from "../types/api";
 import type { StorageContext } from "../types/context";
 import type { StorageOptions } from "../types/options";
 import type { StandardSchemaV1 } from "../types/standard-schema";
@@ -59,9 +54,7 @@ export function toStorageEndpoints<
 						...storageContext,
 					},
 					path: endpoint.path,
-					headers: context?.headers
-						? new Headers(context?.headers)
-						: undefined,
+					headers: context?.headers ? new Headers(context?.headers) : undefined,
 				};
 
 				return runWithEndpointContext(internalContext, () =>

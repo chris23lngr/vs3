@@ -51,7 +51,9 @@ export function createAwsS3Adapter(
 				Key: key,
 				ContentType: resolvedContentType,
 				ACL: acl,
-				Metadata: metadataEntries.length ? Object.fromEntries(metadataEntries) : undefined,
+				Metadata: metadataEntries.length
+					? Object.fromEntries(metadataEntries)
+					: undefined,
 			});
 
 			return getSignedUrl(options.client, command, { expiresIn });

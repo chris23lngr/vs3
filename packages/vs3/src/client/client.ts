@@ -145,7 +145,9 @@ type DebugConfig = {
 	maxBodyLength: number;
 };
 
-function normalizeDebug(input?: DebugOptions | boolean): DebugOptions | undefined {
+function normalizeDebug(
+	input?: DebugOptions | boolean,
+): DebugOptions | undefined {
 	if (input === undefined) {
 		return undefined;
 	}
@@ -164,7 +166,7 @@ function resolveDebug(
 	if (next?.enabled === false) {
 		return undefined;
 	}
-	const enabled = (next?.enabled ?? base?.enabled) ?? false;
+	const enabled = next?.enabled ?? base?.enabled ?? false;
 	if (!enabled) {
 		return undefined;
 	}
@@ -323,7 +325,9 @@ async function requestJson<T>(
 			url,
 			method: "POST",
 			headers: debug?.includeHeaders ? headersToObject(headers) : undefined,
-			body: debug?.includeBody ? truncateBody(body, debug.maxBodyLength) : undefined,
+			body: debug?.includeBody
+				? truncateBody(body, debug.maxBodyLength)
+				: undefined,
 		});
 		const requestContext: RequestHookContext = {
 			url,
@@ -446,7 +450,10 @@ export function createStorageClient<M extends ClientSchema>(
 			metadata,
 		};
 		const url = buildUrl(baseUrl, apiPath, "/generate-upload-url");
-		return requestJson<{ uploadUrl: string; uploadHeaders?: Record<string, string> }>(
+		return requestJson<{
+			uploadUrl: string;
+			uploadHeaders?: Record<string, string>;
+		}>(
 			fetcher,
 			url,
 			payload,
@@ -519,9 +526,7 @@ export function createStorageClient<M extends ClientSchema>(
 					method: "PUT",
 					status: res.status,
 					statusText: res.statusText,
-					headers: debug?.includeHeaders
-						? headersToObject(res.headers)
-						: undefined,
+					headers: debug?.includeHeaders ? headersToObject(res.headers) : undefined,
 					body: debug?.includeResponseBody
 						? truncateBody(body, debug.maxBodyLength)
 						: undefined,
@@ -543,9 +548,7 @@ export function createStorageClient<M extends ClientSchema>(
 				method: "PUT",
 				status: res.status,
 				statusText: res.statusText,
-				headers: debug?.includeHeaders
-					? headersToObject(res.headers)
-					: undefined,
+				headers: debug?.includeHeaders ? headersToObject(res.headers) : undefined,
 			});
 			return res;
 		}, retry);
