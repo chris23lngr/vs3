@@ -51,7 +51,7 @@ describe("generateObjectKey", () => {
 			contentType: "image/png",
 		});
 
-		expect(key).toBe("uuid-123--private.png");
+		expect(key).toBe("uuid-123-private.png");
 	});
 
 	it("throws INVALID_FILE_INFO when no extension exists", () => {
