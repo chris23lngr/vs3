@@ -169,6 +169,9 @@ describe("createBaseClient", () => {
 			expect(onSuccessSpy).toHaveBeenCalledWith({
 				key: "uploads/test.txt",
 				presignedUrl: "https://s3.example.com/upload",
+				uploadUrl: "https://s3.example.com/upload",
+				status: 200,
+				statusText: "OK",
 			});
 		});
 
@@ -194,7 +197,7 @@ describe("createBaseClient", () => {
 				metadataSchema,
 			});
 
-			const mockFile = new File(["test content"], "test.txt", {
+			const mockFile = new File(["test.txt"], "test.txt", {
 				type: "text/plain",
 			});
 
