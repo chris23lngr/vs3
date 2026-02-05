@@ -58,7 +58,7 @@ function addIssues(
  * Uses sync or async validation depending on the StandardSchemaV1 implementation.
  * For async validation, use `parseAsync`/`safeParseAsync`.
  */
-function standardSchemaToZod<S extends StandardSchemaV1>(
+export function standardSchemaToZod<S extends StandardSchemaV1>(
 	standardSchema: S,
 ): z.ZodType<StandardSchemaV1.InferOutput<S>, StandardSchemaV1.InferInput<S>> {
 	const schema = z.any().superRefine((value, ctx) => {

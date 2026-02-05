@@ -9,10 +9,11 @@ import {
 import type { StandardSchemaV1 } from "../types/standard-schema";
 import { createFetchSchema } from "./fetch-schema";
 import type { StorageClientOptions } from "./types";
+import { xhrUpload } from "./xhr/upload";
 
 type ClientFnOptions = {
 	onError?: (error: StorageError) => void;
-	onSuccess?: (data: unknown) => void;
+	onSuccess?: (data: { key: string; presignedUrl: string }) => void;
 };
 
 export function createBaseClient<
@@ -43,7 +44,7 @@ export function createBaseClient<
 				}
 			>,
 		) => {
-			const { onError, onSuccess } = options ?? {};
+			const { onError, onSuccess, onProgress } = options ?? {};
 
 			try {
 				const response = await $fetch("/upload-url", {
@@ -65,9 +66,14 @@ export function createBaseClient<
 					});
 				}
 
-				const { key } = response.data;
+				const { key, presignedUrl } = response.data;
 
-				onSuccess?.(key);
+				xhrUpload(presignedUrl, file, {
+					onProgress,
+				});
+
+				onSuccess?.({ key, presignedUrl });
+				return { key, presignedUrl };
 			} catch (error) {
 				if (error instanceof StorageError) {
 					onError?.(error);

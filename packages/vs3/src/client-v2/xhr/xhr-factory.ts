@@ -13,7 +13,7 @@ export class XhrFactory {
 	open(method: "PUT" | "POST", url: string | URL, async: boolean = true) {
 		this.xhr.open(method, url, async);
 
-		if (this.signal) {
+		if (this.signal !== undefined) {
 			if (this.signal.aborted) {
 				this.xhr.abort();
 				return;
@@ -26,7 +26,7 @@ export class XhrFactory {
 	}
 
 	cleanup() {
-		if (this.signal && this.abortHandler) {
+		if (this.signal !== undefined && this.abortHandler !== undefined) {
 			this.signal.removeEventListener("abort", this.abortHandler);
 		}
 	}

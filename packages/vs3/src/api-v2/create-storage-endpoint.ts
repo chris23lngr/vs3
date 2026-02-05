@@ -6,6 +6,7 @@ import {
 	type StrictEndpoint,
 } from "better-call";
 import z from "zod";
+import { mergeSchema, standardSchemaToZod } from "../core/utils/merge-schema";
 import { runWithEndpointContext } from "../context/endpoint-context";
 import type { StorageContext } from "../types/context";
 import type { StandardSchemaV1 } from "../types/standard-schema";
@@ -68,11 +69,9 @@ export function createStorageEndpoint<
 	const { metadataSchema, ...endpointOptions } = options;
 
 	const bodySchema = endpointOptions.body
-		? (endpointOptions.body as z.ZodObject<any>).extend({
-				metadata: metadataSchema,
-			})
+		? mergeSchema(endpointOptions.body as z.ZodObject<any>, metadataSchema)
 		: z.object({
-				metadata: metadataSchema,
+				metadata: standardSchemaToZod(metadataSchema),
 			});
 
 	return createEndpoint(

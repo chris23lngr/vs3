@@ -39,16 +39,23 @@ export function createUseUpload<M extends StandardSchemaV1>(
 
 					setStatus("loading");
 
-					client.uploadFile(file, metadata, {
+					const res = await client.uploadFile(file, metadata, {
 						onProgress: (progress) => {
 							setProgress(progress);
 							onProgress?.(progress);
 						},
-						onSuccess: () => {
+						onSuccess: ({ key, presignedUrl }) => {
+							setData({
+								key,
+								presignedUrl,
+							});
 							setStatus("success");
 							onSuccess?.();
 						},
 					});
+
+					setIsLoading(false);
+					setData(res);
 				} catch (error) {
 					setError(error);
 					setStatus("error");
