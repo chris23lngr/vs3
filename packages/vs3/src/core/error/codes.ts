@@ -24,4 +24,6 @@ export enum StorageErrorCode {
 	UNAUTHORIZED = "UNAUTHORIZED",
 	/** Authentication token is invalid or expired */
 	FORBIDDEN = "FORBIDDEN",
+	/** A middleware in the chain failed */
+	MIDDLEWARE_FAILED = "MIDDLEWARE_FAILED",
 }
