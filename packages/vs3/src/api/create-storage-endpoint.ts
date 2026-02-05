@@ -8,6 +8,11 @@ import {
 import z from "zod";
 import { runWithEndpointContext } from "../context/endpoint-context";
 import { mergeSchema, standardSchemaToZod } from "../core/utils/merge-schema";
+import { executeMiddlewareChain } from "../middleware/core/execute-chain";
+import type {
+	StorageMiddleware,
+	StorageMiddlewareContext,
+} from "../middleware/types";
 import type { StorageContext } from "../types/context";
 import type { StandardSchemaV1 } from "../types/standard-schema";
 
@@ -51,6 +56,8 @@ export type StorageEndpointOptions<M extends StandardSchemaV1> =
 		outputSchema?: StandardSchemaV1;
 		metadataSchema: M;
 		requireMetadata?: boolean;
+		/** VS3 middleware chain executed before the endpoint handler */
+		middlewares?: StorageMiddleware[];
 	};
 
 export function createStorageEndpoint<
@@ -67,7 +74,8 @@ export function createStorageEndpoint<
 	},
 	handler: EndpointHandler<Path, ExtendedOptions<Options, M>, Response>,
 ): StrictEndpoint<Path, ExtendedOptions<Options, M>, Response> {
-	const { metadataSchema, requireMetadata, ...endpointOptions } = options;
+	const { metadataSchema, requireMetadata, middlewares, ...endpointOptions } =
+		options;
 	const isUndefinedMetadata =
 		metadataSchema instanceof z.ZodUndefined ||
 		metadataSchema instanceof z.ZodNever;
@@ -95,7 +103,19 @@ export function createStorageEndpoint<
 		{
 			...endpointOptions,
 			use: [
-				createMiddleware(async () => {
+				createMiddleware(async (betterCallCtx) => {
+					if (middlewares && middlewares.length > 0) {
+						const request = betterCallCtx.request ?? new Request("http://localhost");
+						const storageCtx: StorageMiddlewareContext = {
+							method: betterCallCtx.method,
+							path: betterCallCtx.path,
+							request,
+							headers: betterCallCtx.headers ?? request.headers,
+							context: {} as StorageContext,
+						};
+						const { context } = await executeMiddlewareChain(middlewares, storageCtx);
+						return context;
+					}
 					return {} as StorageContext;
 				}),
 			],

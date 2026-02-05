@@ -17,13 +17,21 @@ export {
 	runContentValidators,
 } from "./core/validation";
 export { toNextJsRouteHandler } from "./integrations/next-js";
+// Middleware system exports
 export type {
+	ChainExecutionResult,
+	MiddlewareConfig,
+	MiddlewareHandler,
+	StorageMiddleware,
+	StorageMiddlewareContext,
 	VerificationResult,
 	VerifySignatureMiddlewareConfig,
 } from "./middleware";
 export {
 	createClientRequestSigner,
+	createStorageMiddleware,
 	createVerifySignatureMiddleware,
+	executeMiddlewareChain,
 } from "./middleware";
 export { createStorage } from "./storage/create-storage";
 export type { Adapter } from "./types/adapter";
