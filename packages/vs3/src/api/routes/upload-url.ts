@@ -4,11 +4,11 @@ import { StorageErrorCode } from "../../core/error/codes";
 import { StorageServerError } from "../../core/error/error";
 import { formatFileSize } from "../../core/utils/format-file-size";
 import {
+	type FileValidationIssue,
 	getFileNameValidationIssue,
 	getFileTypeValidationIssue,
 	getObjectKeyValidationIssue,
 	runContentValidators,
-	type FileValidationIssue,
 } from "../../core/validation";
 import type { FileInfo } from "../../types/file";
 import type { StandardSchemaV1 } from "../../types/standard-schema";
@@ -119,15 +119,18 @@ async function parseMetadata<M extends StandardSchemaV1>(
 /**
  * Transforms metadata object to string-valued entries for S3.
  */
-function transformMetadata(metadata: unknown): Record<string, string> | undefined {
+function transformMetadata(
+	metadata: unknown,
+): Record<string, string> | undefined {
 	if (!metadata || typeof metadata !== "object") {
 		return undefined;
 	}
 
 	return Object.fromEntries(
-		Object.entries(metadata as Record<string, unknown>).map(
-			([key, value]) => [key, value == null ? "" : String(value)],
-		),
+		Object.entries(metadata as Record<string, unknown>).map(([key, value]) => [
+			key,
+			value == null ? "" : String(value),
+		]),
 	);
 }
 
@@ -182,7 +185,10 @@ export function createUploadUrlRoute<M extends StandardSchemaV1>(
 				}),
 			);
 
-			const internalMetadata = await parseMetadata(metadataSchema, ctx.body.metadata);
+			const internalMetadata = await parseMetadata(
+				metadataSchema,
+				ctx.body.metadata,
+			);
 
 			// Run custom content validators after built-in validations
 			await runCustomValidators({

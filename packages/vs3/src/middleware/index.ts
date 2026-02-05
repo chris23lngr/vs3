@@ -1,6 +1,6 @@
 export {
-	createVerifySignatureMiddleware,
 	createClientRequestSigner,
-	type VerifySignatureMiddlewareConfig,
+	createVerifySignatureMiddleware,
 	type VerificationResult,
+	type VerifySignatureMiddlewareConfig,
 } from "./verify-signature";

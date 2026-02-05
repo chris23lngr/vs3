@@ -63,7 +63,7 @@ export function calculateBackoffDelay(
 	const { baseDelayMs, backoffMultiplier, maxDelayMs } = config;
 
 	const exponentialDelay =
-		baseDelayMs * Math.pow(backoffMultiplier, attemptNumber - 1);
+		baseDelayMs * backoffMultiplier ** (attemptNumber - 1);
 
 	return Math.min(exponentialDelay, maxDelayMs);
 }

@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as retryModule from "../../core/resilience/retry";
+import { describe, expect, it, vi } from "vitest";
 import type { RetryConfig } from "../../core/resilience/retry";
+import * as retryModule from "../../core/resilience/retry";
 
 describe("xhrUpload retry logic", () => {
 	it("should apply exponential backoff on retries", async () => {
@@ -9,10 +9,9 @@ describe("xhrUpload retry logic", () => {
 		vi.resetModules();
 
 		vi.doMock("../../core/resilience/retry", async () => {
-			const actual =
-				await vi.importActual<typeof import("../../core/resilience/retry")>(
-					"../../core/resilience/retry",
-				);
+			const actual = await vi.importActual<
+				typeof import("../../core/resilience/retry")
+			>("../../core/resilience/retry");
 
 			return {
 				...actual,
@@ -27,7 +26,12 @@ describe("xhrUpload retry logic", () => {
 					| ((status: number, statusText: string, cleanup: () => void) => void)
 					| undefined;
 				private loadHandler:
-					| ((success: boolean, status: number, statusText: string, cleanup: () => void) => void)
+					| ((
+							success: boolean,
+							status: number,
+							statusText: string,
+							cleanup: () => void,
+					  ) => void)
 					| undefined;
 
 				open() {}
@@ -133,7 +137,7 @@ describe("xhrUpload retry logic", () => {
 		}
 
 		// Should have some variation (not all identical)
-		const uniqueDelays = new Set(delays.map(d => Math.floor(d / 10)));
+		const uniqueDelays = new Set(delays.map((d) => Math.floor(d / 10)));
 		expect(uniqueDelays.size).toBeGreaterThan(1);
 	});
 
@@ -163,7 +167,12 @@ describe("xhrUpload options", () => {
 		vi.doMock("./xhr-factory", () => ({
 			XhrFactory: class MockXhrFactory {
 				private loadHandler:
-					| ((success: boolean, status: number, statusText: string, cleanup: () => void) => void)
+					| ((
+							success: boolean,
+							status: number,
+							statusText: string,
+							cleanup: () => void,
+					  ) => void)
 					| undefined;
 
 				open() {}

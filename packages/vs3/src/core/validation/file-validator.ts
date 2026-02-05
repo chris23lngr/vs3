@@ -1,5 +1,5 @@
-import { StorageErrorCode } from "../error/codes";
 import type { FileInfo } from "../../types/file";
+import { StorageErrorCode } from "../error/codes";
 
 export type FileValidationIssue = {
 	code: StorageErrorCode;
@@ -50,9 +50,10 @@ function isMimePattern(value: string): boolean {
 	return value.includes("/");
 }
 
-function parseAllowedFileTypes(
-	allowedFileTypes: string[],
-): { mimePatterns: string[]; extensions: string[] } {
+function parseAllowedFileTypes(allowedFileTypes: string[]): {
+	mimePatterns: string[];
+	extensions: string[];
+} {
 	const mimePatterns: string[] = [];
 	const extensions: string[] = [];
 
@@ -82,10 +83,7 @@ function matchesMimePattern(contentType: string, pattern: string): boolean {
 	return contentType === pattern;
 }
 
-function matchesAnyMime(
-	contentType: string,
-	patterns: string[],
-): boolean {
+function matchesAnyMime(contentType: string, patterns: string[]): boolean {
 	return patterns.some((pattern) => matchesMimePattern(contentType, pattern));
 }
 
@@ -105,7 +103,9 @@ function bytesMatchSignature(
 }
 
 function detectMagicType(bytes: Uint8Array): MagicType | null {
-	if (bytesMatchSignature(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) {
+	if (
+		bytesMatchSignature(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+	) {
 		return { mime: "image/png", extension: "png" };
 	}
 	if (bytesMatchSignature(bytes, [0xff, 0xd8, 0xff])) {
@@ -199,12 +199,18 @@ function getMagicIssue(
 		});
 	}
 
-	if (extensions.length > 0 && !matchesAnyExtension(magic.extension, extensions)) {
-		return createInvalidFileInfoIssue("File content does not match allowed extensions.", {
-			detectedExtension: magic.extension,
-			allowedFileTypes,
-			fileName,
-		});
+	if (
+		extensions.length > 0 &&
+		!matchesAnyExtension(magic.extension, extensions)
+	) {
+		return createInvalidFileInfoIssue(
+			"File content does not match allowed extensions.",
+			{
+				detectedExtension: magic.extension,
+				allowedFileTypes,
+				fileName,
+			},
+		);
 	}
 
 	return null;

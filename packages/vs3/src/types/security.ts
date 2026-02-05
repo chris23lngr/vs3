@@ -154,4 +154,6 @@ export type AuthHookResult =
 /**
  * Auth hook function type.
  */
-export type AuthHook = (context: AuthHookContext) => AuthHookResult | Promise<AuthHookResult>;
+export type AuthHook = (
+	context: AuthHookContext,
+) => AuthHookResult | Promise<AuthHookResult>;

@@ -1,12 +1,12 @@
 import type {
+	NonceStore,
 	RequestSigningConfig,
+	SignatureHeaders,
 	SignRequestInput,
 	SignRequestResult,
-	SignatureHeaders,
+	VerificationFailureReason,
 	VerifyRequestInput,
 	VerifyRequestResult,
-	NonceStore,
-	VerificationFailureReason,
 } from "../../types/security";
 
 /** Default timestamp tolerance: 5 minutes */
@@ -43,6 +43,16 @@ function stringToBytes(str: string): Uint8Array {
 	return new TextEncoder().encode(str);
 }
 
+/**
+ * Converts Uint8Array to BufferSource for Web Crypto API compatibility.
+ * Creates an ArrayBuffer-backed copy (Web Crypto requires ArrayBuffer, not SharedArrayBuffer).
+ */
+function toBufferSource(bytes: Uint8Array): BufferSource {
+	const copy = new Uint8Array(bytes.length);
+	copy.set(bytes);
+	return copy;
+}
+
 type CanonicalInput = {
 	method: string;
 	path: string;
@@ -69,13 +79,10 @@ function createCanonicalString(input: CanonicalInput): string {
 /**
  * Computes SHA-256 hash of the given data.
  */
-async function computeHash(
-	data: string,
-	algorithm: string,
-): Promise<string> {
+async function computeHash(data: string, algorithm: string): Promise<string> {
 	const hashBuffer = await crypto.subtle.digest(
 		algorithm,
-		stringToBytes(data),
+		toBufferSource(stringToBytes(data)),
 	);
 	return bytesToHex(new Uint8Array(hashBuffer));
 }
@@ -90,7 +97,7 @@ async function computeHmac(
 ): Promise<string> {
 	const key = await crypto.subtle.importKey(
 		"raw",
-		stringToBytes(secret),
+		toBufferSource(stringToBytes(secret)),
 		{ name: "HMAC", hash: algorithm },
 		false,
 		["sign"],
@@ -99,7 +106,7 @@ async function computeHmac(
 	const signature = await crypto.subtle.sign(
 		"HMAC",
 		key,
-		stringToBytes(data),
+		toBufferSource(stringToBytes(data)),
 	);
 
 	return bytesToHex(new Uint8Array(signature));
@@ -189,7 +196,11 @@ async function signRequest(
 		nonce: input.nonce,
 		bodyHash,
 	});
-	const signature = await computeHmac(context.config.secret, canonicalString, context.algorithm);
+	const signature = await computeHmac(
+		context.config.secret,
+		canonicalString,
+		context.algorithm,
+	);
 	const headers: SignatureHeaders = {
 		"x-signature": signature,
 		"x-timestamp": timestamp.toString(),
@@ -246,8 +257,13 @@ async function validateNonce(
 	return isUnique ? null : "nonce_reused";
 }
 
-async function computeExpectedSignature(context: VerifyContext): Promise<string> {
-	const bodyHash = await computeHash(context.input.body ?? "", context.algorithm);
+async function computeExpectedSignature(
+	context: VerifyContext,
+): Promise<string> {
+	const bodyHash = await computeHash(
+		context.input.body ?? "",
+		context.algorithm,
+	);
 	const canonicalString = createCanonicalString({
 		method: context.input.method,
 		path: context.input.path,
@@ -258,7 +274,9 @@ async function computeExpectedSignature(context: VerifyContext): Promise<string>
 	return computeHmac(context.secret, canonicalString, context.algorithm);
 }
 
-async function verifyRequest(context: VerifyContext): Promise<VerifyRequestResult> {
+async function verifyRequest(
+	context: VerifyContext,
+): Promise<VerifyRequestResult> {
 	const timestampFailure = validateTimestamp(
 		context.input.timestamp,
 		context.timestampTolerance,
@@ -288,7 +306,8 @@ export function createRequestSigner(config: RequestSigningConfig): {
 	) => Promise<VerifyRequestResult>;
 } {
 	const algorithm = resolveAlgorithm(config);
-	const timestampTolerance = config.timestampToleranceMs ?? DEFAULT_TIMESTAMP_TOLERANCE_MS;
+	const timestampTolerance =
+		config.timestampToleranceMs ?? DEFAULT_TIMESTAMP_TOLERANCE_MS;
 	const nonceTtl = config.nonceTtlMs ?? DEFAULT_NONCE_TTL_MS;
 	const requireNonce = config.requireNonce ?? false;
 

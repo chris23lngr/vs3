@@ -154,7 +154,9 @@ describe("file-validator", () => {
 	describe("getObjectKeyValidationIssue", () => {
 		it("returns null for valid object keys", () => {
 			expect(getObjectKeyValidationIssue("uploads/photo.png")).toBeNull();
-			expect(getObjectKeyValidationIssue("user-123/documents/file.pdf")).toBeNull();
+			expect(
+				getObjectKeyValidationIssue("user-123/documents/file.pdf"),
+			).toBeNull();
 			expect(getObjectKeyValidationIssue("simple-key")).toBeNull();
 		});
 

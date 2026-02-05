@@ -60,6 +60,7 @@ export function LLMCopyButton({
 			)}
 			disabled={isLoading}
 			onClick={onClick}
+			type="button"
 		>
 			{checked ? <Check /> : <Copy />}
 			Copy Markdown

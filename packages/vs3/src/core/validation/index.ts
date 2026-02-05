@@ -33,13 +33,13 @@ import type {
 
 // Re-export file validation utilities
 export {
+	type FileTypeValidationInput,
+	type FileValidationIssue,
 	getAllowedFileTypesConfigIssue,
 	getFileNameValidationIssue,
 	getFileTypeValidationIssue,
 	getMagicByteLength,
 	getObjectKeyValidationIssue,
-	type FileTypeValidationInput,
-	type FileValidationIssue,
 } from "./file-validator";
 
 export { sanitizeFilename } from "./filename-sanitizer";
@@ -72,9 +72,10 @@ function isNamedValidator<TMetadata>(
 /**
  * Extracts the validator function and optional name from a validator input.
  */
-function extractValidator<TMetadata>(
-	input: ContentValidatorInput<TMetadata>,
-): { fn: ContentValidator<TMetadata>; name?: string } {
+function extractValidator<TMetadata>(input: ContentValidatorInput<TMetadata>): {
+	fn: ContentValidator<TMetadata>;
+	name?: string;
+} {
 	if (isNamedValidator(input)) {
 		return { fn: input.validate, name: input.name };
 	}
@@ -392,7 +393,9 @@ export function createFilenamePatternValidator(
 		if (!pattern.test(ctx.fileInfo.name)) {
 			return {
 				valid: false,
-				reason: errorMessage ?? `Filename "${ctx.fileInfo.name}" does not match required pattern`,
+				reason:
+					errorMessage ??
+					`Filename "${ctx.fileInfo.name}" does not match required pattern`,
 			};
 		}
 		return { valid: true };

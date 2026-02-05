@@ -146,8 +146,7 @@ describe("retry utility", () => {
 
 			expect(delay).toBeGreaterThanOrEqual(DEFAULT_RETRY_CONFIG.baseDelayMs);
 			expect(delay).toBeLessThanOrEqual(
-				DEFAULT_RETRY_CONFIG.baseDelayMs +
-					DEFAULT_RETRY_CONFIG.maxJitterMs,
+				DEFAULT_RETRY_CONFIG.baseDelayMs + DEFAULT_RETRY_CONFIG.maxJitterMs,
 			);
 		});
 

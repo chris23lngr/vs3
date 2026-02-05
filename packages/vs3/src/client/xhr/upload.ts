@@ -1,11 +1,11 @@
-import type { Headers } from "./types";
-import { XhrFactory } from "./xhr-factory";
 import {
-	type RetryConfig,
-	DEFAULT_RETRY_CONFIG,
 	calculateRetryDelay,
+	DEFAULT_RETRY_CONFIG,
+	type RetryConfig,
 	sleep,
 } from "../../core/resilience/retry";
+import type { Headers } from "./types";
+import { XhrFactory } from "./xhr-factory";
 
 const DEFAULT_RETRY_ATTEMPTS = 3;
 

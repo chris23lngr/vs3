@@ -188,11 +188,13 @@ describe("runContentValidators", () => {
 	it("should run validators sequentially", async () => {
 		const order: number[] = [];
 
-		const createOrderedValidator = (index: number): ContentValidator => async () => {
-			await new Promise((resolve) => setTimeout(resolve, 5));
-			order.push(index);
-			return { valid: true };
-		};
+		const createOrderedValidator =
+			(index: number): ContentValidator =>
+			async () => {
+				await new Promise((resolve) => setTimeout(resolve, 5));
+				order.push(index);
+				return { valid: true };
+			};
 
 		await runContentValidators({
 			validators: [
@@ -449,7 +451,10 @@ describe("createFilenamePatternValidator", () => {
 
 	it("should use custom error message when provided", async () => {
 		const customMessage = "Filename must be alphanumeric only";
-		const validator = createFilenamePatternValidator(/^[a-z0-9]+$/, customMessage);
+		const validator = createFilenamePatternValidator(
+			/^[a-z0-9]+$/,
+			customMessage,
+		);
 
 		const result = await runContentValidators({
 			validators: [validator],
@@ -517,18 +522,15 @@ describe("typed metadata validators", () => {
 	};
 
 	it("should receive typed metadata in validator", async () => {
-		const validator = createValidator<UserMetadata>(
-			"user-quota",
-			(ctx) => {
-				if (ctx.fileInfo.size > ctx.metadata.uploadLimit) {
-					return {
-						valid: false,
-						reason: `User ${ctx.metadata.userId} exceeded upload limit`,
-					};
-				}
-				return { valid: true };
-			},
-		);
+		const validator = createValidator<UserMetadata>("user-quota", (ctx) => {
+			if (ctx.fileInfo.size > ctx.metadata.uploadLimit) {
+				return {
+					valid: false,
+					reason: `User ${ctx.metadata.userId} exceeded upload limit`,
+				};
+			}
+			return { valid: true };
+		});
 
 		const result = await runContentValidators<UserMetadata>({
 			validators: [validator],
@@ -557,7 +559,8 @@ describe("edge cases", () => {
 	});
 
 	it("should handle validator returning promise that rejects", async () => {
-		const validator: ContentValidator = () => Promise.reject(new Error("Rejected"));
+		const validator: ContentValidator = () =>
+			Promise.reject(new Error("Rejected"));
 
 		const result = await runContentValidators({
 			validators: [validator],

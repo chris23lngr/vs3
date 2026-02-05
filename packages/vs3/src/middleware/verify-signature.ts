@@ -75,11 +75,13 @@ const VERIFICATION_ERROR_MAP: Record<
 > = {
 	signature_mismatch: {
 		code: StorageErrorCode.SIGNATURE_INVALID,
-		message: "Request signature verification failed. The signature does not match.",
+		message:
+			"Request signature verification failed. The signature does not match.",
 	},
 	timestamp_expired: {
 		code: StorageErrorCode.TIMESTAMP_EXPIRED,
-		message: "Request timestamp has expired. The request is too old or from the future.",
+		message:
+			"Request timestamp has expired. The request is too old or from the future.",
 	},
 	timestamp_invalid: {
 		code: StorageErrorCode.TIMESTAMP_MISSING,
@@ -95,7 +97,8 @@ const VERIFICATION_ERROR_MAP: Record<
 	},
 	nonce_reused: {
 		code: StorageErrorCode.NONCE_REUSED,
-		message: "Request nonce has already been used. Each request must have a unique nonce.",
+		message:
+			"Request nonce has already been used. Each request must have a unique nonce.",
 	},
 };
 
@@ -147,12 +150,19 @@ function createVerificationError(
 }
 
 function throwVerificationFailure(context: VerificationFailureContext): never {
-	const fallback = createVerificationError(context.code, context.message, context.details);
+	const fallback = createVerificationError(
+		context.code,
+		context.message,
+		context.details,
+	);
 	if (!context.onVerificationFailure) {
 		throw fallback;
 	}
 
-	const response = context.onVerificationFailure(context.reason, context.request);
+	const response = context.onVerificationFailure(
+		context.reason,
+		context.request,
+	);
 	if (response instanceof Response) {
 		throw response;
 	}
@@ -180,13 +190,17 @@ function headersToRecord(headers: SignatureHeaders): Record<string, string> {
 	return record;
 }
 
-function getRequiredHeader(name: string, context: HeaderValidationContext): string {
+function getRequiredHeader(
+	name: string,
+	context: HeaderValidationContext,
+): string {
 	const value = getHeader(context.request.headers, name);
 	if (value) {
 		return value;
 	}
 
-	const reason = name === "x-signature" ? "signature_missing" : "timestamp_missing";
+	const reason =
+		name === "x-signature" ? "signature_missing" : "timestamp_missing";
 	const code =
 		name === "x-signature"
 			? StorageErrorCode.SIGNATURE_MISSING
@@ -215,14 +229,18 @@ function parseTimestampHeader(context: HeaderValidationContext): number {
 	throwVerificationFailure({
 		reason: "timestamp_invalid",
 		code: StorageErrorCode.TIMESTAMP_MISSING,
-		message: "Request timestamp is invalid. Must be a valid Unix timestamp in milliseconds.",
+		message:
+			"Request timestamp is invalid. Must be a valid Unix timestamp in milliseconds.",
 		details: { header: "x-timestamp", value: timestampStr },
 		request: context.request,
 		onVerificationFailure: context.config.onVerificationFailure,
 	});
 }
 
-function validateNonceRequirement(context: HeaderValidationContext, nonce?: string): void {
+function validateNonceRequirement(
+	context: HeaderValidationContext,
+	nonce?: string,
+): void {
 	if (!context.config.requireNonce || nonce) {
 		return;
 	}
@@ -298,7 +316,9 @@ async function runAuthHook(
 	});
 }
 
-async function verifySignature(context: VerificationContext): Promise<SignatureData> {
+async function verifySignature(
+	context: VerificationContext,
+): Promise<SignatureData> {
 	const path = extractPath(context.request);
 	const headerContext: HeaderValidationContext = {
 		request: context.request,
@@ -336,7 +356,9 @@ type VerificationResponseInput = {
 	authResult?: AuthHookResult;
 };
 
-function buildVerificationResult(input: VerificationResponseInput): VerificationResult {
+function buildVerificationResult(
+	input: VerificationResponseInput,
+): VerificationResult {
 	return {
 		verified: true,
 		timestamp: input.signatureData.timestamp,
@@ -350,7 +372,9 @@ function buildVerificationResult(input: VerificationResponseInput): Verification
 	};
 }
 
-async function verifySignedRequest(context: VerificationContext): Promise<VerificationResult> {
+async function verifySignedRequest(
+	context: VerificationContext,
+): Promise<VerificationResult> {
 	const signatureData = await verifySignature(context);
 	const authResult = await runAuthHook(
 		context.request,
@@ -473,5 +497,3 @@ export function createClientRequestSigner(config: RequestSigningConfig): {
 		},
 	};
 }
-
-export type { VerifySignatureMiddlewareConfig };

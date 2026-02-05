@@ -1,7 +1,7 @@
 export {
+	createInMemoryNonceStore,
 	createRequestSigner,
 	generateNonce,
-	createInMemoryNonceStore,
 	type RequestSigningConfig,
 	type SignRequestInput,
 	type SignRequestResult,

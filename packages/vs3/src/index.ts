@@ -1,10 +1,10 @@
 export { aws } from "./adapters";
-export { toNextJsRouteHandler } from "./integrations/next-js";
-export { createStorage } from "./storage/create-storage";
-export type { Adapter } from "./types/adapter";
-export type { StorageOptions } from "./types/options";
-export type { Storage } from "./types/storage";
-
+// Security exports - Request signing and verification
+export {
+	createInMemoryNonceStore,
+	createRequestSigner,
+	generateNonce,
+} from "./core/security";
 // Content validation exports
 export {
 	combineValidators,
@@ -16,7 +16,32 @@ export {
 	createValidator,
 	runContentValidators,
 } from "./core/validation";
-
+export { toNextJsRouteHandler } from "./integrations/next-js";
+export type {
+	VerificationResult,
+	VerifySignatureMiddlewareConfig,
+} from "./middleware";
+export {
+	createClientRequestSigner,
+	createVerifySignatureMiddleware,
+} from "./middleware";
+export { createStorage } from "./storage/create-storage";
+export type { Adapter } from "./types/adapter";
+export type { StorageOptions } from "./types/options";
+export type {
+	AuthHook,
+	AuthHookContext,
+	AuthHookResult,
+	NonceStore,
+	RequestSigningConfig,
+	SignatureHeaders,
+	SignRequestInput,
+	SignRequestResult,
+	VerificationFailureReason,
+	VerifyRequestInput,
+	VerifyRequestResult,
+} from "./types/security";
+export type { Storage } from "./types/storage";
 export type {
 	ContentValidationContext,
 	ContentValidationResult,
@@ -26,34 +51,3 @@ export type {
 	NamedContentValidator,
 	RunContentValidatorsOptions,
 } from "./types/validation";
-
-// Security exports - Request signing and verification
-export {
-	createRequestSigner,
-	generateNonce,
-	createInMemoryNonceStore,
-} from "./core/security";
-
-export {
-	createVerifySignatureMiddleware,
-	createClientRequestSigner,
-} from "./middleware";
-
-export type {
-	RequestSigningConfig,
-	SignRequestInput,
-	SignRequestResult,
-	SignatureHeaders,
-	VerifyRequestInput,
-	VerifyRequestResult,
-	VerificationFailureReason,
-	NonceStore,
-	AuthHook,
-	AuthHookContext,
-	AuthHookResult,
-} from "./types/security";
-
-export type {
-	VerifySignatureMiddlewareConfig,
-	VerificationResult,
-} from "./middleware";

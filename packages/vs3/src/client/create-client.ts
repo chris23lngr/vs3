@@ -9,14 +9,14 @@ import {
 } from "../core/error/error";
 import { formatFileSize } from "../core/utils/format-file-size";
 import {
+	type FileValidationIssue,
 	getAllowedFileTypesConfigIssue,
 	getFileNameValidationIssue,
 	getFileTypeValidationIssue,
 	getMagicByteLength,
-	type FileValidationIssue,
 } from "../core/validation/file-validator";
-import type { StandardSchemaV1 } from "../types/standard-schema";
 import type { FileInfo } from "../types/file";
+import type { StandardSchemaV1 } from "../types/standard-schema";
 import { createFetchSchema } from "./fetch-schema";
 import type { StorageClientOptions } from "./types";
 import { xhrUpload } from "./xhr/upload";
@@ -119,7 +119,8 @@ async function readFileBytesForValidation(
 	} catch (error) {
 		const storageError = new StorageClientError({
 			code: StorageErrorCode.INVALID_FILE_INFO,
-			message: "Failed to read file for type validation. The file may be inaccessible or corrupted.",
+			message:
+				"Failed to read file for type validation. The file may be inaccessible or corrupted.",
 			details: {
 				fileName: file.name,
 				error: error instanceof Error ? error.message : String(error),

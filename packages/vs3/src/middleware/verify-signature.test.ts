@@ -1,10 +1,13 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StorageErrorCode } from "../core/error/codes";
 import { StorageServerError } from "../core/error/error";
-import { createRequestSigner, createInMemoryNonceStore } from "../core/security/request-signer";
 import {
-	createVerifySignatureMiddleware,
+	createInMemoryNonceStore,
+	createRequestSigner,
+} from "../core/security/request-signer";
+import {
 	createClientRequestSigner,
+	createVerifySignatureMiddleware,
 } from "./verify-signature";
 
 describe("createVerifySignatureMiddleware", () => {
@@ -25,29 +28,31 @@ describe("createVerifySignatureMiddleware", () => {
 		const body = options.body ?? "{}";
 		const timestamp = options.timestamp ?? Date.now();
 
-		return signer.sign({
-			method,
-			path,
-			body,
-			nonce: options.nonce,
-			timestamp,
-		}).then((signed) => {
-			const headers: Record<string, string> = {
-				"content-type": "application/json",
-				"x-signature": signed.signature,
-				"x-timestamp": signed.timestamp.toString(),
-			};
-
-			if (signed.nonce) {
-				headers["x-nonce"] = signed.nonce;
-			}
-
-			return new Request(`http://localhost${path}`, {
+		return signer
+			.sign({
 				method,
-				headers,
-				body: method !== "GET" ? body : undefined,
+				path,
+				body,
+				nonce: options.nonce,
+				timestamp,
+			})
+			.then((signed) => {
+				const headers: Record<string, string> = {
+					"content-type": "application/json",
+					"x-signature": signed.signature,
+					"x-timestamp": signed.timestamp.toString(),
+				};
+
+				if (signed.nonce) {
+					headers["x-nonce"] = signed.nonce;
+				}
+
+				return new Request(`http://localhost${path}`, {
+					method,
+					headers,
+					body: method !== "GET" ? body : undefined,
+				});
 			});
-		});
 	}
 
 	describe("basic verification", () => {
@@ -80,7 +85,9 @@ describe("createVerifySignatureMiddleware", () => {
 				await middleware(request);
 			} catch (error) {
 				expect(error).toBeInstanceOf(StorageServerError);
-				expect((error as StorageServerError).code).toBe(StorageErrorCode.SIGNATURE_MISSING);
+				expect((error as StorageServerError).code).toBe(
+					StorageErrorCode.SIGNATURE_MISSING,
+				);
 			}
 		});
 
@@ -102,7 +109,9 @@ describe("createVerifySignatureMiddleware", () => {
 				await middleware(request);
 			} catch (error) {
 				expect(error).toBeInstanceOf(StorageServerError);
-				expect((error as StorageServerError).code).toBe(StorageErrorCode.TIMESTAMP_MISSING);
+				expect((error as StorageServerError).code).toBe(
+					StorageErrorCode.TIMESTAMP_MISSING,
+				);
 			}
 		});
 
@@ -125,7 +134,9 @@ describe("createVerifySignatureMiddleware", () => {
 				await middleware(request);
 			} catch (error) {
 				expect(error).toBeInstanceOf(StorageServerError);
-				expect((error as StorageServerError).code).toBe(StorageErrorCode.TIMESTAMP_MISSING);
+				expect((error as StorageServerError).code).toBe(
+					StorageErrorCode.TIMESTAMP_MISSING,
+				);
 			}
 		});
 
@@ -148,7 +159,9 @@ describe("createVerifySignatureMiddleware", () => {
 				await middleware(request);
 			} catch (error) {
 				expect(error).toBeInstanceOf(StorageServerError);
-				expect((error as StorageServerError).code).toBe(StorageErrorCode.SIGNATURE_INVALID);
+				expect((error as StorageServerError).code).toBe(
+					StorageErrorCode.SIGNATURE_INVALID,
+				);
 			}
 		});
 
@@ -164,7 +177,9 @@ describe("createVerifySignatureMiddleware", () => {
 				await middleware(request);
 			} catch (error) {
 				expect(error).toBeInstanceOf(StorageServerError);
-				expect((error as StorageServerError).code).toBe(StorageErrorCode.SIGNATURE_INVALID);
+				expect((error as StorageServerError).code).toBe(
+					StorageErrorCode.SIGNATURE_INVALID,
+				);
 			}
 		});
 	});
@@ -211,7 +226,9 @@ describe("createVerifySignatureMiddleware", () => {
 				await middleware(request);
 			} catch (error) {
 				expect(error).toBeInstanceOf(StorageServerError);
-				expect((error as StorageServerError).code).toBe(StorageErrorCode.TIMESTAMP_EXPIRED);
+				expect((error as StorageServerError).code).toBe(
+					StorageErrorCode.TIMESTAMP_EXPIRED,
+				);
 			}
 		});
 
@@ -232,7 +249,9 @@ describe("createVerifySignatureMiddleware", () => {
 				await middleware(request);
 			} catch (error) {
 				expect(error).toBeInstanceOf(StorageServerError);
-				expect((error as StorageServerError).code).toBe(StorageErrorCode.TIMESTAMP_EXPIRED);
+				expect((error as StorageServerError).code).toBe(
+					StorageErrorCode.TIMESTAMP_EXPIRED,
+				);
 			}
 		});
 	});
@@ -253,12 +272,17 @@ describe("createVerifySignatureMiddleware", () => {
 				await middleware(request);
 			} catch (error) {
 				expect(error).toBeInstanceOf(StorageServerError);
-				expect((error as StorageServerError).code).toBe(StorageErrorCode.NONCE_MISSING);
+				expect((error as StorageServerError).code).toBe(
+					StorageErrorCode.NONCE_MISSING,
+				);
 			}
 		});
 
 		it("verifies with valid nonce", async () => {
-			const signer = createRequestSigner({ secret: testSecret, requireNonce: true });
+			const signer = createRequestSigner({
+				secret: testSecret,
+				requireNonce: true,
+			});
 			const nonceStore = createInMemoryNonceStore();
 			const middleware = createVerifySignatureMiddleware({
 				secret: testSecret,
@@ -266,7 +290,9 @@ describe("createVerifySignatureMiddleware", () => {
 				nonceStore,
 			});
 
-			const request = await createSignedRequest(signer, { nonce: "unique-nonce-123" });
+			const request = await createSignedRequest(signer, {
+				nonce: "unique-nonce-123",
+			});
 
 			const result = await middleware(request);
 			expect(result.verified).toBe(true);
@@ -274,7 +300,10 @@ describe("createVerifySignatureMiddleware", () => {
 		});
 
 		it("rejects reused nonce", async () => {
-			const signer = createRequestSigner({ secret: testSecret, requireNonce: true });
+			const signer = createRequestSigner({
+				secret: testSecret,
+				requireNonce: true,
+			});
 			const nonceStore = createInMemoryNonceStore();
 			const middleware = createVerifySignatureMiddleware({
 				secret: testSecret,
@@ -299,7 +328,9 @@ describe("createVerifySignatureMiddleware", () => {
 				await middleware(request2);
 			} catch (error) {
 				expect(error).toBeInstanceOf(StorageServerError);
-				expect((error as StorageServerError).code).toBe(StorageErrorCode.NONCE_REUSED);
+				expect((error as StorageServerError).code).toBe(
+					StorageErrorCode.NONCE_REUSED,
+				);
 			}
 		});
 	});
@@ -379,7 +410,9 @@ describe("createVerifySignatureMiddleware", () => {
 				await middleware(request);
 			} catch (error) {
 				expect(error).toBeInstanceOf(StorageServerError);
-				expect((error as StorageServerError).code).toBe(StorageErrorCode.UNAUTHORIZED);
+				expect((error as StorageServerError).code).toBe(
+					StorageErrorCode.UNAUTHORIZED,
+				);
 			}
 		});
 

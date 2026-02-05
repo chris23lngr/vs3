@@ -1,7 +1,7 @@
+import type { StorageOptions } from "../../types/options";
 import { StorageErrorCode } from "../error/codes";
 import { StorageServerError } from "../error/error";
 import { getAllowedFileTypesConfigIssue } from "../validation/file-validator";
-import type { StorageOptions } from "../../types/options";
 
 /**
  * Validates maxFileSize configuration value.
@@ -35,9 +35,7 @@ function validateMaxFileSize(maxFileSize: number | undefined): void {
  * @param options - The storage options to validate
  * @throws {StorageServerError} If any option is invalid
  */
-export function validateStorageOptions(
-	options: StorageOptions,
-): void {
+export function validateStorageOptions(options: StorageOptions): void {
 	validateMaxFileSize(options.maxFileSize);
 
 	const allowedFileTypesIssue = getAllowedFileTypesConfigIssue(
