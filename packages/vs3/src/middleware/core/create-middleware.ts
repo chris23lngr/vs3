@@ -18,7 +18,10 @@ function validateConfig(config: MiddlewareConfig): void {
  * Creates a storage middleware from a config and handler.
  * Throws if both skipPaths and includePaths are provided.
  */
-export function createStorageMiddleware<TContext = object, TResult = object>(
+export function createStorageMiddleware<
+	TContext = object,
+	TResult extends Record<string, unknown> = Record<string, unknown>,
+>(
 	config: MiddlewareConfig,
 	handler: MiddlewareHandler<TContext, TResult>,
 ): StorageMiddleware<TContext, TResult> {
