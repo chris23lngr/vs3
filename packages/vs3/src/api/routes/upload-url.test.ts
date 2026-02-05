@@ -1,0 +1,322 @@
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
+import z from "zod";
+import type { Adapter } from "../../types/adapter";
+import type { StandardSchemaV1 } from "../../types/standard-schema";
+import { StorageErrorCode } from "../../core/error/codes";
+import { StorageServerError } from "../../core/error/error";
+import { createUploadUrlRoute } from "./upload-url";
+
+const baseFileInfo = {
+	name: "photo.png",
+	size: 123,
+	contentType: "image/png",
+};
+
+const createAdapter = (): Adapter => ({
+	generatePresignedUploadUrl: vi
+		.fn<Parameters<Adapter["generatePresignedUploadUrl"]>, ReturnType<Adapter["generatePresignedUploadUrl"]>>()
+		.mockResolvedValue("https://example.com/upload"),
+	generatePresignedDownloadUrl: vi.fn(),
+	deleteObject: vi.fn(),
+});
+
+const createContextOptions = <M extends StandardSchemaV1>(
+	metadataSchema: M,
+	generateKey?: (fileInfo: typeof baseFileInfo, metadata: any) => string | Promise<string>,
+) => ({
+	adapter: createAdapter(),
+	metadataSchema,
+	generateKey,
+});
+
+describe("upload-url route", () => {
+	it("returns a presigned URL and key", async () => {
+		const metadataSchema = z.object({
+			userId: z.string(),
+		});
+
+		const endpoint = createUploadUrlRoute(metadataSchema);
+		const generateKey = vi.fn().mockResolvedValue("uploads/abc.png");
+		const contextOptions = createContextOptions(metadataSchema, generateKey);
+
+		const result = await endpoint({
+			body: {
+				fileInfo: baseFileInfo,
+				metadata: {
+					userId: "user-1",
+				},
+			},
+			context: {
+				$options: contextOptions,
+			},
+		});
+
+		expect(result).toEqual({
+			presignedUrl: "https://example.com/upload",
+			key: "uploads/abc.png",
+		});
+		expect(generateKey).toHaveBeenCalledWith(baseFileInfo, {
+			userId: "user-1",
+		});
+	});
+
+	it("passes adapter options derived from the request", async () => {
+		const metadataSchema = z.object({
+			userId: z.string(),
+			region: z.string().optional(),
+		});
+
+		const endpoint = createUploadUrlRoute(metadataSchema);
+		const generateKey = vi.fn().mockResolvedValue("uploads/xyz.png");
+		const contextOptions = createContextOptions(metadataSchema, generateKey);
+		const adapter = contextOptions.adapter;
+
+		await endpoint({
+			body: {
+				fileInfo: baseFileInfo,
+				expiresIn: 120,
+				acl: "public-read",
+				metadata: {
+					userId: "user-2",
+					region: "eu",
+				},
+			},
+			context: {
+				$options: contextOptions,
+			},
+		});
+
+		expect(adapter.generatePresignedUploadUrl).toHaveBeenCalledWith(
+			"uploads/xyz.png",
+			baseFileInfo,
+			expect.objectContaining({
+				expiresIn: 120,
+				contentType: baseFileInfo.contentType,
+				acl: "public-read",
+				metadata: {
+					userId: "user-2",
+					region: "eu",
+				},
+			}),
+		);
+	});
+
+	it("parses metadata and passes parsed output to generateKey", async () => {
+		const metadataSchema = z.object({
+			uploadCount: z.coerce.number(),
+		});
+
+		const endpoint = createUploadUrlRoute(metadataSchema);
+		const generateKey = vi.fn().mockResolvedValue("uploads/parsed.png");
+		const contextOptions = createContextOptions(metadataSchema, generateKey);
+
+		await endpoint({
+			body: {
+				fileInfo: baseFileInfo,
+				metadata: {
+					uploadCount: "42",
+				},
+			},
+			context: {
+				$options: contextOptions,
+			},
+		});
+
+		expect(generateKey).toHaveBeenCalledWith(baseFileInfo, {
+			uploadCount: 42,
+		});
+	});
+
+	it("throws INTERNAL_SERVER_ERROR when context options are missing", async () => {
+		const endpoint = createUploadUrlRoute(
+			z.object({
+				userId: z.string(),
+			}),
+		);
+
+		await expect(
+			endpoint({
+				body: {
+					fileInfo: baseFileInfo,
+					metadata: {
+						userId: "missing-context",
+					},
+				},
+				context: {},
+			}),
+		).rejects.toMatchObject({
+			code: StorageErrorCode.INTERNAL_SERVER_ERROR,
+			message: "Router context is not available.",
+		});
+	});
+
+	it("surfaces schema validation errors for invalid file info", async () => {
+		const endpoint = createUploadUrlRoute(
+			z.object({
+				userId: z.string(),
+			}),
+		);
+
+		await expect(
+			endpoint({
+				body: {
+					fileInfo: {
+						name: "missing-size.txt",
+						contentType: "text/plain",
+					},
+					metadata: {
+						userId: "user",
+					},
+				},
+				context: {
+					$options: createContextOptions(
+						z.object({
+							userId: z.string(),
+						}),
+					),
+				},
+			}),
+		).rejects.toMatchObject({
+			name: "APIError",
+			statusCode: 400,
+		});
+	});
+
+	it("returns METADATA_VALIDATION_ERROR for invalid metadata", async () => {
+		const metadataSchema: StandardSchemaV1<{ tag: string }, { tag: string }> = {
+			"~standard": {
+				version: 1,
+				vendor: "test",
+				types: {
+					input: { tag: "" },
+					output: { tag: "" },
+				},
+				validate: (value) => {
+					const input = value as { tag?: string };
+					if (input.tag && input.tag === input.tag.toLowerCase()) {
+						return { value: input as { tag: string } };
+					}
+					return {
+						issues: [
+							{
+								message: "tag must be lowercase",
+							},
+						],
+					};
+				},
+			},
+		};
+
+		const endpoint = createUploadUrlRoute(metadataSchema);
+		const contextOptions = createContextOptions(metadataSchema);
+
+		await expect(
+			endpoint({
+				body: {
+					fileInfo: baseFileInfo,
+					metadata: {
+						tag: "NOT-LOWER",
+					},
+				},
+				context: {
+					$options: contextOptions,
+				},
+			}),
+		).rejects.toMatchObject({
+			name: "APIError",
+			statusCode: 400,
+		});
+	});
+
+	it("bubbles adapter errors", async () => {
+		const metadataSchema = z.object({
+			userId: z.string(),
+		});
+		const endpoint = createUploadUrlRoute(metadataSchema);
+		const contextOptions = createContextOptions(metadataSchema);
+		contextOptions.adapter.generatePresignedUploadUrl = vi.fn(() => {
+			throw new StorageServerError({
+				code: StorageErrorCode.INTERNAL_SERVER_ERROR,
+				message: "Adapter error",
+				details: "fail",
+			});
+		});
+
+		await expect(
+			endpoint({
+				body: {
+					fileInfo: baseFileInfo,
+					metadata: {
+						userId: "user",
+					},
+				},
+				context: {
+					$options: contextOptions,
+				},
+			}),
+		).rejects.toMatchObject({
+			code: StorageErrorCode.INTERNAL_SERVER_ERROR,
+			message: "Adapter error",
+		});
+	});
+
+	it("does not require metadata when no metadata schema is provided", async () => {
+		const endpoint = createUploadUrlRoute();
+		const contextOptions = createContextOptions(z.undefined());
+
+		await expect(
+			endpoint({
+				body: {
+					fileInfo: baseFileInfo,
+				},
+				context: {
+					$options: contextOptions,
+				},
+			}),
+		).resolves.toMatchObject({
+			presignedUrl: "https://example.com/upload",
+		});
+	});
+
+	it("enforces metadata types when schema is provided", () => {
+		const metadataSchema = z.object({
+			userId: z.string(),
+		});
+		const endpoint = createUploadUrlRoute(metadataSchema);
+
+		expectTypeOf(endpoint).parameter(0).toMatchTypeOf<{
+			body: {
+				fileInfo: {
+					name: string;
+					size: number;
+					contentType: string;
+				};
+				metadata: {
+					userId: string;
+				};
+			};
+		}>();
+
+		// @ts-expect-error metadata is required when a metadata schema is provided
+		const _invalid: Parameters<typeof endpoint>[0] = {
+			body: {
+				fileInfo: baseFileInfo,
+			},
+		};
+		void _invalid;
+	});
+
+	it("does not require metadata types when schema is omitted", () => {
+		const endpoint = createUploadUrlRoute();
+
+		expectTypeOf(endpoint).parameter(0).toMatchTypeOf<{
+			body: {
+				fileInfo: {
+					name: string;
+					size: number;
+					contentType: string;
+				};
+			};
+		}>();
+	});
+});
