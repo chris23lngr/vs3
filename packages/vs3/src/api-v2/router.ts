@@ -30,5 +30,9 @@ export function router<O extends StorageOptions>(
 ) {
 	const { api } = getEndpoints(context, options);
 
-	return createRouter(api as any, {});
+	return createRouter(api as any, {
+		routerContext: {
+			options,
+		},
+	});
 }

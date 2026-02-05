@@ -20,7 +20,7 @@ export type StorageOptions<M extends StandardSchemaV1 = StandardSchemaV1> = {
 
 	generateKey?: (
 		fileInfo: FileInfo,
-		metadata: StandardSchemaV1.InferOutput<M>,
+		metadata: StandardSchemaV1.InferInput<M>,
 	) => string | Promise<string>;
 
 	hooks?: {

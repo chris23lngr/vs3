@@ -1,18 +1,20 @@
 import {
 	createEndpoint,
+	createMiddleware,
 	type EndpointContext,
 	type EndpointOptions,
 	type StrictEndpoint,
 } from "better-call";
 import z from "zod";
 import { runWithEndpointContext } from "../context/endpoint-context";
+import type { StorageContext } from "../types/context";
 import type { StandardSchemaV1 } from "../types/standard-schema";
 
 type EndpointHandler<
 	Path extends string,
 	Options extends EndpointOptions,
 	R,
-> = (context: EndpointContext<Path, Options, R>) => Promise<R>;
+> = (context: EndpointContext<Path, Options, StorageContext>) => Promise<R>;
 
 // Utility type to extend a StandardSchema with a metadata field
 type ExtendSchemaWithMetadata<
@@ -77,10 +79,15 @@ export function createStorageEndpoint<
 		path,
 		{
 			...endpointOptions,
+			use: [
+				createMiddleware(async () => {
+					return {} as StorageContext;
+				}),
+			],
 			body: bodySchema,
 		} as unknown as ExtendedOptions<Options, M>,
 		async (ctx) => runWithEndpointContext(ctx as any, () => handler(ctx)),
-	) as unknown as StrictEndpoint<Path, ExtendedOptions<Options, M>, any>;
+	) as unknown as StrictEndpoint<Path, ExtendedOptions<Options, M>, Response>;
 }
 
 export type StorageEndpoint<

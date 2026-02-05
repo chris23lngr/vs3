@@ -19,8 +19,20 @@ export function createUploadRoute<M extends StandardSchemaV1>(
 			}),
 		},
 		async (ctx) => {
+			const adapter = ctx.context.$options.adapter;
+
+			const key = await ctx.context.$options.generateKey?.(
+				ctx.body.file,
+				ctx.body.metadata,
+			);
+
+			// const url = await adapter.generatePresignedUploadUrl(
+			// 	"randomkey",
+			// 	ctx.body.file,
+			// );
+
 			return {
-				name: "test",
+				name: key ?? "undefined",
 			};
 		},
 	);
