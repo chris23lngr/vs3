@@ -242,12 +242,26 @@ function applyWhitespaceAndReplacements(
 	value: string,
 	replacementChar: string,
 	applied: SanitizationOperation[],
+	shouldPreserveLeading: boolean,
+	shouldPreserveTrailing: boolean,
 ): string {
 	const trimmed = value.trim();
 	if (trimmed !== value) {
 		applied.push("trimmed_whitespace");
 	}
-	return collapseReplacementChars(trimmed, replacementChar);
+	let current = collapseReplacementChars(trimmed, replacementChar);
+	if (replacementChar) {
+		const escaped = replacementChar.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		if (!shouldPreserveLeading) {
+			const leadingRegex = new RegExp(`^${escaped}+`, "g");
+			current = current.replace(leadingRegex, "");
+		}
+		if (!shouldPreserveTrailing) {
+			const trailingRegex = new RegExp(`${escaped}+$`, "g");
+			current = current.replace(trailingRegex, "");
+		}
+	}
+	return current;
 }
 
 function applySanitizationSteps(
@@ -255,10 +269,16 @@ function applySanitizationSteps(
 	replacementChar: string,
 ): { value: string; applied: SanitizationOperation[] } {
 	const removals = applySecurityRemovals(filename, replacementChar);
+	const preserveLeading =
+		replacementChar.length > 0 && filename.startsWith(replacementChar);
+	const preserveTrailing =
+		replacementChar.length > 0 && filename.endsWith(replacementChar);
 	const cleaned = applyWhitespaceAndReplacements(
 		removals.value,
 		replacementChar,
 		removals.applied,
+		preserveLeading,
+		preserveTrailing,
 	);
 	return { value: cleaned, applied: removals.applied };
 }

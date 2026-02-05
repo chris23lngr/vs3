@@ -309,12 +309,12 @@ describe("filename-sanitizer", () => {
 			});
 
 			it("preserves leading replacement characters", () => {
-				const result = sanitizeFilename("/file.txt");
+				const result = sanitizeFilename("_file.txt");
 				expect(result.sanitized).toBe("_file.txt");
 			});
 
 			it("preserves trailing replacement characters", () => {
-				const result = sanitizeFilename("file/");
+				const result = sanitizeFilename("file_");
 				expect(result.sanitized).toBe("file_");
 			});
 
