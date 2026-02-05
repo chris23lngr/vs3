@@ -26,4 +26,6 @@ export enum StorageErrorCode {
 	FORBIDDEN = "FORBIDDEN",
 	/** A middleware in the chain failed */
 	MIDDLEWARE_FAILED = "MIDDLEWARE_FAILED",
+	/** Request processing timed out */
+	MIDDLEWARE_TIMEOUT = "MIDDLEWARE_TIMEOUT",
 }
