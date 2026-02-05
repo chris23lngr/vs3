@@ -1,0 +1,6 @@
+Follow the instructions defined in .ai/RULES.md.
+
+These rules are system-level and mandatory.
+
+Role-specific instructions may be provided from files in .ai/.
+When a role is referenced, treat it as additive to RULES.md.

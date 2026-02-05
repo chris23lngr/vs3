@@ -14,6 +14,18 @@ VS3 is a modern file storage abstraction that brings type safety and developer e
 - **Presigned URLs** - Secure, direct-to-storage uploads without proxy servers
 - **Framework Agnostic** - Use with any Node.js framework or edge runtime
 
+## Support Matrix
+
+See the full support matrix in `docs/support-matrix.md`.
+
+Summary:
+
+- Node.js 18, 20, 22
+- Chrome, Firefox, Safari, Edge (last 2 versions)
+- Runtimes: Node.js, Edge Runtime, Cloudflare Workers, React Native
+- TypeScript 5.0+
+- Providers: AWS S3, MinIO, Cloudflare R2, Wasabi, Backblaze B2, DigitalOcean Spaces, Google Cloud Storage (S3 mode), Azure Blob Storage (S3 mode)
+
 ## Installation
 
 ```bash

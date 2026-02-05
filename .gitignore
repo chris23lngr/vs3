@@ -73,3 +73,7 @@ config.js
 **/node_modules
 
 **/dist
+
+.roadmap/
+
+.ai
