@@ -16,6 +16,8 @@
 		"lint-staged": "lint-staged"
 	},
 	"devDependencies": {
+		"@commitlint/cli": "^20.4.1",
+		"@commitlint/config-conventional": "^20.4.1",
 		"husky": "^9.1.7",
 		"lint-staged": "^16.1.0",
 		"turbo": "latest"
