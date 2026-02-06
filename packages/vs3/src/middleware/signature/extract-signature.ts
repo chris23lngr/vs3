@@ -1,4 +1,5 @@
 import { StorageErrorCode } from "../../core/error/codes";
+import { StorageServerError } from "../../core/error/error";
 import { throwVerificationFailure } from "./errors";
 import type { HeaderValidationContext, SignatureData } from "./types";
 
@@ -11,7 +12,11 @@ export async function readRequestBody(request: Request): Promise<string> {
 		const clone = request.clone();
 		return await clone.text();
 	} catch {
-		return "";
+		throw new StorageServerError({
+			code: StorageErrorCode.INTERNAL_SERVER_ERROR,
+			message: "Failed to read request body for signature verification.",
+			details: undefined,
+		});
 	}
 }
 
@@ -20,7 +25,11 @@ export function extractPath(request: Request): string {
 		const url = new URL(request.url);
 		return url.pathname;
 	} catch {
-		return request.url;
+		throw new StorageServerError({
+			code: StorageErrorCode.INTERNAL_SERVER_ERROR,
+			message: "Failed to parse request URL for signature verification.",
+			details: undefined,
+		});
 	}
 }
 
