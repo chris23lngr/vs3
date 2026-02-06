@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm -w run check
+
+      - name: Typecheck
+        run: pnpm -w run typecheck
+
+      - name: Test
+        run: pnpm -w run test:ci
+
+      - name: Build
+        run: pnpm -w run build:ci
+
+      - name: Verify Build Artifacts
+        run: node scripts/verify-build.mjs
