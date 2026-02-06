@@ -47,7 +47,9 @@ const verifyExportTargets = async (packageJson) => {
 };
 
 const verifyBundleSize = (stats) => {
-	const jsStats = stats.filter((entry) => entry.target.endsWith(".js"));
+	const jsStats = stats.filter(
+		(entry) => entry.target.endsWith(".js") || entry.target.endsWith(".cjs"),
+	);
 	const totalJsBytes = jsStats.reduce((sum, entry) => sum + entry.size, 0);
 
 	for (const entry of jsStats) {
@@ -77,11 +79,81 @@ const verifyExportsResolve = (packageJson) => {
 	}
 };
 
+const verifyDualFormat = async (packageJson) => {
+	for (const [exportKey, conditions] of Object.entries(
+		packageJson.exports ?? {},
+	)) {
+		const importCondition = conditions?.import;
+		const requireCondition = conditions?.require;
+
+		if (!importCondition?.default) {
+			throw new Error(`Missing import condition for export "${exportKey}".`);
+		}
+		if (!requireCondition?.default) {
+			throw new Error(`Missing require condition for export "${exportKey}".`);
+		}
+		if (!importCondition?.types) {
+			throw new Error(`Missing import types condition for export "${exportKey}".`);
+		}
+		if (!requireCondition?.types) {
+			throw new Error(
+				`Missing require types condition for export "${exportKey}".`,
+			);
+		}
+
+		const esmPath = path.join(
+			PACKAGE_DIR,
+			importCondition.default.replace(/^\.\//, ""),
+		);
+		const cjsPath = path.join(
+			PACKAGE_DIR,
+			requireCondition.default.replace(/^\.\//, ""),
+		);
+		const esmTypesPath = path.join(
+			PACKAGE_DIR,
+			importCondition.types.replace(/^\.\//, ""),
+		);
+		const cjsTypesPath = path.join(
+			PACKAGE_DIR,
+			requireCondition.types.replace(/^\.\//, ""),
+		);
+
+		await stat(esmPath);
+		await stat(cjsPath);
+		await stat(esmTypesPath);
+		await stat(cjsTypesPath);
+	}
+};
+
+const verifyEsmImports = async (packageJson) => {
+	for (const exportKey of Object.keys(packageJson.exports ?? {})) {
+		const specifier =
+			exportKey === "."
+				? packageJson.name
+				: `${packageJson.name}${exportKey.slice(1)}`;
+
+		try {
+			await import(specifier);
+		} catch (error) {
+			if (
+				error.code === "ERR_MODULE_NOT_FOUND" ||
+				error.code === "ERR_PACKAGE_PATH_NOT_EXPORTED"
+			) {
+				throw new Error(`ESM import failed for "${specifier}": ${error.message}`);
+			}
+			// Other errors (e.g. missing peer deps at runtime) are acceptable
+			// since we only want to verify the module resolves
+		}
+	}
+};
+
 const main = async () => {
 	const packageJson = await readPackageJson();
 	const stats = await verifyExportTargets(packageJson);
 	verifyBundleSize(stats);
 	verifyExportsResolve(packageJson);
+	await verifyDualFormat(packageJson);
+	await verifyEsmImports(packageJson);
 };
 
 main().catch((error) => {
