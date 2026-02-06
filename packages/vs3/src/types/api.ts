@@ -52,4 +52,13 @@ export type StorageAPI<O extends StorageOptions> = {
 			uploadHeaders?: Record<string, string>;
 		}
 	>;
+
+	/**
+	 * Generate a presigned download URL
+	 * Does not require metadata
+	 */
+	downloadUrl: APIMethod<
+		{ key: string; expiresIn?: number; encryption?: S3Encryption },
+		{ presignedUrl: string; downloadHeaders?: Record<string, string> }
+	>;
 };

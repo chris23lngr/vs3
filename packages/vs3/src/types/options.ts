@@ -121,5 +121,11 @@ export type StorageOptions<M extends StandardSchemaV1 = StandardSchemaV1> = {
 			metadata: StandardSchemaV1.InferOutput<M>,
 			key: string,
 		) => void | Promise<void>;
+
+		beforeDownload?: (
+			key: string,
+		) => BeforeHookResult | Promise<BeforeHookResult>;
+
+		afterDownload?: (key: string) => void | Promise<void>;
 	};
 };

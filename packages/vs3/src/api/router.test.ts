@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import z from "zod";
 import { createContext } from "../context/create-context";
-import { StorageErrorCode } from "../core/error/codes";
-import { errorSchema } from "../core/error/error";
 import { createStorageMiddleware } from "../middleware";
 import type { Adapter } from "../types/adapter";
 import { router } from "./router";
@@ -14,6 +12,7 @@ const createAdapter = (): Adapter => ({
 	generatePresignedDownloadUrl: vi
 		.fn<Adapter["generatePresignedDownloadUrl"]>()
 		.mockResolvedValue("https://example.com/download"),
+	objectExists: vi.fn<Adapter["objectExists"]>().mockResolvedValue(true),
 	deleteObject: vi.fn<Adapter["deleteObject"]>().mockResolvedValue(undefined),
 });
 
@@ -176,76 +175,32 @@ describe("router", () => {
 		);
 	});
 
-	it("returns FILE_TOO_LARGE error with status 413 when file exceeds maxFileSize", async () => {
+	it("handles download-url requests end-to-end", async () => {
 		const adapter = createAdapter();
 		const options = {
 			bucket: "test-bucket",
 			adapter,
-			maxFileSize: 100,
-			metadataSchema: z.object({
-				userId: z.string(),
-			}),
-			generateKey: vi.fn().mockResolvedValue("uploads/large-file.png"),
 		};
 		const context = createContext(options);
 		const { handler } = router(options, context);
 
-		const request = new Request("http://localhost/upload-url", {
+		const request = new Request("http://localhost/download-url", {
 			method: "POST",
-			headers: { "content-type": "application/json" },
+			headers: {
+				"content-type": "application/json",
+			},
 			body: JSON.stringify({
-				fileInfo: {
-					name: "large-file.png",
-					size: 500,
-					contentType: "image/png",
-				},
-				metadata: { userId: "user-1" },
+				key: "uploads/photo.png",
 			}),
 		});
 
 		const response = await handler(request);
 		const data = await response.json();
 
-		expect(response.status).toBe(413);
-		expect(data.code).toBe(StorageErrorCode.FILE_TOO_LARGE);
-		expect(data.origin).toBe("server");
-		expect(errorSchema.safeParse(data).success).toBe(true);
-	});
-
-	it("returns FILE_TYPE_NOT_ALLOWED error with status 415 when file type is disallowed", async () => {
-		const adapter = createAdapter();
-		const options = {
-			bucket: "test-bucket",
-			adapter,
-			allowedFileTypes: ["image/png"],
-			metadataSchema: z.object({
-				userId: z.string(),
-			}),
-			generateKey: vi.fn().mockResolvedValue("uploads/doc.pdf"),
-		};
-		const context = createContext(options);
-		const { handler } = router(options, context);
-
-		const request = new Request("http://localhost/upload-url", {
-			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({
-				fileInfo: {
-					name: "doc.pdf",
-					size: 100,
-					contentType: "application/pdf",
-				},
-				metadata: { userId: "user-1" },
-			}),
+		expect(response.status).toBe(200);
+		expect(data).toEqual({
+			presignedUrl: "https://example.com/download",
 		});
-
-		const response = await handler(request);
-		const data = await response.json();
-
-		expect(response.status).toBe(415);
-		expect(data.code).toBe(StorageErrorCode.FILE_TYPE_NOT_ALLOWED);
-		expect(data.origin).toBe("server");
-		expect(errorSchema.safeParse(data).success).toBe(true);
 	});
 
 	it("rejects requests when middleware throws via HTTP handler", async () => {

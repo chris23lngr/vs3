@@ -18,6 +18,7 @@ const createAdapter = (): Adapter => ({
 		.fn<Adapter["generatePresignedUploadUrl"]>()
 		.mockResolvedValue("https://example.com/upload"),
 	generatePresignedDownloadUrl: vi.fn(),
+	objectExists: vi.fn(),
 	deleteObject: vi.fn(),
 });
 

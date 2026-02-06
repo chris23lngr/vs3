@@ -1,12 +1,28 @@
 import {
 	DeleteObjectCommand,
 	GetObjectCommand,
+	HeadObjectCommand,
 	PutObjectCommand,
 	type S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { Adapter } from "../../types/adapter";
 import { resolveS3EncryptionConfig } from "../s3/encryption";
+
+function isNotFoundError(error: unknown): boolean {
+	if (typeof error !== "object" || error === null) return false;
+	const err = error as Record<string, unknown>;
+	if (err.name === "NotFound") return true;
+	const metadata = err.$metadata;
+	if (
+		typeof metadata === "object" &&
+		metadata !== null &&
+		(metadata as Record<string, unknown>).httpStatusCode === 404
+	) {
+		return true;
+	}
+	return false;
+}
 
 interface CreateAwsS3AdapterOptions {
 	client: S3Client;
@@ -84,6 +100,20 @@ export function createAwsS3Adapter(
 			}
 
 			return url;
+		},
+		async objectExists(key, requestOptions) {
+			const { bucket } = requestOptions ?? {};
+			const command = new HeadObjectCommand({
+				Bucket: resolveBucket(bucket),
+				Key: key,
+			});
+			try {
+				await options.client.send(command);
+				return true;
+			} catch (error) {
+				if (isNotFoundError(error)) return false;
+				throw error;
+			}
 		},
 		async deleteObject(key, requestOptions) {
 			const { bucket } = requestOptions ?? {};

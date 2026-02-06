@@ -58,4 +58,11 @@ export type StorageClientOptions<
 	 * ```
 	 */
 	allowedFileTypes?: string[];
+
+	/**
+	 * Whether to throw an error if hook operation fails.
+	 *
+	 * When set to true, hooks will rethrow occurred errors instead of returning them as part of the state.
+	 */
+	throwOnError?: boolean;
 };

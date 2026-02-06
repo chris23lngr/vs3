@@ -38,6 +38,7 @@ export function getS3Client(): S3Client {
 
 export const storage = createStorage({
 	bucket: "spesen-tool-dev1",
+	apiPath: "/api/storage",
 	adapter: aws({
 		client: getS3Client(),
 	}),

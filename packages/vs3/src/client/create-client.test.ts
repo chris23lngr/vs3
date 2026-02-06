@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import z from "zod";
 import { StorageErrorCode } from "../core/error/codes";
+import { StorageServerError } from "../core/error/error";
 import { createBaseClient } from "./create-client";
 import * as xhrUploadModule from "./xhr/upload";
 
@@ -727,6 +728,113 @@ describe("createBaseClient", () => {
 
 				expect(mockFetchFn).not.toHaveBeenCalled();
 			});
+		});
+	});
+
+	describe("downloadFile", () => {
+		it("preserves server error code and message from API response", async () => {
+			const { createFetch } = await import("@better-fetch/fetch");
+			const mockFetchFn = vi.fn().mockResolvedValue({
+				error: {
+					origin: "server",
+					code: StorageErrorCode.NOT_FOUND,
+					message: "Object not found.",
+					details: { key: "uploads/missing.png" },
+					httpStatus: 404,
+				},
+				data: null,
+			});
+			(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+			const client = createBaseClient({
+				baseURL: mockBaseURL,
+				apiPath: mockApiPath,
+			});
+
+			await expect(
+				client.downloadFile("uploads/missing.png"),
+			).rejects.toMatchObject({
+				code: StorageErrorCode.NOT_FOUND,
+				message: "Object not found.",
+				origin: "server",
+			});
+		});
+
+		it("creates StorageServerError for server-origin errors", async () => {
+			const { createFetch } = await import("@better-fetch/fetch");
+			const mockFetchFn = vi.fn().mockResolvedValue({
+				error: {
+					origin: "server",
+					code: StorageErrorCode.NOT_FOUND,
+					message: "Object not found.",
+					details: { key: "missing.png" },
+					httpStatus: 404,
+				},
+				data: null,
+			});
+			(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+			const client = createBaseClient({
+				baseURL: mockBaseURL,
+				apiPath: mockApiPath,
+			});
+
+			await expect(client.downloadFile("missing.png")).rejects.toBeInstanceOf(
+				StorageServerError,
+			);
+		});
+
+		it("falls back to UNKNOWN_ERROR for unparseable errors", async () => {
+			const { createFetch } = await import("@better-fetch/fetch");
+			const mockFetchFn = vi.fn().mockResolvedValue({
+				error: { status: 500, message: "Internal Server Error" },
+				data: null,
+			});
+			(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+			const client = createBaseClient({
+				baseURL: mockBaseURL,
+				apiPath: mockApiPath,
+			});
+
+			await expect(client.downloadFile("uploads/photo.png")).rejects.toMatchObject(
+				{
+					code: StorageErrorCode.UNKNOWN_ERROR,
+				},
+			);
+		});
+
+		it("calls onError callback with parsed server error", async () => {
+			const { createFetch } = await import("@better-fetch/fetch");
+			const mockFetchFn = vi.fn().mockResolvedValue({
+				error: {
+					origin: "server",
+					code: StorageErrorCode.NOT_FOUND,
+					message: "Object not found.",
+					details: { key: "missing.png" },
+					httpStatus: 404,
+				},
+				data: null,
+			});
+			(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+			const client = createBaseClient({
+				baseURL: mockBaseURL,
+				apiPath: mockApiPath,
+			});
+
+			const onErrorSpy = vi.fn();
+
+			await expect(
+				client.downloadFile("missing.png", { onError: onErrorSpy }),
+			).rejects.toThrow();
+
+			expect(onErrorSpy).toHaveBeenCalledWith(
+				expect.objectContaining({
+					code: StorageErrorCode.NOT_FOUND,
+					message: "Object not found.",
+				}),
+			);
 		});
 	});
 });

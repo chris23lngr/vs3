@@ -51,6 +51,14 @@ export type Adapter = {
 	): PresignedDownloadResult | Promise<PresignedDownloadResult>;
 
 	/**
+	 * Check whether an object exists in storage.
+	 */
+	objectExists(
+		key: string,
+		options?: Partial<{ bucket: string }>,
+	): boolean | Promise<boolean>;
+
+	/**
 	 * Delete an object by key.
 	 */
 	deleteObject(

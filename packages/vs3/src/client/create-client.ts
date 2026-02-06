@@ -19,9 +19,23 @@ import {
 import type { S3Encryption } from "../types/encryption";
 import type { FileInfo } from "../types/file";
 import type { StandardSchemaV1 } from "../types/standard-schema";
+import {
+	extractFileName,
+	openInBrowserTab,
+	triggerBrowserDownload,
+} from "./browser/download";
 import { createFetchSchema } from "./fetch-schema";
 import type { StorageClientOptions } from "./types";
 import { xhrUpload } from "./xhr/upload";
+
+/**
+ * Download mode for the client.
+ *
+ * - `"url"` — returns the presigned URL only (default)
+ * - `"direct-download"` — fetches the file and triggers a browser download
+ * - `"preview"` — opens the file in a new browser tab
+ */
+export type DownloadMode = "url" | "direct-download" | "preview";
 
 type ClientValidationOptions = {
 	maxFileSize: number | undefined;
@@ -43,6 +57,11 @@ const uploadUrlResponseSchema = z.object({
 	key: z.string(),
 	presignedUrl: z.string(),
 	uploadHeaders: z.record(z.string(), z.string()).optional(),
+});
+
+const downloadUrlResponseSchema = z.object({
+	presignedUrl: z.string(),
+	downloadHeaders: z.record(z.string(), z.string()).optional(),
 });
 
 function createClientValidationError(
@@ -237,6 +256,110 @@ function handleUploadError(
 	throw storageError;
 }
 
+type DownloadRequestInput = {
+	key: string;
+	expiresIn: number | undefined;
+	encryption: S3Encryption | undefined;
+};
+
+async function executeDownloadRequest(
+	$fetch: ReturnType<typeof createFetch>,
+	input: DownloadRequestInput,
+): Promise<DownloadFileResult> {
+	const body: { key: string; expiresIn?: number; encryption?: S3Encryption } = {
+		key: input.key,
+	};
+	if (input.expiresIn !== undefined) {
+		body.expiresIn = input.expiresIn;
+	}
+	if (input.encryption !== undefined) {
+		body.encryption = input.encryption;
+	}
+
+	const response = await $fetch("/download-url", { body });
+
+	if (response.error) {
+		const parsed = errorSchema.safeParse(response.error);
+		if (parsed.success) {
+			const ErrorClass =
+				parsed.data.origin === "server" ? StorageServerError : StorageClientError;
+			throw new ErrorClass({
+				code: parsed.data.code,
+				message: parsed.data.message,
+				details: parsed.data.details,
+				httpStatus: parsed.data.httpStatus,
+				recoverySuggestion: parsed.data.recoverySuggestion,
+			});
+		}
+		throw new StorageClientError({
+			code: StorageErrorCode.UNKNOWN_ERROR,
+			details: `${response.error.status}: ${response.error.message ?? "Unknown error"}`,
+			message: response.error.message ?? "Unknown error",
+		});
+	}
+
+	const parsedResponse = downloadUrlResponseSchema.safeParse(response.data);
+	if (!parsedResponse.success) {
+		throw new StorageClientError({
+			code: StorageErrorCode.UNKNOWN_ERROR,
+			message: "Invalid download URL response.",
+			details: parsedResponse.error.flatten().fieldErrors,
+		});
+	}
+
+	const result: DownloadFileResult = {
+		presignedUrl: parsedResponse.data.presignedUrl,
+	};
+
+	if (
+		parsedResponse.data.downloadHeaders &&
+		Object.keys(parsedResponse.data.downloadHeaders).length > 0
+	) {
+		result.downloadHeaders = parsedResponse.data.downloadHeaders;
+	}
+
+	return result;
+}
+
+function dispatchDownloadMode(
+	mode: DownloadMode | undefined,
+	result: DownloadFileResult,
+	key: string,
+): Promise<void> | void {
+	if (mode === "direct-download") {
+		return triggerBrowserDownload(
+			result.presignedUrl,
+			extractFileName(key),
+			result.downloadHeaders,
+		);
+	}
+	if (mode === "preview") {
+		openInBrowserTab(result.presignedUrl);
+	}
+}
+
+function handleDownloadError(
+	error: unknown,
+	onError?: (error: StorageError) => void,
+): never {
+	if (error instanceof StorageError) {
+		onError?.(error);
+		throw error;
+	}
+
+	const storageError = new StorageClientError({
+		code: StorageErrorCode.NETWORK_ERROR,
+		message:
+			error instanceof Error
+				? error.message
+				: "Download URL request failed unexpectedly",
+		details: error instanceof Error ? error.stack : String(error),
+	});
+
+	onError?.(storageError);
+	throw storageError;
+}
+
 async function validateUploadFileInput(
 	input: UploadValidationInput,
 ): Promise<UploadValidationResult> {
@@ -311,6 +434,16 @@ export type UploadFileResult = {
 	uploadHeaders?: Record<string, string>;
 };
 
+/**
+ * Result returned from downloadFile operation.
+ */
+export type DownloadFileResult = {
+	/** The presigned URL for downloading the file */
+	presignedUrl: string;
+	/** Headers to include when fetching the presigned URL, if any */
+	downloadHeaders?: Record<string, string>;
+};
+
 type ClientFnOptions = {
 	onError?: (error: StorageError) => void;
 	onSuccess?: (result: UploadFileResult) => void;
@@ -340,6 +473,7 @@ export function createBaseClient<
 
 	return {
 		$fetch,
+		"~options": options,
 		/**
 		 * Uploads a file to storage using a presigned URL.
 		 *
@@ -389,6 +523,45 @@ export function createBaseClient<
 				return result;
 			} catch (error) {
 				handleUploadError(error, onError);
+			}
+		},
+
+		/**
+		 * Gets a presigned download URL for a file in storage.
+		 *
+		 * @param key - The key/path of the file to download
+		 * @param options - Download options including callbacks and encryption
+		 * @returns Download result containing the presigned URL and optional headers
+		 *
+		 * @example
+		 * ```typescript
+		 * const result = await client.downloadFile("uploads/photo.png");
+		 * window.location.href = result.presignedUrl;
+		 * ```
+		 */
+		downloadFile: async (
+			key: string,
+			options?: Partial<{
+				expiresIn: number;
+				encryption: S3Encryption;
+				mode: DownloadMode;
+				onError: (error: StorageError) => void;
+				onSuccess: (result: DownloadFileResult) => void;
+			}>,
+		): Promise<DownloadFileResult> => {
+			const { expiresIn, encryption, mode, onError, onSuccess } = options ?? {};
+
+			try {
+				const result = await executeDownloadRequest($fetch, {
+					key,
+					expiresIn,
+					encryption,
+				});
+				await dispatchDownloadMode(mode, result, key);
+				onSuccess?.(result);
+				return result;
+			} catch (error) {
+				handleDownloadError(error, onError);
 			}
 		},
 	};
