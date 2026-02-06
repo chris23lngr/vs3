@@ -1,0 +1,29 @@
+core:
+  - changed-files:
+      - any-glob-to-any-file: "packages/vs3/**"
+
+app:dev:
+  - changed-files:
+      - any-glob-to-any-file: "apps/dev/**"
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file: "apps/docs/**"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: ".github/**"
+
+config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "turbo.json"
+          - "pnpm-workspace.yaml"
+          - "biome.jsonc"
+          - "tsconfig*.json"
+          - ".npmrc"
+          - ".nvmrc"
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file: "packages/vs3/**/*.test.ts"

@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  quality:
+  lint:
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -44,11 +44,113 @@ jobs:
       - name: Lint
         run: pnpm -w run check
 
+  typecheck:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      PNPM_STORE_DIR: ${{ github.workspace }}/.pnpm-store
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Activate pnpm
+        run: corepack prepare pnpm@10.28.1 --activate
+
+      - name: Ensure pnpm store dir
+        run: mkdir -p .pnpm-store
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: .pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Typecheck
         run: pnpm -w run typecheck
 
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      PNPM_STORE_DIR: ${{ github.workspace }}/.pnpm-store
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Activate pnpm
+        run: corepack prepare pnpm@10.28.1 --activate
+
+      - name: Ensure pnpm store dir
+        run: mkdir -p .pnpm-store
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: .pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Test
         run: pnpm -w run test:ci
+
+  build-verify:
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      PNPM_STORE_DIR: ${{ github.workspace }}/.pnpm-store
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Activate pnpm
+        run: corepack prepare pnpm@10.28.1 --activate
+
+      - name: Ensure pnpm store dir
+        run: mkdir -p .pnpm-store
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: .pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm -w run build:ci
