@@ -693,7 +693,7 @@ describe("createBaseClient", () => {
 				await expect(
 					client.uploadFile(mockFile, { userId: "user-1" }),
 				).rejects.toMatchObject({
-					code: StorageErrorCode.INVALID_FILE_INFO,
+					code: StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
 					message: "File type is not allowed.",
 				});
 
@@ -725,7 +725,7 @@ describe("createBaseClient", () => {
 				await expect(
 					client.uploadFile(mockFile, { userId: "user-1" }),
 				).rejects.toMatchObject({
-					code: StorageErrorCode.INVALID_FILE_INFO,
+					code: StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
 					message: "File content type is not allowed.",
 				});
 

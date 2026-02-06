@@ -396,7 +396,7 @@
 
 #### 2.3 Enhanced S3 Security Options
 
-- [ ] 2.3.1 **S3 Encryption Support**
+- [x] 2.3.1 **S3 Encryption Support**
   - Add SSE-S3 (Server-Side Encryption with S3-managed keys)
   - Add SSE-KMS (Server-Side Encryption with KMS)
   - Add SSE-C (Server-Side Encryption with Customer-provided keys)
@@ -438,7 +438,7 @@
 
 #### 2.5 Error Codes Expansion
 
-- [ ] 2.5.1 **Comprehensive Error Code System**
+- [x] 2.5.1 **Comprehensive Error Code System**
   - Add 20+ specific error codes:
     - `FILE_TOO_LARGE`
     - `FILE_TYPE_NOT_ALLOWED`

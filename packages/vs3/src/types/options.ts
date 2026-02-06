@@ -25,7 +25,7 @@ export type StorageOptions<M extends StandardSchemaV1 = StandardSchemaV1> = {
 	/**
 	 * Allowed file types for uploads.
 	 * Supports MIME types (e.g. "image/png" or "image/*") and file extensions (e.g. ".png", ".jpg").
-	 * When provided, uploads that do not match are rejected with INVALID_FILE_INFO.
+	 * When provided, uploads that do not match are rejected with FILE_TYPE_NOT_ALLOWED.
 	 *
 	 * **Note:** Extensions "jpeg" and "jpg" are treated as equivalent.
 	 *

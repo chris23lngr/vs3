@@ -154,7 +154,7 @@ describe("createRateLimitMiddleware decrements remaining", () => {
 });
 
 describe("createRateLimitMiddleware exceeds limit", () => {
-	it("throws FORBIDDEN when limit exceeded", async () => {
+	it("throws RATE_LIMIT_EXCEEDED when limit exceeded", async () => {
 		const store = createInMemoryRateLimitStore();
 		const middleware = createRateLimitMiddleware({
 			maxRequests: 1,
@@ -170,7 +170,7 @@ describe("createRateLimitMiddleware exceeds limit", () => {
 		} catch (error) {
 			assertIsStorageServerError(error);
 			const serverError = error;
-			expect(serverError.code).toBe(StorageErrorCode.FORBIDDEN);
+			expect(serverError.code).toBe(StorageErrorCode.RATE_LIMIT_EXCEEDED);
 			expect(serverError.message).toBe("Rate limit exceeded");
 		}
 	});

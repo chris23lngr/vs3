@@ -126,15 +126,12 @@ function detectMagicType(bytes: Uint8Array): MagicType | null {
 	return null;
 }
 
-function createInvalidFileInfoIssue(
+function createFileValidationIssue(
+	code: StorageErrorCode,
 	message: string,
 	details: string | Record<string, unknown>,
 ): FileValidationIssue {
-	return {
-		code: StorageErrorCode.INVALID_FILE_INFO,
-		message,
-		details,
-	};
+	return { code, message, details };
 }
 
 function getMimeTypeIssue(
@@ -147,11 +144,15 @@ function getMimeTypeIssue(
 		return null;
 	}
 	if (!matchesAnyMime(contentType, mimePatterns)) {
-		return createInvalidFileInfoIssue("File type is not allowed.", {
-			contentType,
-			allowedFileTypes,
-			fileName,
-		});
+		return createFileValidationIssue(
+			StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
+			"File type is not allowed.",
+			{
+				contentType,
+				allowedFileTypes,
+				fileName,
+			},
+		);
 	}
 	return null;
 }
@@ -166,11 +167,15 @@ function getExtensionIssue(
 		return null;
 	}
 	if (!matchesAnyExtension(extension, extensions)) {
-		return createInvalidFileInfoIssue("File extension is not allowed.", {
-			fileExtension: extension,
-			allowedFileTypes,
-			fileName,
-		});
+		return createFileValidationIssue(
+			StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
+			"File extension is not allowed.",
+			{
+				fileExtension: extension,
+				allowedFileTypes,
+				fileName,
+			},
+		);
 	}
 	return null;
 }
@@ -192,18 +197,23 @@ function getMagicIssue(
 	}
 
 	if (mimePatterns.length > 0 && !matchesAnyMime(magic.mime, mimePatterns)) {
-		return createInvalidFileInfoIssue("File content type is not allowed.", {
-			detectedMime: magic.mime,
-			allowedFileTypes,
-			fileName,
-		});
+		return createFileValidationIssue(
+			StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
+			"File content type is not allowed.",
+			{
+				detectedMime: magic.mime,
+				allowedFileTypes,
+				fileName,
+			},
+		);
 	}
 
 	if (
 		extensions.length > 0 &&
 		!matchesAnyExtension(magic.extension, extensions)
 	) {
-		return createInvalidFileInfoIssue(
+		return createFileValidationIssue(
+			StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
 			"File content does not match allowed extensions.",
 			{
 				detectedExtension: magic.extension,
@@ -220,7 +230,8 @@ function getAllowedFileTypeEntryIssue(
 	entry: string,
 ): FileValidationIssue | null {
 	if (typeof entry !== "string" || entry.trim().length === 0) {
-		return createInvalidFileInfoIssue(
+		return createFileValidationIssue(
+			StorageErrorCode.INVALID_FILE_INFO,
 			"Invalid allowedFileTypes configuration.",
 			"allowedFileTypes entries must be non-empty strings.",
 		);
@@ -228,7 +239,8 @@ function getAllowedFileTypeEntryIssue(
 
 	const trimmed = entry.trim();
 	if (isMimePattern(trimmed) && !MIME_PATTERN.test(trimmed)) {
-		return createInvalidFileInfoIssue(
+		return createFileValidationIssue(
+			StorageErrorCode.INVALID_FILE_INFO,
 			"Invalid allowedFileTypes configuration.",
 			`Invalid MIME type pattern: "${entry}".`,
 		);
@@ -237,7 +249,8 @@ function getAllowedFileTypeEntryIssue(
 	if (!isMimePattern(trimmed)) {
 		const extension = normalizeExtension(trimmed);
 		if (!extension || !/^[a-z0-9]+$/i.test(extension)) {
-			return createInvalidFileInfoIssue(
+			return createFileValidationIssue(
+				StorageErrorCode.INVALID_FILE_INFO,
 				"Invalid allowedFileTypes configuration.",
 				`Invalid file extension: "${entry}".`,
 			);
@@ -259,7 +272,8 @@ export function getAllowedFileTypesConfigIssue(
 	}
 
 	if (allowedFileTypes.length === 0) {
-		return createInvalidFileInfoIssue(
+		return createFileValidationIssue(
+			StorageErrorCode.INVALID_FILE_INFO,
 			"Invalid allowedFileTypes configuration.",
 			"allowedFileTypes must include at least one MIME type or file extension.",
 		);
@@ -280,21 +294,24 @@ export function getFileNameValidationIssue(
 ): FileValidationIssue | null {
 	const trimmed = fileName.trim();
 	if (!trimmed) {
-		return createInvalidFileInfoIssue(
+		return createFileValidationIssue(
+			StorageErrorCode.INVALID_FILENAME,
 			"Invalid file name.",
 			"File name must not be empty.",
 		);
 	}
 
 	if (CONTROL_CHAR_REGEX.test(fileName)) {
-		return createInvalidFileInfoIssue(
+		return createFileValidationIssue(
+			StorageErrorCode.INVALID_FILENAME,
 			"Invalid file name.",
 			"File name contains control characters.",
 		);
 	}
 
 	if (fileName.includes("/") || fileName.includes("\\")) {
-		return createInvalidFileInfoIssue(
+		return createFileValidationIssue(
+			StorageErrorCode.INVALID_FILENAME,
 			"Invalid file name.",
 			"File name must not include path separators.",
 		);
@@ -307,21 +324,24 @@ export function getObjectKeyValidationIssue(
 	objectKey: string,
 ): FileValidationIssue | null {
 	if (!objectKey.trim()) {
-		return createInvalidFileInfoIssue(
+		return createFileValidationIssue(
+			StorageErrorCode.INVALID_FILE_INFO,
 			"Invalid object key.",
 			"Object key must not be empty.",
 		);
 	}
 
 	if (CONTROL_CHAR_REGEX.test(objectKey)) {
-		return createInvalidFileInfoIssue(
+		return createFileValidationIssue(
+			StorageErrorCode.INVALID_FILE_INFO,
 			"Invalid object key.",
 			"Object key contains control characters.",
 		);
 	}
 
 	if (objectKey.includes("\\")) {
-		return createInvalidFileInfoIssue(
+		return createFileValidationIssue(
+			StorageErrorCode.INVALID_FILE_INFO,
 			"Invalid object key.",
 			"Object key must not include backslashes.",
 		);
@@ -331,7 +351,8 @@ export function getObjectKeyValidationIssue(
 		.split("/")
 		.some((segment) => segment === "." || segment === "..");
 	if (hasTraversal) {
-		return createInvalidFileInfoIssue(
+		return createFileValidationIssue(
+			StorageErrorCode.INVALID_FILE_INFO,
 			"Invalid object key.",
 			"Object key must not include path traversal segments.",
 		);

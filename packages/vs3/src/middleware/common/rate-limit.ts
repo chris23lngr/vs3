@@ -71,7 +71,7 @@ export function createRateLimitMiddleware(
 
 			if (count > config.maxRequests) {
 				throw new StorageServerError({
-					code: StorageErrorCode.FORBIDDEN,
+					code: StorageErrorCode.RATE_LIMIT_EXCEEDED,
 					message: "Rate limit exceeded",
 					details: { remaining: 0 },
 				});

@@ -99,7 +99,7 @@ describe("file-validator", () => {
 		it("rejects empty file names", () => {
 			const issue = getFileNameValidationIssue("");
 			expect(issue).toMatchObject({
-				code: StorageErrorCode.INVALID_FILE_INFO,
+				code: StorageErrorCode.INVALID_FILENAME,
 				message: "Invalid file name.",
 			});
 		});
@@ -107,7 +107,7 @@ describe("file-validator", () => {
 		it("rejects whitespace-only file names", () => {
 			const issue = getFileNameValidationIssue("   ");
 			expect(issue).toMatchObject({
-				code: StorageErrorCode.INVALID_FILE_INFO,
+				code: StorageErrorCode.INVALID_FILENAME,
 				message: "Invalid file name.",
 			});
 		});
@@ -115,7 +115,7 @@ describe("file-validator", () => {
 		it("rejects file names with forward slash", () => {
 			const issue = getFileNameValidationIssue("path/to/file.png");
 			expect(issue).toMatchObject({
-				code: StorageErrorCode.INVALID_FILE_INFO,
+				code: StorageErrorCode.INVALID_FILENAME,
 				message: "Invalid file name.",
 			});
 		});
@@ -123,7 +123,7 @@ describe("file-validator", () => {
 		it("rejects file names with backslash", () => {
 			const issue = getFileNameValidationIssue("path\\to\\file.png");
 			expect(issue).toMatchObject({
-				code: StorageErrorCode.INVALID_FILE_INFO,
+				code: StorageErrorCode.INVALID_FILENAME,
 				message: "Invalid file name.",
 			});
 		});
@@ -131,7 +131,7 @@ describe("file-validator", () => {
 		it("rejects file names with control characters", () => {
 			const issue = getFileNameValidationIssue("file\x00.png");
 			expect(issue).toMatchObject({
-				code: StorageErrorCode.INVALID_FILE_INFO,
+				code: StorageErrorCode.INVALID_FILENAME,
 				message: "Invalid file name.",
 			});
 		});
@@ -139,14 +139,14 @@ describe("file-validator", () => {
 		it("rejects file names with newline", () => {
 			const issue = getFileNameValidationIssue("file\n.png");
 			expect(issue).toMatchObject({
-				code: StorageErrorCode.INVALID_FILE_INFO,
+				code: StorageErrorCode.INVALID_FILENAME,
 			});
 		});
 
 		it("rejects file names with tab", () => {
 			const issue = getFileNameValidationIssue("file\t.png");
 			expect(issue).toMatchObject({
-				code: StorageErrorCode.INVALID_FILE_INFO,
+				code: StorageErrorCode.INVALID_FILENAME,
 			});
 		});
 	});
@@ -261,7 +261,7 @@ describe("file-validator", () => {
 					allowedFileTypes: ["image/png"],
 				});
 				expect(issue).toMatchObject({
-					code: StorageErrorCode.INVALID_FILE_INFO,
+					code: StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
 					message: "File type is not allowed.",
 				});
 			});
@@ -298,7 +298,7 @@ describe("file-validator", () => {
 					allowedFileTypes: [".png"],
 				});
 				expect(issue).toMatchObject({
-					code: StorageErrorCode.INVALID_FILE_INFO,
+					code: StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
 					message: "File extension is not allowed.",
 				});
 			});
@@ -430,7 +430,7 @@ describe("file-validator", () => {
 					fileBytes: jpegMagicBytes,
 				});
 				expect(issue).toMatchObject({
-					code: StorageErrorCode.INVALID_FILE_INFO,
+					code: StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
 					message: "File content type is not allowed.",
 				});
 			});
@@ -446,7 +446,7 @@ describe("file-validator", () => {
 					fileBytes: pngMagicBytes,
 				});
 				expect(issue).toMatchObject({
-					code: StorageErrorCode.INVALID_FILE_INFO,
+					code: StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
 					message: "File content type is not allowed.",
 				});
 			});

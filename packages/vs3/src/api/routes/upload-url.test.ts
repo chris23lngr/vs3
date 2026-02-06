@@ -520,7 +520,7 @@ describe("upload-url route", () => {
 					},
 				}),
 			).rejects.toMatchObject({
-				code: StorageErrorCode.INVALID_FILE_INFO,
+				code: StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
 				message: "File type is not allowed.",
 			});
 		});
@@ -554,7 +554,7 @@ describe("upload-url route", () => {
 					},
 				}),
 			).rejects.toMatchObject({
-				code: StorageErrorCode.INVALID_FILE_INFO,
+				code: StorageErrorCode.FILE_TYPE_NOT_ALLOWED,
 				message: "File extension is not allowed.",
 			});
 		});
@@ -585,7 +585,7 @@ describe("upload-url route", () => {
 					},
 				}),
 			).rejects.toMatchObject({
-				code: StorageErrorCode.INVALID_FILE_INFO,
+				code: StorageErrorCode.INVALID_FILENAME,
 				message: "Invalid file name.",
 			});
 		});
