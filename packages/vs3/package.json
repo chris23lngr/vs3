@@ -1,41 +1,80 @@
 {
 	"name": "vs3",
 	"version": "1.0.0",
-	"description": "",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"description": "Type-safe S3 storage library with presigned uploads, validation, and framework integrations",
+	"type": "module",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"default": "./dist/index.js"
+			"import": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			},
+			"require": {
+				"types": "./dist/index.d.cts",
+				"default": "./dist/index.cjs"
+			}
 		},
 		"./react": {
-			"types": "./dist/client/react/index.d.ts",
-			"default": "./dist/client/react/index.js"
+			"import": {
+				"types": "./dist/react.d.ts",
+				"default": "./dist/react.js"
+			},
+			"require": {
+				"types": "./dist/react.d.cts",
+				"default": "./dist/react.cjs"
+			}
 		},
 		"./integrations/next-js": {
-			"types": "./dist/integrations/next-js.d.ts",
-			"default": "./dist/integrations/next-js.js"
+			"import": {
+				"types": "./dist/next-js.d.ts",
+				"default": "./dist/next-js.js"
+			},
+			"require": {
+				"types": "./dist/next-js.d.cts",
+				"default": "./dist/next-js.cjs"
+			}
 		},
 		"./adapters": {
-			"types": "./dist/adapters/index.d.ts",
-			"default": "./dist/adapters/index.js"
+			"import": {
+				"types": "./dist/adapters.d.ts",
+				"default": "./dist/adapters.js"
+			},
+			"require": {
+				"types": "./dist/adapters.d.cts",
+				"default": "./dist/adapters.cjs"
+			}
 		}
 	},
+	"files": [
+		"dist"
+	],
+	"sideEffects": false,
+	"engines": {
+		"node": ">=18"
+	},
 	"scripts": {
-		"build": "tsc",
-		"dev": "ts-node src/index.ts",
-		"dev:test": "ts-node src/test.ts",
+		"build": "tsup",
+		"dev": "tsup --watch",
 		"lint": "biome check $TURBO_ROOT$",
 		"format": "biome check --write $TURBO_ROOT$",
 		"format:unsafe": "biome check --write --unsafe $TURBO_ROOT$",
-		"start": "node dist/index.js",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:ui": "vitest --ui"
 	},
-	"keywords": [],
+	"keywords": [
+		"s3",
+		"storage",
+		"upload",
+		"aws",
+		"presigned-url",
+		"file-upload",
+		"typescript"
+	],
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
@@ -45,7 +84,7 @@
 		"@vitest/coverage-v8": "4.0.18",
 		"@vitest/ui": "^4.0.18",
 		"react": "^19.2.4",
-		"ts-node": "^10.9.2",
+		"tsup": "^8.5.1",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.18"
 	},
