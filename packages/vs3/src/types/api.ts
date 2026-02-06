@@ -1,6 +1,7 @@
 import type { FileInfo } from "./file";
 import type { StorageOptions } from "./options";
 import type { StandardSchemaV1 } from "./standard-schema";
+import type { S3Encryption } from "./encryption";
 
 /**
  * Conditionally adds metadata to a body type based on storage options
@@ -40,10 +41,15 @@ export type StorageAPI<O extends StorageOptions> = {
 				fileInfo: FileInfo;
 				expiresIn?: number;
 				acl?: "public-read" | "private";
+				encryption?: S3Encryption;
 			},
 			O,
 			true
 		>,
-		{ presignedUrl: string; key: string }
+		{
+			presignedUrl: string;
+			key: string;
+			uploadHeaders?: Record<string, string>;
+		}
 	>;
 };

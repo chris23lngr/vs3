@@ -93,6 +93,9 @@ describe("upload-url route", () => {
 				fileInfo: baseFileInfo,
 				expiresIn: 120,
 				acl: "public-read",
+				encryption: {
+					type: "SSE-S3",
+				},
 				metadata: {
 					userId: "user-2",
 					region: "eu",
@@ -113,6 +116,9 @@ describe("upload-url route", () => {
 				metadata: {
 					userId: "user-2",
 					region: "eu",
+				},
+				encryption: {
+					type: "SSE-S3",
 				},
 			}),
 		);
@@ -141,6 +147,42 @@ describe("upload-url route", () => {
 
 		expect(generateKey).toHaveBeenCalledWith(baseFileInfo, {
 			uploadCount: 42,
+		});
+	});
+
+	it("returns upload headers when adapter provides them", async () => {
+		const metadataSchema = z.object({
+			userId: z.string(),
+		});
+
+		const endpoint = createUploadUrlRoute(metadataSchema);
+		const contextOptions = createContextOptions(metadataSchema);
+		contextOptions.adapter.generatePresignedUploadUrl = vi
+			.fn()
+			.mockResolvedValue({
+				url: "https://example.com/upload",
+				headers: {
+					"x-amz-server-side-encryption": "AES256",
+				},
+			});
+
+		await expect(
+			callEndpoint(endpoint, {
+				body: {
+					fileInfo: baseFileInfo,
+					metadata: {
+						userId: "user-1",
+					},
+				},
+				context: {
+					$options: contextOptions,
+				},
+			}),
+		).resolves.toMatchObject({
+			presignedUrl: "https://example.com/upload",
+			uploadHeaders: {
+				"x-amz-server-side-encryption": "AES256",
+			},
 		});
 	});
 

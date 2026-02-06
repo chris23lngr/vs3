@@ -1,5 +1,6 @@
 import type z from "zod";
 import type { fileInfoSchema } from "../schemas/file";
+import type { S3Encryption } from "./encryption";
 
 export type ACL =
 	| "public-read"
@@ -7,6 +8,10 @@ export type ACL =
 	| "authenticated-read"
 	| "bucket-owner-full-control"
 	| "bucket-owner-read";
+
+export type PresignedUploadResult =
+	| string
+	| { url: string; headers?: Record<string, string> };
 
 export type Adapter = {
 	/**
@@ -23,8 +28,9 @@ export type Adapter = {
 			acl: ACL;
 			metadata: Record<string, string>;
 			bucket: string;
+			encryption: S3Encryption;
 		}>,
-	): string | Promise<string>;
+	): PresignedUploadResult | Promise<PresignedUploadResult>;
 
 	/**
 	 * Generate a presigned download url for a given key.

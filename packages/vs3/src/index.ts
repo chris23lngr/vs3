@@ -47,6 +47,7 @@ export {
 } from "./middleware";
 export { createStorage } from "./storage/create-storage";
 export type { Adapter } from "./types/adapter";
+export type { S3Encryption } from "./types/encryption";
 export type { StorageOptions } from "./types/options";
 export type {
 	AuthHook,

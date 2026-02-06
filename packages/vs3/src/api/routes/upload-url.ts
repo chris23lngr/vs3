@@ -11,6 +11,7 @@ import {
 	runContentValidators,
 } from "../../core/validation";
 import type { FileInfo } from "../../types/file";
+import type { PresignedUploadResult } from "../../types/adapter";
 import type { StandardSchemaV1 } from "../../types/standard-schema";
 import type { ContentValidatorInput } from "../../types/validation";
 import { createStorageEndpoint } from "../create-storage-endpoint";
@@ -134,6 +135,15 @@ function transformMetadata(
 	);
 }
 
+function normalizePresignedUpload(
+	result: PresignedUploadResult,
+): { url: string; headers?: Record<string, string> } {
+	if (typeof result === "string") {
+		return { url: result };
+	}
+	return result;
+}
+
 export function createUploadUrlRoute<M extends StandardSchemaV1>(
 	metadataSchema?: M,
 ) {
@@ -173,6 +183,7 @@ export function createUploadUrlRoute<M extends StandardSchemaV1>(
 				contentValidatorTimeoutMs,
 			} = ctx.context.$options;
 			const { fileInfo, acl, expiresIn } = ctx.body;
+			const { encryption } = ctx.body;
 
 			throwIfIssue(getFileNameValidationIssue(fileInfo.name));
 
@@ -204,17 +215,34 @@ export function createUploadUrlRoute<M extends StandardSchemaV1>(
 
 			throwIfIssue(getObjectKeyValidationIssue(key));
 
-			const url = await adapter.generatePresignedUploadUrl(key, fileInfo, {
-				expiresIn,
-				contentType: fileInfo.contentType,
-				metadata: transformMetadata(internalMetadata),
-				acl,
-			});
+			const presigned = await adapter.generatePresignedUploadUrl(
+				key,
+				fileInfo,
+				{
+					expiresIn,
+					contentType: fileInfo.contentType,
+					metadata: transformMetadata(internalMetadata),
+					acl,
+					encryption,
+				},
+			);
 
-			return {
+			const { url, headers } = normalizePresignedUpload(presigned);
+
+			const response: {
+				presignedUrl: string;
+				key: string;
+				uploadHeaders?: Record<string, string>;
+			} = {
 				presignedUrl: url,
 				key,
 			};
+
+			if (headers && Object.keys(headers).length > 0) {
+				response.uploadHeaders = headers;
+			}
+
+			return response;
 		},
 	);
 }

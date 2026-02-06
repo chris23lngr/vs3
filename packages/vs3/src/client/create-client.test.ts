@@ -313,6 +313,58 @@ describe("createBaseClient", () => {
 			);
 		});
 
+		it("forwards upload headers returned by the API", async () => {
+			const metadataSchema = z.object({
+				userId: z.string(),
+			});
+
+			const { createFetch } = await import("@better-fetch/fetch");
+			const mockFetchFn = vi.fn().mockResolvedValue({
+				error: null,
+				data: {
+					key: "uploads/test.txt",
+					presignedUrl: "https://s3.example.com/upload",
+					uploadHeaders: {
+						"x-amz-server-side-encryption": "AES256",
+					},
+				},
+			});
+
+			(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+			const client = createBaseClient({
+				baseURL: mockBaseURL,
+				apiPath: mockApiPath,
+				metadataSchema,
+			});
+
+			const mockFile = new File(["test content"], "test.txt", {
+				type: "text/plain",
+			});
+
+			const mockUploadResult = {
+				uploadUrl: "https://s3.example.com/upload",
+				status: 200,
+				statusText: "OK",
+			};
+
+			const xhrUploadSpy = vi
+				.spyOn(xhrUploadModule, "xhrUpload")
+				.mockResolvedValue(mockUploadResult);
+
+			await client.uploadFile(mockFile, { userId: "user-1" });
+
+			expect(xhrUploadSpy).toHaveBeenCalledWith(
+				"https://s3.example.com/upload",
+				mockFile,
+				expect.objectContaining({
+					headers: {
+						"x-amz-server-side-encryption": "AES256",
+					},
+				}),
+			);
+		});
+
 		describe("client-side file size validation", () => {
 			it("accepts file within size limit", async () => {
 				const metadataSchema = z.object({
