@@ -1,0 +1,284 @@
+---
+title: Middlewares
+description: Add auth, rate limiting, CORS, logging, and timeouts to your storage by passing middlewares when you create the storage.
+---
+
+You create a storage instance with `createStorage()`. The options you pass can include a **middlewares** array. Those middlewares run before every request to your storage API (for example when a client calls `api.uploadUrl()`). Use them to verify signatures, limit rate, set CORS, log requests, or add timeouts.
+
+**How you use middlewares:**
+
+- **When creating storage** — Pass the `middlewares` option to `createStorage({ bucket, adapter, ..., middlewares: [...] })`. The same list applies to all endpoints (e.g. upload-url) on the returned `api`.
+- **Path filtering** — Each middleware can use `skipPaths` or `includePaths` so it runs only on certain API paths.
+- **Built-in middlewares** — VS3 provides signature verification, rate limiting, CORS, logging, and timeout. You add them to the `middlewares` array.
+- **Custom middlewares** — Use `createStorageMiddleware` to build your own and add it to the same array.
+
+## How middlewares work
+
+A middleware is a function that receives the current request context and either returns data to merge into the context or returns nothing. Middlewares run in order. Each one sees the context produced by the previous ones. The merged context is available to the endpoint logic that handles the request.
+
+You configure middlewares once when you create the storage. They run on every request to any of the storage API endpoints (such as upload-url). Order in the array matters: the first middleware runs first.
+
+```ts
+import {
+  createStorage,
+  createVerifySignatureMiddleware,
+  createLoggingMiddleware,
+  createInMemoryRateLimitStore,
+  createRateLimitMiddleware,
+} from "vs3";
+import z from "zod";
+
+const storage = createStorage({
+  bucket: "my-bucket",
+  adapter: myAdapter,
+  metadataSchema: z.object({ userId: z.string() }),
+  middlewares: [
+    createLoggingMiddleware({ logger: console.log }),
+    createVerifySignatureMiddleware({ secret: process.env.SIGNING_SECRET! }),
+    createRateLimitMiddleware({
+      maxRequests: 100,
+      windowMs: 60_000,
+      store: createInMemoryRateLimitStore(),
+    }),
+  ],
+});
+
+// storage.api.uploadUrl() and storage.handler are now protected by those middlewares
+const { api, handler } = storage;
+```
+
+If a middleware throws or returns a `Response`, the chain stops and that value is used. Otherwise the next middleware runs with the updated context.
+
+## Configuring middlewares on your storage
+
+Pass a **middlewares** array in the options to `createStorage()`. Every request to the storage API (e.g. `api.uploadUrl()`) goes through this list before the endpoint handler runs. You can use only built-in middlewares, only custom ones, or a mix.
+
+```ts
+import {
+  createStorage,
+  createVerifySignatureMiddleware,
+  createRateLimitMiddleware,
+  createInMemoryRateLimitStore,
+} from "vs3";
+
+const storage = createStorage({
+  bucket: "my-bucket",
+  adapter: myAdapter,
+  middlewares: [
+    createVerifySignatureMiddleware({
+      secret: process.env.SIGNING_SECRET!,
+      skipPaths: ["/upload-url/health"],
+    }),
+    createRateLimitMiddleware({
+      maxRequests: 100,
+      windowMs: 60_000,
+      store: createInMemoryRateLimitStore(),
+    }),
+  ],
+});
+```
+
+The returned `storage.api` exposes the same endpoints as without middlewares; the only difference is that each request is first run through the middleware chain.
+
+## Path filtering (skipPaths and includePaths)
+
+Each middleware can be limited to certain API paths. Use **skipPaths** to run on all paths except the ones listed, or **includePaths** to run only on the listed paths. You cannot set both.
+
+```ts
+// Run signature verification on all paths except /upload-url/health
+createVerifySignatureMiddleware({
+  secret: process.env.SIGNING_SECRET!,
+  skipPaths: ["/upload-url/health"],
+});
+
+// Run rate limiting only on specific paths
+createRateLimitMiddleware({
+  maxRequests: 10,
+  windowMs: 60_000,
+  store: createInMemoryRateLimitStore(),
+  includePaths: ["/upload-url"],
+});
+```
+
+Paths match the route path of the endpoint (e.g. `"/upload-url"` for the upload-url endpoint).
+
+## Built-in middlewares
+
+### Signature verification
+
+`createVerifySignatureMiddleware` checks HMAC signatures (and optional nonces) so only clients that know the secret can call your storage API. It adds `signature` to the context with the verification result and optional auth data.
+
+```ts
+import {
+  createVerifySignatureMiddleware,
+  createInMemoryNonceStore,
+} from "vs3";
+
+// Use in createStorage({ ..., middlewares: [ ... ] })
+createVerifySignatureMiddleware({
+  secret: process.env.SIGNING_SECRET!,
+  timestampToleranceMs: 300_000,
+  requireNonce: true,
+  nonceStore: createInMemoryNonceStore(),
+  skipPaths: ["/upload-url/health"],
+  authHook: async (ctx) => {
+    return { userId: ctx.metadata?.userId as string };
+  },
+});
+```
+
+Required headers: `x-signature`, `x-timestamp`. If `requireNonce` is true, `x-nonce` is required. On the client, use `createClientRequestSigner` to sign requests before calling the storage API.
+
+### Rate limiting
+
+`createRateLimitMiddleware` limits how many requests can hit your storage API per time window. It uses a store (e.g. in-memory) to count requests and adds `rateLimit: { remaining }` to the context. When the limit is exceeded it throws `FORBIDDEN`.
+
+```ts
+import {
+  createRateLimitMiddleware,
+  createInMemoryRateLimitStore,
+} from "vs3";
+
+const store = createInMemoryRateLimitStore();
+
+createRateLimitMiddleware({
+  maxRequests: 100,
+  windowMs: 60_000,
+  store,
+});
+```
+
+### CORS
+
+`createCorsMiddleware` checks the `Origin` header and, for `OPTIONS` requests, responds with CORS preflight headers. For other methods it adds CORS header values to the context so they can be attached to the response.
+
+```ts
+import { createCorsMiddleware } from "vs3";
+
+createCorsMiddleware({
+  allowedOrigins: ["https://myapp.com", "*"],
+  allowedMethods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  maxAge: 86400,
+});
+```
+
+If the origin is not allowed, the middleware does not add context. For `OPTIONS` it throws a `Response` with status 204 and CORS headers, so the request does not reach the endpoint handler.
+
+### Logging
+
+`createLoggingMiddleware` calls a logger with method, path, and timestamp. It does not add anything to the context.
+
+```ts
+import { createLoggingMiddleware } from "vs3";
+
+createLoggingMiddleware({
+  logger: (entry) => {
+    console.log(
+      `[${new Date(entry.timestamp).toISOString()}] ${entry.method} ${entry.path}`
+    );
+  },
+});
+```
+
+### Timeout
+
+`createTimeoutMiddleware` creates an `AbortSignal` that aborts after the given milliseconds and adds `timeout: { signal }` to the context. Endpoint logic can pass this signal to `fetch` or other abortable APIs so long-running work is cancelled.
+
+```ts
+import { createTimeoutMiddleware } from "vs3";
+
+createTimeoutMiddleware({
+  timeoutMs: 30_000,
+});
+```
+
+## Custom middlewares
+
+Use `createStorageMiddleware` to define your own middleware: pass a config (name and optional path filters) and an async handler. The handler receives the current context; return a plain object to merge into the context, or return nothing.
+
+```ts
+import { createStorageMiddleware } from "vs3";
+
+const addRequestId = createStorageMiddleware(
+  {
+    name: "request-id",
+    skipPaths: ["/upload-url/health"],
+  },
+  async (ctx) => {
+    const id = crypto.randomUUID();
+    return { requestId: id };
+  }
+);
+
+// Add to createStorage({ ..., middlewares: [addRequestId, ...] })
+```
+
+You can read context from previous middlewares (e.g. `ctx.context.signature`) and add new keys. TypeScript will infer the merged context when you use the middleware in your storage's `middlewares` array.
+
+```ts
+const requireUser = createStorageMiddleware(
+  { name: "require-user" },
+  async (ctx) => {
+    const userId = ctx.context.signature?.auth?.userId;
+    if (!userId) throw new Response("Unauthorized", { status: 401 });
+    return { userId };
+  }
+);
+```
+
+## API reference
+
+Public, user-facing APIs for middlewares. All are exported from the `vs3` package.
+
+### Storage options
+
+| Option | Description |
+|--------|-------------|
+| `middlewares` (on `createStorage` options) | Optional array of middlewares. Applied to every request to the storage API (e.g. `api.uploadUrl()`). |
+
+### Creating custom middlewares
+
+| Export | Description |
+|--------|-------------|
+| `createStorageMiddleware(config, handler)` | Builds a middleware from a config and async handler. The handler receives the request context and can return an object to merge into context or `undefined`. |
+
+### Config and context types (for custom middlewares)
+
+| Type | Description |
+|------|-------------|
+| `MiddlewareConfig` | `{ name: string; skipPaths?: string[]; includePaths?: string[] }`. Use when calling `createStorageMiddleware`. `skipPaths` and `includePaths` are mutually exclusive. |
+| `StorageMiddlewareContext<C>` | The argument passed to your custom handler: `method`, `path`, `request`, `headers`, and accumulated `context` from previous middlewares. |
+| `StorageMiddleware` | Type of a middleware instance (for typing arrays or parameters). |
+
+### Signature verification
+
+| Export | Description |
+|--------|-------------|
+| `createVerifySignatureMiddleware(config)` | Middleware that verifies request signature (and optional nonce), runs optional `authHook`, and adds `signature: VerificationResult` to context. |
+| `createClientRequestSigner(config)` | Builds a client-side signer for adding signature headers to requests. |
+| `VerificationResult` | `{ verified: true; timestamp: number; nonce?: string; auth?: { userId?: string; metadata?: Record<string, unknown> } }`. |
+| `VerifySignatureMiddlewareConfig` | Extends `RequestSigningConfig` with `nonceStore?`, `authHook?`, `skipPaths?`, `onVerificationFailure?`. |
+
+### Common middlewares
+
+| Export | Description |
+|--------|-------------|
+| `createRateLimitMiddleware(config)` | Rate limit by path; adds `rateLimit: { remaining }`; throws `FORBIDDEN` when exceeded. Config: `maxRequests`, `windowMs`, `store`, optional `skipPaths`/`includePaths`. |
+| `createInMemoryRateLimitStore()` | In-memory store for rate limiting (fixed windows). |
+| `createCorsMiddleware(config)` | CORS preflight and context; config: `allowedOrigins`, optional `allowedMethods`, `allowedHeaders`, `maxAge`, path filters. |
+| `createLoggingMiddleware(config)` | Logs each request via `config.logger(entry)`; no context. Config: `logger`, optional path filters. |
+| `createTimeoutMiddleware(config)` | Adds `timeout: { signal: AbortSignal }`; config: `timeoutMs`, optional path filters. |
+
+### Config types
+
+| Type | Description |
+|------|-------------|
+| `RateLimitConfig` | `maxRequests`, `windowMs`, `store`, optional `skipPaths`/`includePaths`. |
+| `RateLimitStore` | `{ increment(key, windowMs): Promise<number> }`. |
+| `CorsConfig` | `allowedOrigins`, optional `allowedMethods`, `allowedHeaders`, `maxAge`, path filters. |
+| `LoggingConfig` | `logger: (entry: LogEntry) => void`, optional path filters. |
+| `LogEntry` | `{ method: string; path: string; timestamp: number }`. |
+| `TimeoutConfig` | `timeoutMs: number`, optional path filters. |
+
+All of these are exported from the main `vs3` package.
