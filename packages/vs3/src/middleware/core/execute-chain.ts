@@ -84,7 +84,7 @@ async function executeSingleMiddleware(
 export async function executeMiddlewareChain(
 	middlewares: readonly StorageMiddleware[],
 	initialContext: StorageMiddlewareContext,
-): Promise<ChainExecutionResult> {
+): Promise<ChainExecutionResult<Record<string, unknown>>> {
 	let accumulatedContext: Record<string, unknown> = {
 		...initialContext.context,
 	};

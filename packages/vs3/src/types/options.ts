@@ -1,3 +1,4 @@
+import type { StorageMiddleware } from "../middleware";
 import type { Adapter } from "./adapter";
 import type { FileInfo } from "./file";
 import type { BeforeHookResult } from "./hooks";
@@ -91,6 +92,18 @@ export type StorageOptions<M extends StandardSchemaV1 = StandardSchemaV1> = {
 	baseUrl?: string;
 
 	apiPath?: string;
+
+	/**
+	 * Middlewares to apply to the storage API.
+	 * Middlewares are applied to every request to the storage API (e.g. `api.uploadUrl()`).
+	 * Middlewares are applied in the order they are provided.
+	 *
+	 * @example
+	 * ```typescript
+	 * middlewares: [createVerifySignatureMiddleware({ secret: "..." })],
+	 * ```
+	 */
+	middlewares?: readonly StorageMiddleware[];
 
 	generateKey?: (
 		fileInfo: FileInfo,
