@@ -1,8 +1,9 @@
-# VS3
+<img width="1772" height="527" alt="vs3-readme-banner-1" src="https://github.com/user-attachments/assets/c245ec52-9048-4363-9412-c227c45192b7" />
 
-Enterprise-grade S3 storage toolkit with first-class validation, middleware, and client helpers.
+<br />
+<br />
 
-VS3 is a TypeScript-first library for building storage APIs that generate presigned upload URLs, enforce validation, and integrate cleanly with modern runtimes. The core package lives in `packages/vs3`.
+> VS3 is a TypeScript-first library for managing easy S3 Storage access while giving you full freedom over your storage instance.
 
 ## Quickstart
 
