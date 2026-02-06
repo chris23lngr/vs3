@@ -48,6 +48,20 @@ describe("StorageError", () => {
 		expect(error.details).toEqual(details);
 	});
 
+	it("populates httpStatus and recoverySuggestion from definitions", () => {
+		const error = new StorageError({
+			origin: "server",
+			message: "File too large",
+			code: StorageErrorCode.FILE_TOO_LARGE,
+			details: undefined,
+		});
+
+		expect(error.httpStatus).toBe(413);
+		expect(error.recoverySuggestion).toBe(
+			"Reduce the file size or raise the configured limit.",
+		);
+	});
+
 	it("is an instance of Error", () => {
 		const error = new StorageError({
 			origin: "server",
@@ -100,6 +114,24 @@ describe("StorageError", () => {
 
 		expect(clientError.origin).toBe("client");
 		expect(serverError.origin).toBe("server");
+	});
+
+	it("returns a standardized payload", () => {
+		const error = new StorageError({
+			origin: "server",
+			message: "Rate limit",
+			code: StorageErrorCode.RATE_LIMIT_EXCEEDED,
+			details: { remaining: 0 },
+		});
+
+		expect(error.toPayload()).toEqual({
+			origin: "server",
+			message: "Rate limit",
+			code: StorageErrorCode.RATE_LIMIT_EXCEEDED,
+			details: { remaining: 0 },
+			httpStatus: 429,
+			recoverySuggestion: "Wait before retrying or reduce request volume.",
+		});
 	});
 });
 
