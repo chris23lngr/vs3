@@ -25,11 +25,11 @@ export class XhrFactory {
 		}
 	}
 
-	cleanup() {
+	cleanup = (): void => {
 		if (this.signal !== undefined && this.abortHandler !== undefined) {
 			this.signal.removeEventListener("abort", this.abortHandler);
 		}
-	}
+	};
 
 	/**
 	 * Takes in a Headers object and appends all of the headers to the
