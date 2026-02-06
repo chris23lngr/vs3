@@ -1,5 +1,3 @@
-import type { StorageContext } from "../types/context";
-
 /**
  * Context passed to each middleware in the chain.
  * Accumulates results from previous middlewares via the `context` property.
@@ -9,7 +7,7 @@ export type StorageMiddlewareContext<C = object> = {
 	readonly path: string;
 	readonly request: Request;
 	readonly headers: Headers;
-	readonly context: StorageContext & C;
+	readonly context: C;
 };
 
 /**

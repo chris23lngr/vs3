@@ -1,6 +1,6 @@
 import type { StorageOptions } from "./options";
 
 export type StorageContext<O extends StorageOptions = StorageOptions> = {
-	readonly $options?: O;
+	readonly $options: O;
 	readonly $middleware?: Record<string, unknown>;
 };
