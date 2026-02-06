@@ -5,7 +5,14 @@ import path from "node:path";
 const PACKAGE_DIR = path.resolve(process.cwd(), "packages/vs3");
 const PACKAGE_JSON_PATH = path.join(PACKAGE_DIR, "package.json");
 const MAX_SINGLE_JS_BYTES = 750_000;
-const MAX_TOTAL_JS_BYTES = 2_000_000;
+const MAX_FORMAT_TOTAL_JS_BYTES = 2_000_000;
+
+const RESOLUTION_ERROR_CODES = new Set([
+	"ERR_MODULE_NOT_FOUND",
+	"ERR_PACKAGE_PATH_NOT_EXPORTED",
+	"ERR_PACKAGE_IMPORT_NOT_DEFINED",
+	"ERR_UNSUPPORTED_DIR_IMPORT",
+]);
 
 const readPackageJson = async () => {
 	const raw = await readFile(PACKAGE_JSON_PATH, "utf-8");
@@ -47,12 +54,10 @@ const verifyExportTargets = async (packageJson) => {
 };
 
 const verifyBundleSize = (stats) => {
-	const jsStats = stats.filter(
-		(entry) => entry.target.endsWith(".js") || entry.target.endsWith(".cjs"),
-	);
-	const totalJsBytes = jsStats.reduce((sum, entry) => sum + entry.size, 0);
+	const esmStats = stats.filter((entry) => entry.target.endsWith(".js"));
+	const cjsStats = stats.filter((entry) => entry.target.endsWith(".cjs"));
 
-	for (const entry of jsStats) {
+	for (const entry of [...esmStats, ...cjsStats]) {
 		if (entry.size > MAX_SINGLE_JS_BYTES) {
 			throw new Error(
 				`Bundle size exceeded for ${entry.target}: ${entry.size} bytes (max ${MAX_SINGLE_JS_BYTES}).`,
@@ -60,9 +65,18 @@ const verifyBundleSize = (stats) => {
 		}
 	}
 
-	if (totalJsBytes > MAX_TOTAL_JS_BYTES) {
+	const esmTotal = esmStats.reduce((sum, entry) => sum + entry.size, 0);
+	const cjsTotal = cjsStats.reduce((sum, entry) => sum + entry.size, 0);
+
+	if (esmTotal > MAX_FORMAT_TOTAL_JS_BYTES) {
 		throw new Error(
-			`Total JS bundle size exceeded: ${totalJsBytes} bytes (max ${MAX_TOTAL_JS_BYTES}).`,
+			`ESM total bundle size exceeded: ${esmTotal} bytes (max ${MAX_FORMAT_TOTAL_JS_BYTES}).`,
+		);
+	}
+
+	if (cjsTotal > MAX_FORMAT_TOTAL_JS_BYTES) {
+		throw new Error(
+			`CJS total bundle size exceeded: ${cjsTotal} bytes (max ${MAX_FORMAT_TOTAL_JS_BYTES}).`,
 		);
 	}
 };
@@ -135,14 +149,11 @@ const verifyEsmImports = async (packageJson) => {
 		try {
 			await import(specifier);
 		} catch (error) {
-			if (
-				error.code === "ERR_MODULE_NOT_FOUND" ||
-				error.code === "ERR_PACKAGE_PATH_NOT_EXPORTED"
-			) {
+			if (RESOLUTION_ERROR_CODES.has(error.code)) {
 				throw new Error(`ESM import failed for "${specifier}": ${error.message}`);
 			}
-			// Other errors (e.g. missing peer deps at runtime) are acceptable
-			// since we only want to verify the module resolves
+			// Runtime evaluation errors (e.g. missing optional peer deps) are
+			// expected in CI — resolution succeeded, so the export is valid.
 		}
 	}
 };

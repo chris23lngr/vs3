@@ -1,4 +1,12 @@
+import { readFileSync } from "node:fs";
 import { defineConfig } from "tsup";
+
+const pkg = JSON.parse(readFileSync("./package.json", "utf-8"));
+
+const external = [
+	...Object.keys(pkg.dependencies ?? {}),
+	...Object.keys(pkg.peerDependencies ?? {}),
+];
 
 export default defineConfig({
 	entry: {
@@ -11,14 +19,5 @@ export default defineConfig({
 	dts: true,
 	sourcemap: true,
 	clean: true,
-	external: [
-		"@aws-sdk/client-s3",
-		"@aws-sdk/s3-request-presigner",
-		"react",
-		"@nanostores/react",
-		"nanostores",
-		"better-call",
-		"better-fetch",
-		"zod",
-	],
+	external,
 });
