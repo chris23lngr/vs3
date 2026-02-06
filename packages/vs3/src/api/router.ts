@@ -1,4 +1,5 @@
 import { createRouter } from "better-call";
+import { StorageError } from "../core/error/error";
 import type { StorageContext } from "../types/context";
 import type { StorageOptions } from "../types/options";
 import { createUploadUrlRoute } from "./routes/upload-url";
@@ -30,6 +31,14 @@ export function router<O extends StorageOptions>(
 	return createRouter(api as any, {
 		routerContext: {
 			options,
+		},
+		onError(e) {
+			if (e instanceof StorageError) {
+				return new Response(JSON.stringify(e.toPayload()), {
+					status: e.httpStatus,
+					headers: { "Content-Type": "application/json" },
+				});
+			}
 		},
 	});
 }

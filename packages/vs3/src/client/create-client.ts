@@ -166,6 +166,16 @@ async function executeUploadRequest<M extends StandardSchemaV1>(
 	});
 
 	if (response.error) {
+		const parsed = errorSchema.safeParse(response.error);
+		if (parsed.success) {
+			throw new StorageClientError({
+				code: parsed.data.code,
+				message: parsed.data.message,
+				details: parsed.data.details,
+				httpStatus: parsed.data.httpStatus,
+				recoverySuggestion: parsed.data.recoverySuggestion,
+			});
+		}
 		throw new StorageClientError({
 			code: StorageErrorCode.UNKNOWN_ERROR,
 			details: `${response.error.status}: ${response.error.message ?? "Unknown error"}`,
