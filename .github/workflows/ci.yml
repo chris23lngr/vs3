@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CI: true
+      PNPM_STORE_DIR: ${{ github.workspace }}/.pnpm-store
     steps:
       - name: Checkout
         uses: actions/checkout@v4
