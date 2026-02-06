@@ -27,4 +27,16 @@ export const routeRegistry = {
 			uploadHeaders: z.record(z.string(), z.string()).optional(),
 		}),
 	},
+	"/download-url": {
+		body: z.object({
+			key: z.string().min(1),
+			expiresIn: z.number().optional(),
+			encryption: s3EncryptionSchema.optional(),
+		}),
+		requireMetadata: false,
+		output: z.object({
+			presignedUrl: z.string(),
+			downloadHeaders: z.record(z.string(), z.string()).optional(),
+		}),
+	},
 } as const satisfies RouteRegistry;

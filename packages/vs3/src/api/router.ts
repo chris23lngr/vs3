@@ -1,6 +1,7 @@
 import { createRouter } from "better-call";
 import type { StorageContext } from "../types/context";
 import type { StorageOptions } from "../types/options";
+import { createDownloadUrlRoute } from "./routes/download-url";
 import { createUploadUrlRoute } from "./routes/upload-url";
 import { toStorageEndpoints } from "./to-storage-endpoints";
 
@@ -12,6 +13,7 @@ export function getEndpoints<O extends StorageOptions>(
 
 	const endpoints = {
 		uploadUrl: createUploadUrlRoute(options.metadataSchema as MetadataSchema),
+		downloadUrl: createDownloadUrlRoute(options.metadataSchema as MetadataSchema),
 	} as const;
 
 	const api = toStorageEndpoints<O, typeof endpoints>(endpoints, context);
