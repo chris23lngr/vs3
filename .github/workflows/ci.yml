@@ -21,6 +21,11 @@ jobs:
           node-version: 20
           cache: pnpm
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.1
+
       - name: Enable Corepack
         run: corepack enable
 
