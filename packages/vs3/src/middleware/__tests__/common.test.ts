@@ -1,13 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StorageErrorCode } from "../../core/error/codes";
 import { StorageServerError } from "../../core/error/error";
-import {
-	createCorsMiddleware,
-} from "../common/cors";
-import {
-	createLoggingMiddleware,
-	type LogEntry,
-} from "../common/logging";
+import { createCorsMiddleware } from "../common/cors";
+import { createLoggingMiddleware, type LogEntry } from "../common/logging";
 import {
 	createInMemoryRateLimitStore,
 	createRateLimitMiddleware,
@@ -209,10 +204,7 @@ describe("createRateLimitMiddleware separate paths", () => {
 			store,
 		});
 
-		await executeMiddlewareChain(
-			[middleware],
-			createTestContext({ path: "/a" }),
-		);
+		await executeMiddlewareChain([middleware], createTestContext({ path: "/a" }));
 		const result = await executeMiddlewareChain(
 			[middleware],
 			createTestContext({ path: "/b" }),
@@ -407,9 +399,7 @@ describe("createCorsMiddleware preflight custom methods and headers", () => {
 		} catch (response) {
 			assertIsResponse(response);
 			const res = response;
-			expect(res.headers.get("Access-Control-Allow-Methods")).toBe(
-				"GET, POST",
-			);
+			expect(res.headers.get("Access-Control-Allow-Methods")).toBe("GET, POST");
 			expect(res.headers.get("Access-Control-Allow-Headers")).toBe(
 				"X-Custom-Header",
 			);

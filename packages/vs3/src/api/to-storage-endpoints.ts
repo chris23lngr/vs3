@@ -151,11 +151,7 @@ export function toStorageEndpoints<
 
 				const middlewares = storageContext.$options?.middlewares;
 				const middlewareResult = middlewares?.length
-					? await runGlobalMiddlewares(
-							middlewares,
-							endpoint.path,
-							context ?? {},
-						)
+					? await runGlobalMiddlewares(middlewares, endpoint.path, context ?? {})
 					: undefined;
 
 				const internalContext: InternalContext = {
@@ -165,9 +161,7 @@ export function toStorageEndpoints<
 						$middleware: middlewareResult,
 					},
 					path: endpoint.path,
-					headers: context?.headers
-						? new Headers(context?.headers)
-						: undefined,
+					headers: context?.headers ? new Headers(context?.headers) : undefined,
 				};
 
 				return runWithEndpointContext(internalContext, () =>

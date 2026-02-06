@@ -10,9 +10,7 @@ import { createClientRequestSigner } from "../signature/client-signer";
 import { createVerifySignatureMiddleware } from "../signature/verify-signature";
 import type { StorageMiddlewareContext } from "../types";
 
-function createMiddlewareContext(
-	request: Request,
-): StorageMiddlewareContext {
+function createMiddlewareContext(request: Request): StorageMiddlewareContext {
 	let path: string;
 	try {
 		path = new URL(request.url).pathname;
@@ -85,8 +83,8 @@ describe("createVerifySignatureMiddleware", () => {
 			const result = await middleware.handler(ctx);
 
 			expect(result).toBeDefined();
-			expect(result!.signature.verified).toBe(true);
-			expect(result!.signature.timestamp).toBeGreaterThan(0);
+			expect(result?.signature.verified).toBe(true);
+			expect(result?.signature.timestamp).toBeGreaterThan(0);
 		});
 
 		it("throws on missing signature header", async () => {
@@ -104,9 +102,7 @@ describe("createVerifySignatureMiddleware", () => {
 			});
 
 			const ctx = createMiddlewareContext(request);
-			await expect(middleware.handler(ctx)).rejects.toThrow(
-				StorageServerError,
-			);
+			await expect(middleware.handler(ctx)).rejects.toThrow(StorageServerError);
 
 			try {
 				await middleware.handler(ctx);
@@ -133,9 +129,7 @@ describe("createVerifySignatureMiddleware", () => {
 			});
 
 			const ctx = createMiddlewareContext(request);
-			await expect(middleware.handler(ctx)).rejects.toThrow(
-				StorageServerError,
-			);
+			await expect(middleware.handler(ctx)).rejects.toThrow(StorageServerError);
 
 			try {
 				await middleware.handler(ctx);
@@ -163,9 +157,7 @@ describe("createVerifySignatureMiddleware", () => {
 			});
 
 			const ctx = createMiddlewareContext(request);
-			await expect(middleware.handler(ctx)).rejects.toThrow(
-				StorageServerError,
-			);
+			await expect(middleware.handler(ctx)).rejects.toThrow(StorageServerError);
 
 			try {
 				await middleware.handler(ctx);
@@ -193,9 +185,7 @@ describe("createVerifySignatureMiddleware", () => {
 			});
 
 			const ctx = createMiddlewareContext(request);
-			await expect(middleware.handler(ctx)).rejects.toThrow(
-				StorageServerError,
-			);
+			await expect(middleware.handler(ctx)).rejects.toThrow(StorageServerError);
 
 			try {
 				await middleware.handler(ctx);
@@ -216,9 +206,7 @@ describe("createVerifySignatureMiddleware", () => {
 			const request = await createSignedRequest(wrongSigner);
 
 			const ctx = createMiddlewareContext(request);
-			await expect(middleware.handler(ctx)).rejects.toThrow(
-				StorageServerError,
-			);
+			await expect(middleware.handler(ctx)).rejects.toThrow(StorageServerError);
 
 			try {
 				await middleware.handler(ctx);
@@ -255,7 +243,7 @@ describe("createVerifySignatureMiddleware", () => {
 			const ctx = createMiddlewareContext(request);
 			const result = await middleware.handler(ctx);
 			expect(result).toBeDefined();
-			expect(result!.signature.verified).toBe(true);
+			expect(result?.signature.verified).toBe(true);
 		});
 
 		it("rejects expired timestamp", async () => {
@@ -270,9 +258,7 @@ describe("createVerifySignatureMiddleware", () => {
 			const request = await createSignedRequest(signer, { timestamp });
 
 			const ctx = createMiddlewareContext(request);
-			await expect(middleware.handler(ctx)).rejects.toThrow(
-				StorageServerError,
-			);
+			await expect(middleware.handler(ctx)).rejects.toThrow(StorageServerError);
 
 			try {
 				await middleware.handler(ctx);
@@ -296,9 +282,7 @@ describe("createVerifySignatureMiddleware", () => {
 			const request = await createSignedRequest(signer, { timestamp });
 
 			const ctx = createMiddlewareContext(request);
-			await expect(middleware.handler(ctx)).rejects.toThrow(
-				StorageServerError,
-			);
+			await expect(middleware.handler(ctx)).rejects.toThrow(StorageServerError);
 
 			try {
 				await middleware.handler(ctx);
@@ -322,9 +306,7 @@ describe("createVerifySignatureMiddleware", () => {
 			const request = await createSignedRequest(signer);
 
 			const ctx = createMiddlewareContext(request);
-			await expect(middleware.handler(ctx)).rejects.toThrow(
-				StorageServerError,
-			);
+			await expect(middleware.handler(ctx)).rejects.toThrow(StorageServerError);
 
 			try {
 				await middleware.handler(ctx);
@@ -355,8 +337,8 @@ describe("createVerifySignatureMiddleware", () => {
 			const ctx = createMiddlewareContext(request);
 			const result = await middleware.handler(ctx);
 			expect(result).toBeDefined();
-			expect(result!.signature.verified).toBe(true);
-			expect(result!.signature.nonce).toBe("unique-nonce-123");
+			expect(result?.signature.verified).toBe(true);
+			expect(result?.signature.nonce).toBe("unique-nonce-123");
 		});
 
 		it("rejects reused nonce", async () => {
@@ -382,7 +364,7 @@ describe("createVerifySignatureMiddleware", () => {
 			const ctx1 = createMiddlewareContext(request1);
 			const result1 = await middleware.handler(ctx1);
 			expect(result1).toBeDefined();
-			expect(result1!.signature.verified).toBe(true);
+			expect(result1?.signature.verified).toBe(true);
 
 			// Second request with same nonce fails
 			const request2 = await createSignedRequest(signer, {
@@ -391,9 +373,7 @@ describe("createVerifySignatureMiddleware", () => {
 			});
 			const ctx2 = createMiddlewareContext(request2);
 
-			await expect(middleware.handler(ctx2)).rejects.toThrow(
-				StorageServerError,
-			);
+			await expect(middleware.handler(ctx2)).rejects.toThrow(StorageServerError);
 
 			try {
 				await middleware.handler(ctx2);
@@ -418,10 +398,7 @@ describe("createVerifySignatureMiddleware", () => {
 			});
 
 			const ctx = createMiddlewareContext(request);
-			const chainResult = await executeMiddlewareChain(
-				[middleware],
-				ctx,
-			);
+			const chainResult = await executeMiddlewareChain([middleware], ctx);
 
 			// When skipped, no signature context is added
 			expect(
@@ -441,9 +418,9 @@ describe("createVerifySignatureMiddleware", () => {
 			});
 
 			const ctx = createMiddlewareContext(request);
-			await expect(
-				executeMiddlewareChain([middleware], ctx),
-			).rejects.toThrow(StorageServerError);
+			await expect(executeMiddlewareChain([middleware], ctx)).rejects.toThrow(
+				StorageServerError,
+			);
 		});
 	});
 
@@ -467,8 +444,8 @@ describe("createVerifySignatureMiddleware", () => {
 
 			expect(authHook).toHaveBeenCalledTimes(1);
 			expect(result).toBeDefined();
-			expect(result!.signature.verified).toBe(true);
-			expect(result!.signature.auth).toEqual({
+			expect(result?.signature.verified).toBe(true);
+			expect(result?.signature.auth).toEqual({
 				userId: "user-123",
 				metadata: { role: "admin" },
 			});
@@ -489,9 +466,7 @@ describe("createVerifySignatureMiddleware", () => {
 			const request = await createSignedRequest(signer);
 
 			const ctx = createMiddlewareContext(request);
-			await expect(middleware.handler(ctx)).rejects.toThrow(
-				StorageServerError,
-			);
+			await expect(middleware.handler(ctx)).rejects.toThrow(StorageServerError);
 
 			try {
 				await middleware.handler(ctx);
@@ -505,9 +480,7 @@ describe("createVerifySignatureMiddleware", () => {
 
 		it("receives headers in authHook context", async () => {
 			const signer = createRequestSigner({ secret: testSecret });
-			const authHook = vi
-				.fn()
-				.mockResolvedValue({ authenticated: true });
+			const authHook = vi.fn().mockResolvedValue({ authenticated: true });
 
 			const middleware = createVerifySignatureMiddleware({
 				secret: testSecret,
@@ -551,7 +524,7 @@ describe("createVerifySignatureMiddleware", () => {
 			const ctx = createMiddlewareContext(request);
 			const result = await middleware.handler(ctx);
 			expect(result).toBeDefined();
-			expect(result!.signature.verified).toBe(true);
+			expect(result?.signature.verified).toBe(true);
 		});
 
 		it("verifies PUT requests with body", async () => {
@@ -569,7 +542,7 @@ describe("createVerifySignatureMiddleware", () => {
 			const ctx = createMiddlewareContext(request);
 			const result = await middleware.handler(ctx);
 			expect(result).toBeDefined();
-			expect(result!.signature.verified).toBe(true);
+			expect(result?.signature.verified).toBe(true);
 		});
 
 		it("verifies DELETE requests", async () => {
@@ -594,7 +567,7 @@ describe("createVerifySignatureMiddleware", () => {
 			const ctx = createMiddlewareContext(request);
 			const result = await middleware.handler(ctx);
 			expect(result).toBeDefined();
-			expect(result!.signature.verified).toBe(true);
+			expect(result?.signature.verified).toBe(true);
 		});
 	});
 
@@ -607,10 +580,7 @@ describe("createVerifySignatureMiddleware", () => {
 
 			const request = await createSignedRequest(signer);
 			const ctx = createMiddlewareContext(request);
-			const chainResult = await executeMiddlewareChain(
-				[middleware],
-				ctx,
-			);
+			const chainResult = await executeMiddlewareChain([middleware], ctx);
 
 			const context = chainResult.context as {
 				signature: { verified: boolean; timestamp: number };
@@ -686,6 +656,6 @@ describe("createClientRequestSigner", () => {
 		const ctx = createMiddlewareContext(request);
 		const result = await middleware.handler(ctx);
 		expect(result).toBeDefined();
-		expect(result!.signature.verified).toBe(true);
+		expect(result?.signature.verified).toBe(true);
 	});
 });

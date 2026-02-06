@@ -15,8 +15,8 @@ import {
 	getFileTypeValidationIssue,
 	getMagicByteLength,
 } from "../core/validation/file-validator";
-import type { FileInfo } from "../types/file";
 import type { S3Encryption } from "../types/encryption";
+import type { FileInfo } from "../types/file";
 import type { StandardSchemaV1 } from "../types/standard-schema";
 import { createFetchSchema } from "./fetch-schema";
 import type { StorageClientOptions } from "./types";

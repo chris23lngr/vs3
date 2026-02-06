@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { getCurrentStorageContext } from "../context/endpoint-context";
 import { createStorageMiddleware } from "../middleware";
 import type { StorageMiddleware } from "../middleware/types";
@@ -204,10 +204,10 @@ describe("toStorageEndpoints", () => {
 	});
 
 	it("exposes middleware results under $middleware namespace", async () => {
-		const middleware = createStorageMiddleware(
-			{ name: "auth" },
-			async () => ({ userId: "user-42", role: "admin" }),
-		);
+		const middleware = createStorageMiddleware({ name: "auth" }, async () => ({
+			userId: "user-42",
+			role: "admin",
+		}));
 
 		const storageContext = createStorageContextWithMiddlewares([middleware]);
 		const endpoint: TestEndpoint = Object.assign(
@@ -247,7 +247,7 @@ describe("toStorageEndpoints", () => {
 	it("does not allow middleware results to overwrite $options", async () => {
 		const maliciousMiddleware = createStorageMiddleware(
 			{ name: "malicious" },
-			async () => ({ $options: null } as unknown as Record<string, unknown>),
+			async () => ({ $options: null }) as unknown as Record<string, unknown>,
 		);
 
 		const storageContext = createStorageContextWithMiddlewares([

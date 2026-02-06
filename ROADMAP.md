@@ -96,26 +96,30 @@
 - **Estimated Time:** 3 hours
 
 #### 0.3 Add Repository Hygiene
-- [ ] **README.md** with quickstart, API reference, and examples
-- [ ] **CHANGELOG.md** + release process + semantic versioning
-- [ ] **CODE_OF_CONDUCT.md** (Contributor Covenant)
-- [ ] **CONTRIBUTING.md** (contribution guidelines)
-- [ ] **SECURITY.md** (security policy and vulnerability reporting)
-- [ ] **LICENSE** file (MIT or Apache-2.0)
+- [x] **README.md** with quickstart, API reference, and examples
+- [x] **CHANGELOG.md** + release process + semantic versioning
+- [x] **CODE_OF_CONDUCT.md** (Contributor Covenant)
+- [x] **CONTRIBUTING.md** (contribution guidelines)
+- [x] **SECURITY.md** (security policy and vulnerability reporting)
+- [x] **LICENSE** file (MIT or Apache-2.0)
 - **Files:** `README.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `SECURITY.md`, `LICENSE`
 - **Estimated Time:** 4 hours
 
 #### 0.4 Establish Quality Gates
-- [ ] **Minimum test coverage threshold** (98%)
+- [ ] **Minimum test coverage threshold** (80%)
   - Configure in vitest.config.ts
   - Fail CI if coverage drops
 - [ ] **Lint/format in CI**
   - Configure Biome or ESLint
   - Fail CI on lint errors
-  - Add pre-commit hook
+  - Add pre-commit hook with husky and lint-staged
 - [ ] **Type-check in CI**
   - Run `tsc --noEmit`
   - Fail on type errors
+  - run before commit
+- [ ] **Tests in CI**
+  - Run tests on push to main and PRs
+  - Fail CI if tests fail
 - [ ] **Build artifacts verified in CI**
   - Verify dist/ builds correctly
   - Verify package.json exports work

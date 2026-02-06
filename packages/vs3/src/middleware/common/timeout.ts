@@ -20,9 +20,8 @@ function validateTimeoutConfig(config: TimeoutConfig): void {
 
 function createTimeoutSignal(timeoutMs: number): AbortSignal {
 	// AbortSignal.timeout() is not in all TS lib targets; cast to access it at runtime (Node 16+).
-	const timeoutFn = (
-		AbortSignal as { timeout?: (ms: number) => AbortSignal }
-	).timeout;
+	const timeoutFn = (AbortSignal as { timeout?: (ms: number) => AbortSignal })
+		.timeout;
 
 	if (typeof timeoutFn === "function") {
 		return timeoutFn(timeoutMs);

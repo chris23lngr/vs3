@@ -10,8 +10,8 @@ import {
 	getObjectKeyValidationIssue,
 	runContentValidators,
 } from "../../core/validation";
-import type { FileInfo } from "../../types/file";
 import type { PresignedUploadResult } from "../../types/adapter";
+import type { FileInfo } from "../../types/file";
 import type { StandardSchemaV1 } from "../../types/standard-schema";
 import type { ContentValidatorInput } from "../../types/validation";
 import { createStorageEndpoint } from "../create-storage-endpoint";
@@ -135,9 +135,10 @@ function transformMetadata(
 	);
 }
 
-function normalizePresignedUpload(
-	result: PresignedUploadResult,
-): { url: string; headers?: Record<string, string> } {
+function normalizePresignedUpload(result: PresignedUploadResult): {
+	url: string;
+	headers?: Record<string, string>;
+} {
 	if (typeof result === "string") {
 		return { url: result };
 	}
@@ -215,17 +216,13 @@ export function createUploadUrlRoute<M extends StandardSchemaV1>(
 
 			throwIfIssue(getObjectKeyValidationIssue(key));
 
-			const presigned = await adapter.generatePresignedUploadUrl(
-				key,
-				fileInfo,
-				{
-					expiresIn,
-					contentType: fileInfo.contentType,
-					metadata: transformMetadata(internalMetadata),
-					acl,
-					encryption,
-				},
-			);
+			const presigned = await adapter.generatePresignedUploadUrl(key, fileInfo, {
+				expiresIn,
+				contentType: fileInfo.contentType,
+				metadata: transformMetadata(internalMetadata),
+				acl,
+				encryption,
+			});
 
 			const { url, headers } = normalizePresignedUpload(presigned);
 

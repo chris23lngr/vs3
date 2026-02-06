@@ -24,8 +24,7 @@ type RateLimitResult = {
 function validateRateLimitConfig(config: RateLimitConfig): void {
 	const isValidMax =
 		Number.isFinite(config.maxRequests) && config.maxRequests > 0;
-	const isValidWindow =
-		Number.isFinite(config.windowMs) && config.windowMs > 0;
+	const isValidWindow = Number.isFinite(config.windowMs) && config.windowMs > 0;
 
 	if (!isValidMax || !isValidWindow) {
 		throw new Error(

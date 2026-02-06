@@ -1,7 +1,7 @@
+import type { S3Encryption } from "./encryption";
 import type { FileInfo } from "./file";
 import type { StorageOptions } from "./options";
 import type { StandardSchemaV1 } from "./standard-schema";
-import type { S3Encryption } from "./encryption";
 
 /**
  * Conditionally adds metadata to a body type based on storage options

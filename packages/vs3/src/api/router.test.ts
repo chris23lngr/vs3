@@ -175,12 +175,9 @@ describe("router", () => {
 	});
 
 	it("rejects requests when middleware throws via HTTP handler", async () => {
-		const middleware = createStorageMiddleware(
-			{ name: "blocker" },
-			async () => {
-				throw new Error("unauthorized");
-			},
-		);
+		const middleware = createStorageMiddleware({ name: "blocker" }, async () => {
+			throw new Error("unauthorized");
+		});
 
 		const adapter = createAdapter();
 		const options = {

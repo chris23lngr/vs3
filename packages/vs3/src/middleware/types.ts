@@ -18,9 +18,7 @@ export type StorageMiddlewareContext<C = object> = {
 export type MiddlewareHandler<
 	TContext = object,
 	TResult extends Record<string, unknown> = Record<string, unknown>,
-> = (
-	ctx: StorageMiddlewareContext<TContext>,
-) => Promise<TResult | undefined>;
+> = (ctx: StorageMiddlewareContext<TContext>) => Promise<TResult | undefined>;
 
 /**
  * Configuration for a middleware.

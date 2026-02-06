@@ -25,13 +25,9 @@ export const s3EncryptionSchema = z.discriminatedUnion("type", [
 	}),
 	z.object({
 		type: z.literal("SSE-C"),
-		customerKey: z
-			.string()
-			.min(1)
-			.refine(isValidSseCustomerKey, {
-				message:
-					"SSE-C customer key must be a 32-byte base64-encoded string.",
-			}),
+		customerKey: z.string().min(1).refine(isValidSseCustomerKey, {
+			message: "SSE-C customer key must be a 32-byte base64-encoded string.",
+		}),
 		customerKeyMd5: z.string().min(1).optional(),
 		algorithm: z.literal("AES256").optional(),
 	}),

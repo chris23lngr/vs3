@@ -349,11 +349,7 @@ describe("createBaseClient", () => {
 				.spyOn(xhrUploadModule, "xhrUpload")
 				.mockResolvedValue(mockUploadResult);
 
-			await client.uploadFile(
-				mockFile,
-				{ userId: "user-1" },
-				{ retry: 2 },
-			);
+			await client.uploadFile(mockFile, { userId: "user-1" }, { retry: 2 });
 
 			expect(xhrUploadSpy).toHaveBeenCalledWith(
 				"https://s3.example.com/upload",

@@ -103,8 +103,7 @@ const STORAGE_ERROR_DEFINITIONS: Record<
 		code: StorageErrorCode.INVALID_FILENAME,
 		description: "Filename contains invalid characters or format.",
 		httpStatus: 400,
-		recoverySuggestion:
-			"Rename the file to remove invalid characters or paths.",
+		recoverySuggestion: "Rename the file to remove invalid characters or paths.",
 	},
 	[StorageErrorCode.RATE_LIMIT_EXCEEDED]: {
 		code: StorageErrorCode.RATE_LIMIT_EXCEEDED,
@@ -198,8 +197,7 @@ const STORAGE_ERROR_DEFINITIONS: Record<
 	},
 	[StorageErrorCode.TIMESTAMP_EXPIRED]: {
 		code: StorageErrorCode.TIMESTAMP_EXPIRED,
-		description:
-			"Request timestamp is outside the acceptable time window.",
+		description: "Request timestamp is outside the acceptable time window.",
 		httpStatus: 401,
 		recoverySuggestion: "Sync the client clock and retry with a new timestamp.",
 	},

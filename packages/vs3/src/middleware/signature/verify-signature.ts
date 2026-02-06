@@ -4,7 +4,10 @@ import {
 } from "../../core/security/request-signer";
 import { createStorageMiddleware } from "../core/create-middleware";
 import type { StorageMiddleware } from "../types";
-import type { VerificationResult, VerifySignatureMiddlewareConfig } from "./types";
+import type {
+	VerificationResult,
+	VerifySignatureMiddlewareConfig,
+} from "./types";
 import { verifySignedRequest } from "./verify-request";
 
 type SignatureMiddlewareResult = {

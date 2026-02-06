@@ -4,13 +4,23 @@
 	"packageManager": "pnpm@10.28.1",
 	"scripts": {
 		"build": "turbo run build",
+		"build:ci": "turbo run build --filter=vs3",
+		"typecheck": "turbo run typecheck",
 		"dev": "turbo run dev",
 		"test": "turbo run test",
-		"check": "biome check .",
+		"test:ci": "turbo run test --filter=vs3 -- --coverage",
+		"check": "biome check . --error-on-warnings",
 		"check:write": "biome check --write .",
-		"check:unsafe": "biome check --write --unsafe ."
+		"check:unsafe": "biome check --write --unsafe .",
+		"prepare": "husky",
+		"lint-staged": "lint-staged"
 	},
 	"devDependencies": {
+		"husky": "^9.1.7",
+		"lint-staged": "^16.1.0",
 		"turbo": "latest"
+	},
+	"lint-staged": {
+		"*.{cjs,css,js,json,jsx,md,mjs,ts,tsx,yaml,yml}": "biome check --write"
 	}
 }

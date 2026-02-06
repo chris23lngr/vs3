@@ -181,21 +181,15 @@ describe("storage", () => {
 	it("runs multiple middlewares in order", async () => {
 		const order: string[] = [];
 
-		const first = createStorageMiddleware(
-			{ name: "first" },
-			async () => {
-				order.push("first");
-				return { step: 1 };
-			},
-		);
+		const first = createStorageMiddleware({ name: "first" }, async () => {
+			order.push("first");
+			return { step: 1 };
+		});
 
-		const second = createStorageMiddleware(
-			{ name: "second" },
-			async () => {
-				order.push("second");
-				return { step: 2 };
-			},
-		);
+		const second = createStorageMiddleware({ name: "second" }, async () => {
+			order.push("second");
+			return { step: 2 };
+		});
 
 		const storage = createStorage({
 			bucket: "test",

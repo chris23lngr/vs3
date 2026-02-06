@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { StorageErrorCode } from "../../core/error/codes";
 import { StorageServerError } from "../../core/error/error";
-import type { StorageContext } from "../../types/context";
 import { createStorageMiddleware } from "../core/create-middleware";
 import { executeMiddlewareChain } from "../core/execute-chain";
 import type { MiddlewareHandler, StorageMiddlewareContext } from "../types";
@@ -301,12 +300,9 @@ describe("executeMiddlewareChain error passthrough", () => {
 describe("executeMiddlewareChain response passthrough", () => {
 	it("re-throws Response instances unchanged", async () => {
 		const response = new Response("Forbidden", { status: 403 });
-		const middleware = createStorageMiddleware(
-			{ name: "response" },
-			async () => {
-				throw response;
-			},
-		);
+		const middleware = createStorageMiddleware({ name: "response" }, async () => {
+			throw response;
+		});
 
 		await expect(
 			executeMiddlewareChain([middleware], createTestContext()),
@@ -360,7 +356,10 @@ describe("executeMiddlewareChain non-Error throw", () => {
 describe("executeMiddlewareChain invalid result", () => {
 	it("rejects non-object middleware results", async () => {
 		const handler = (async () => "not-an-object") as unknown as MiddlewareHandler;
-		const middleware = createStorageMiddleware({ name: "invalid-result" }, handler);
+		const middleware = createStorageMiddleware(
+			{ name: "invalid-result" },
+			handler,
+		);
 
 		try {
 			await executeMiddlewareChain([middleware], createTestContext());

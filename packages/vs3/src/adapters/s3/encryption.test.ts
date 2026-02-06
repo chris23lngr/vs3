@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { resolveS3EncryptionConfig } from "./encryption";
 

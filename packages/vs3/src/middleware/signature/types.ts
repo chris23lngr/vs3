@@ -1,10 +1,10 @@
+import type { StorageErrorCode } from "../../core/error/codes";
 import type { createRequestSigner } from "../../core/security/request-signer";
 import type {
 	AuthHook,
 	NonceStore,
 	RequestSigningConfig,
 } from "../../types/security";
-import type { StorageErrorCode } from "../../core/error/codes";
 
 /**
  * Configuration for the signature verification middleware.
@@ -32,10 +32,7 @@ export type VerifySignatureMiddlewareConfig = RequestSigningConfig & {
 	 * Custom error handler for verification failures.
 	 * If not provided, a StorageServerError will be thrown.
 	 */
-	onVerificationFailure?: (
-		reason: string,
-		request: Request,
-	) => Response | never;
+	onVerificationFailure?: (reason: string, request: Request) => Response | never;
 };
 
 /**
@@ -75,8 +72,5 @@ export type VerificationFailureContext = {
 	message: string;
 	details?: unknown;
 	request: Request;
-	onVerificationFailure?: (
-		reason: string,
-		request: Request,
-	) => Response | never;
+	onVerificationFailure?: (reason: string, request: Request) => Response | never;
 };

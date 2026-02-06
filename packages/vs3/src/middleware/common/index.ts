@@ -1,4 +1,4 @@
-export { createCorsMiddleware, type CorsConfig } from "./cors";
+export { type CorsConfig, createCorsMiddleware } from "./cors";
 export {
 	createLoggingMiddleware,
 	type LogEntry,

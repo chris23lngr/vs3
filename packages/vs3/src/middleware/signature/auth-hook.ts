@@ -13,10 +13,7 @@ function buildAuthHeaders(request: Request): Record<string, string> {
 export async function runAuthHook(
 	request: Request,
 	authHook?: AuthHook,
-	onVerificationFailure?: (
-		reason: string,
-		request: Request,
-	) => Response | never,
+	onVerificationFailure?: (reason: string, request: Request) => Response | never,
 ): Promise<AuthHookResult | undefined> {
 	if (!authHook) {
 		return undefined;

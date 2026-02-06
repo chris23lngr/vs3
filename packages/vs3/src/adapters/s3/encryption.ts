@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 import type { S3Encryption } from "../../types/encryption";
 
 export type S3EncryptionHeaders = Record<string, string>;

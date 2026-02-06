@@ -27,8 +27,7 @@ const VERIFICATION_ERROR_MAP: Record<
 	},
 	nonce_store_missing: {
 		code: StorageErrorCode.NONCE_STORE_MISSING,
-		message:
-			"Nonce validation is required but no nonce store is configured.",
+		message: "Nonce validation is required but no nonce store is configured.",
 	},
 	nonce_reused: {
 		code: StorageErrorCode.NONCE_REUSED,
