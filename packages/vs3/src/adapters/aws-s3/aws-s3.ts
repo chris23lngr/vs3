@@ -69,12 +69,23 @@ export function createAwsS3Adapter(
 			return url;
 		},
 		async generatePresignedDownloadUrl(key, requestOptions) {
-			const { expiresIn = 3600, bucket } = requestOptions ?? {};
+			const { expiresIn = 3600, bucket, encryption } = requestOptions ?? {};
+			const encryptionConfig =
+				encryption?.type === "SSE-C"
+					? resolveS3EncryptionConfig(encryption)
+					: {};
 			const command = new GetObjectCommand({
 				Bucket: resolveBucket(bucket),
 				Key: key,
+				...(encryptionConfig.input ?? {}),
 			});
-			return getSignedUrl(options.client, command, { expiresIn });
+			const url = await getSignedUrl(options.client, command, { expiresIn });
+
+			if (encryptionConfig.headers) {
+				return { url, headers: encryptionConfig.headers };
+			}
+
+			return url;
 		},
 		async deleteObject(key, requestOptions) {
 			const { bucket } = requestOptions ?? {};
