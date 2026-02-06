@@ -1,4 +1,5 @@
 import { StorageClientDemo } from "@/components/client-demo";
+import { DownloadDemo } from "@/components/download-demo";
 
 export default function HomePage() {
 	return (
@@ -6,6 +7,7 @@ export default function HomePage() {
 			<div className="mx-auto w-full max-w-3xl px-8">
 				<h1 className="font-semibold text-2xl">Storage Demo</h1>
 				<StorageClientDemo />
+				<DownloadDemo />
 			</div>
 		</main>
 	);
