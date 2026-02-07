@@ -1,13 +1,34 @@
 ---
-title: Hello World
-description: Your first document
+title: Introduction
+description: Introduction to vs3
 ---
 
-Welcome to the docs! You can start writing documents in `/content/docs`.
+<Callout type="info">
+  `vs3` is currently in beta. The API will likely change before the first stable release. We strongly discourage you from using it in production but we'd love to hear your feedback and suggestions.
+</Callout>
 
-## What is Next?
+`vs3` is a TypeScript-first library for secure S3 storage access. It generates presigned upload URLs, enforces validation and integrates cleanly with modern runtimes. We use the official AWS S3 SDK (`@aws-sdk/client-s3`) under the hood to interact with your storage provider. 
 
-<Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.dev" />
-</Cards>
+It is designed to be used in serverless environments like Vercel, AWS Lambda, or Cloudflare Workers.
+
+## Features
+
+- **Presigned uploads & downloads** — generate presigned URLs for direct client-to-S3 transfers
+- **File validation** — content type, extension, size, and filename validation with magic byte detection
+- **Type-safe metadata** — define metadata schemas with Zod and get full type inference
+- **Middleware system** — CORS, rate limiting, logging, request signing, and timeout middleware
+- **Request signing** — HMAC-based request signing and verification for secure uploads
+- **S3 encryption** — SSE-S3, SSE-KMS, and SSE-C encryption support
+
+## Getting started
+
+We recommend reading the [installation](/docs/installation) guide to get started with `vs3`.
+
+## Contributing
+
+Thank you for your interest in `vs3`! We highly welcome contributions from the community – please read the [contributing](https://github.com/chris23lngr/vs3/blob/master/CONTRIBUTING.md) guide to get started.
+
+## Credits
+
+- [`@better-auth`](https://better-auth.com) inspired the API design and package structure. We also use `better-fetch` and `better-call` for server-client communication.
+- [`fumadocs`](https://www.fumadocs.dev/) for providing an excellent documentation framework.

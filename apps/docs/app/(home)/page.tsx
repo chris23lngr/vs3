@@ -27,7 +27,7 @@ export default function HomePage() {
 						<div className="md:col-start-2">
 							<Link
 								className="block font-mono text-sm underline underline-offset-4"
-								href="/docs"
+								href="https://github.com/chris23lngr/vs3"
 							>
 								GitHub
 							</Link>
@@ -41,12 +41,24 @@ export default function HomePage() {
 						everything you need to ship secure S3 access fast.
 					</p>
 					<div className="mt-12 flex flex-col items-center justify-start gap-2 sm:flex-row">
-						<Button className={"w-full px-4 sm:w-auto"} size={"lg"}>
-							Get Started
-						</Button>
-						<Button className={"w-full px-4 sm:w-auto"} size={"lg"} variant={"ghost"}>
-							View Documentation <ArrowRightIcon />
-						</Button>
+						<Button
+							className={"w-full px-4 sm:w-auto"}
+							nativeButton={false}
+							render={<Link href="/docs/installation">Get Started</Link>}
+							size={"lg"}
+						/>
+
+						<Button
+							className={"w-full px-4 sm:w-auto"}
+							nativeButton={false}
+							render={
+								<Link href="/docs">
+									View Documentation <ArrowRightIcon />
+								</Link>
+							}
+							size={"lg"}
+							variant={"ghost"}
+						/>
 					</div>
 				</div>
 				{/* <div className="absolute bottom-0 left-0 -z-20 size-[200%] -translate-x-1/2 translate-y-1/2 bg-radial from-blue-500 to-blue-500/0 opacity-20" /> */}
