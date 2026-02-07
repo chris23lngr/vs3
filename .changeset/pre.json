@@ -6,5 +6,5 @@
 		"docs": "0.0.0",
 		"vs3": "0.0.1"
 	},
-	"changesets": []
+	"changesets": ["major-cars-sort", "swift-hoops-melt"]
 }
