@@ -30,7 +30,8 @@
 		"**/*.ts",
 		"**/*.tsx",
 		".next/types/**/*.ts",
-		".next/dev/types/**/*.ts"
+		".next/dev/types/**/*.ts",
+		"content/docs/installation.mdx"
 	],
 	"exclude": ["node_modules"]
 }
