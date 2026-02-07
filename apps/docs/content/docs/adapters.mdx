@@ -1,0 +1,203 @@
+---
+title: Adapters
+description: Connect vs3 to any S3-compatible storage provider.
+---
+
+Adapters provide a preconfigured S3 client for your storage provider. Every adapter uses the official AWS S3 SDK (`@aws-sdk/client-s3`) under the hood — the only difference between adapters is how the client is configured (endpoint, region, credentials, etc.). We currently provide support for the following adapters:
+
+- [AWS S3](#aws-s3)
+- [Cloudflare R2](#cloudflare-r2)
+- [MinIO](#minio)
+- [Backblaze B2](#backblaze-b2)
+- [DigitalOcean Spaces](#digitalocean-spaces)
+- [Wasabi](#wasabi)
+
+If you cannot find an adapter for your provider, you can always create your own adapter by following the [custom adapters](#custom-adapters) section.
+
+Pass an adapter to `createStorage` to connect vs3 to your provider:
+
+```ts
+import { createStorage } from "vs3";
+import { aws } from "vs3/adapters";
+
+const storage = createStorage({
+  bucket: "my-bucket",
+  adapter: aws({
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+  }),
+});
+```
+
+<Callout type="info">
+All adapters require the `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` peer dependencies to be installed.
+</Callout>
+
+---
+
+## AWS S3
+
+The `aws` adapter connects to Amazon S3. It accepts the same options as the AWS SDK `S3Client` constructor.
+
+```ts
+import { aws } from "vs3/adapters";
+
+const adapter = aws({
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+});
+```
+
+| Option | Type | Required | Description |
+|---|---|---|---|
+| `region` | `string` | Yes | AWS region (e.g. `us-east-1`). |
+| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
+
+Any additional [`S3ClientConfig`](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/) options are forwarded to the underlying client.
+
+---
+
+## Cloudflare R2
+
+The `cloudflareR2` adapter configures the S3 client for Cloudflare R2 with the correct endpoint and region.
+
+```ts
+import { cloudflareR2 } from "vs3/adapters";
+
+const adapter = cloudflareR2({
+  accountId: process.env.CF_ACCOUNT_ID!,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  },
+});
+```
+
+| Option | Type | Required | Description |
+|---|---|---|---|
+| `accountId` | `string` | Yes | Your Cloudflare account ID. |
+| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
+| `jurisdiction` | `"eu" \| "fedramp"` | No | Data locality jurisdiction. |
+
+---
+
+## MinIO
+
+The `minio` adapter configures the S3 client with path-style access, which is required by MinIO.
+
+```ts
+import { minio } from "vs3/adapters";
+
+const adapter = minio({
+  endpoint: "http://localhost:9000",
+  credentials: {
+    accessKeyId: process.env.MINIO_ACCESS_KEY!,
+    secretAccessKey: process.env.MINIO_SECRET_KEY!,
+  },
+});
+```
+
+| Option | Type | Required | Description |
+|---|---|---|---|
+| `endpoint` | `string` | Yes | Full URL to your MinIO instance. |
+| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
+| `region` | `string` | No | Defaults to `us-east-1`. |
+
+---
+
+## Backblaze B2
+
+The `backblazeB2` adapter configures the S3-compatible endpoint for Backblaze B2.
+
+```ts
+import { backblazeB2 } from "vs3/adapters";
+
+const adapter = backblazeB2({
+  region: "us-west-000",
+  credentials: {
+    accessKeyId: process.env.B2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.B2_SECRET_ACCESS_KEY!,
+  },
+});
+```
+
+| Option | Type | Required | Description |
+|---|---|---|---|
+| `region` | `string` | Yes | B2 region (e.g. `us-west-000`, `eu-central-003`). |
+| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
+
+---
+
+## DigitalOcean Spaces
+
+The `digitaloceanSpaces` adapter configures the S3 client for DigitalOcean Spaces.
+
+```ts
+import { digitaloceanSpaces } from "vs3/adapters";
+
+const adapter = digitaloceanSpaces({
+  region: "nyc3",
+  credentials: {
+    accessKeyId: process.env.DO_SPACES_KEY!,
+    secretAccessKey: process.env.DO_SPACES_SECRET!,
+  },
+});
+```
+
+| Option | Type | Required | Description |
+|---|---|---|---|
+| `region` | `string` | Yes | Datacenter region (e.g. `nyc3`, `ams3`, `sgp1`). |
+| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
+
+---
+
+## Wasabi
+
+The `wasabi` adapter configures the S3 client for Wasabi Hot Cloud Storage.
+
+```ts
+import { wasabi } from "vs3/adapters";
+
+const adapter = wasabi({
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.WASABI_ACCESS_KEY!,
+    secretAccessKey: process.env.WASABI_SECRET_KEY!,
+  },
+});
+```
+
+| Option | Type | Required | Description |
+|---|---|---|---|
+| `region` | `string` | Yes | Wasabi region (e.g. `us-east-1`, `eu-central-1`). |
+| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
+
+---
+
+## Custom Adapter
+
+If your provider is not listed above, use `createAdapter` to wrap any existing `S3Client` instance:
+
+```ts
+import { S3Client } from "@aws-sdk/client-s3";
+import { createAdapter } from "vs3/adapters";
+
+const client = new S3Client({
+  endpoint: "https://s3.custom-provider.com",
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY!,
+    secretAccessKey: process.env.S3_SECRET_KEY!,
+  },
+});
+
+const adapter = createAdapter({ client });
+```
+
+This gives you full control over the S3 client configuration while still integrating with vs3.

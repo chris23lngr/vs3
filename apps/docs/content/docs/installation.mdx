@@ -48,19 +48,15 @@ bun add vs3
 `vs3` requires an adapter to interact with the storage. See [Adapters](/docs/adapters) for a full list of supported adapters.
 
 ```ts title="server/storage/server.ts"
-import { S3Client } from "@aws-sdk/client-s3";
 import { aws } from "vs3/adapters";
 
 const adapter = aws({
-    bucket: process.env.AWS_BUCKET!,
-    client: new S3Client({
-        region: process.env.AWS_REGION!,
-        credentials: {
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-        },
-    }),
-})
+    region: process.env.AWS_REGION!,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+});
 ```
 
 <Callout type="info">
