@@ -47,16 +47,6 @@
 				"default": "./dist/adapters.cjs"
 			}
 		},
-		"./adapters/aws-s3": {
-			"import": {
-				"types": "./dist/aws-s3.d.ts",
-				"default": "./dist/aws-s3.js"
-			},
-			"require": {
-				"types": "./dist/aws-s3.d.cts",
-				"default": "./dist/aws-s3.cjs"
-			}
-		},
 		"./package.json": "./package.json"
 	},
 	"files": [
@@ -73,9 +63,6 @@
 			],
 			"adapters": [
 				"./dist/adapters.d.ts"
-			],
-			"adapters/aws-s3": [
-				"./dist/aws-s3.d.ts"
 			]
 		}
 	},
