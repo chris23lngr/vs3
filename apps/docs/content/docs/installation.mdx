@@ -1,0 +1,163 @@
+---
+title: Installation
+description: How to get up and running with vs3.
+---
+
+<Steps>
+
+<Step>
+
+## Install dependencies
+
+Install the required dependencies with a package manager of your choice:
+
+<Tabs groupId="package-manager" defaultValue="pnpm" items={["pnpm", "npm", "yarn", "bun"]}>
+
+<Tab value="pnpm">
+```bash
+pnpm install vs3
+```
+</Tab>
+
+<Tab value="npm">
+```bash
+npm install vs3
+```
+</Tab>
+
+<Tab value="yarn">
+```bash
+yarn add vs3
+```
+</Tab>
+
+<Tab value="bun">
+```bash
+bun add vs3
+```
+</Tab>
+
+</Tabs>
+
+</Step>
+
+<Step>
+
+## Create a storage adapter
+
+`vs3` requires an adapter to interact with the storage. See [Adapters](/docs/adapters) for a full list of supported adapters.
+
+```ts title="server/storage/server.ts"
+import { S3Client } from "@aws-sdk/client-s3";
+import { aws } from "vs3/adapters";
+
+const adapter = aws({
+    bucket: process.env.AWS_BUCKET!,
+    client: new S3Client({
+        region: process.env.AWS_REGION!,
+        credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        },
+    }),
+})
+```
+
+<Callout type="info">
+For `aws` make sure you have the `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` packages installed.
+</Callout>
+
+</Step>
+
+<Step>
+
+## Create a storage instance
+
+Create a storage instance and pass in the adapter you created:
+
+```ts title="server/storage/server.ts"
+export const storage = createStorage({
+    bucket: process.env.AWS_BUCKET!,
+    adapter,
+});
+
+// Required for the client to infer the metadata schema
+// [!code highlight]
+export type StorageMetadata = storage.$Infer.metadata;
+```
+
+While this will work without any other options you might want to pass in some additional options. Check out the [Configuration](/docs/configuration) section for more information.
+
+</Step>
+
+<Step>
+
+## Mount handlers
+
+Mount the handlers to your framework of choice at `/api/storage/[...all]`. If you prefer to use a different path, you can pass the `apiPath` option when creating the storage instance. See the [Configuration](/docs/configuration) section for more information.
+
+<Tabs groupId="framework" defaultValue="nextjs" items={["nextjs"]}>
+
+<Tab value="nextjs">
+```ts title="app/api/storage/[...all]/route.ts"
+export const { GET, POST, OPTIONS, PUT } = toNextJsRouteHandler({ handler: storage.handler });
+```
+</Tab>
+
+</Tabs>
+
+<Callout type="info">
+Although we currently only provide an integration for Next.js, `vs3` supports any backend framework that uses standard request and response objects.
+</Callout>
+
+</Step>
+
+<Step>
+
+## Create a client instance
+
+To access the storage API from the client you need to create a client instance. Create a client instance by importing `createStorageClient` for the framework of your choice and passing in the same options you passed to the storage instance.
+
+<Tabs groupId="frontend-framework" defaultValue="react" items={["react"]}>
+
+<Tab value="react">
+```ts title="server/storage/client.ts"
+"use client";
+
+import { createStorageClient } from "vs3/react";
+import type { StorageMetadata } from "./server";
+
+export const storageClient = createStorageClient<StorageMetadata>({
+    // Optional configuration
+});
+```
+</Tab>
+
+</Tabs>
+
+If you passed the `StorageMetadata` type to the client instance, you do not need to pass the metadata schema again. The schema will be inferred automatically.
+
+<Callout type="warn">
+This will likely change in the future to allow for more flexibility. See [this issue](https://github.com/chris23lngr/vs3/issues/49) for more information.
+</Callout>
+
+
+</Step>
+
+<Step>
+
+## All done
+
+That's it! You can now use `vs3` to upload and download files. Check out the [usage](/docs/usage) section for more information on how to use the client and server APIs.
+
+```ts title="client-demo.tsx"
+"use client";
+
+const { upload } = storageClient.useUpload();
+upload(file, { userId: "123" });
+```
+
+</Step>
+
+
+</Steps>
