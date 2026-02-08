@@ -2,14 +2,15 @@ import { createRequestSigner } from "../../core/security/request-signer";
 import type {
 	RequestSigningConfig,
 	SignatureHeaders,
+	SignRequestInput,
 } from "../../types/security";
 
-export type ServerSignInput = {
-	method: string;
-	path: string;
-	body?: string;
-	nonce?: string;
-};
+/**
+ * Input for the server-side signer.
+ * Derived from {@link SignRequestInput} but omits `timestamp` because the
+ * server signer always uses the current time.
+ */
+export type ServerSignInput = Omit<SignRequestInput, "timestamp">;
 
 export type ServerSignResult = {
 	headers: Record<string, string>;
