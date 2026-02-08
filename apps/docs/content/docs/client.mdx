@@ -1,0 +1,146 @@
+---
+title: Usage
+description: How to use vs3 to upload and download files.
+---
+
+## Client
+
+The storage client allows you to interact with the storage API from the client.
+
+### useUpload
+
+The `useUpload` hook allows you to upload a file to the storage.
+
+```ts
+const { upload, reset, state } = storageClient.useUpload();
+```
+
+The upload hook will return a `upload` function that you can use to upload a file to the storage. The state object contains the current upload state including the progress, status, error and data.
+
+#### `upload`
+
+The `upload` function takes a file and a metadata object and returns a promise that resolves to the upload result. In the background the client makes a request to the storage API which will generate a presigned URL. The client then uploads the file to the presigned URL. See [concepts](/docs/concepts) for more information.
+
+If you have defined a metadata schema, you will need to pass the metadata to the `upload` function as a second argument.
+
+```ts
+upload(new File([], "test.txt"), { userId: "123" });
+```
+
+#### `reset`
+
+The `reset` function will reset the upload state to the initial state.
+
+```ts
+reset();
+```
+
+#### `state`
+
+The `state` object contains the current upload state including the progress, status, error and data.
+
+```ts
+console.log(state);
+```
+```json
+{
+	"isLoading": false,
+	"progress": 0,
+	"error": null,
+	"data": null,
+	"status": "idle"
+}
+```
+
+### useDownload
+
+The `useDownload` hook allows you to download a file from the storage.
+
+```ts
+const { download, state } = storageClient.useDownload();
+```
+
+#### `download`
+
+The `download` function takes a key and a download options object and returns a promise that resolves to the download result. In the background the client makes a request to the storage API which will generate a presigned URL. The client then downloads the file from the presigned URL. See [concepts](/docs/concepts) for more information.
+
+```ts
+download("test.txt", { mode: "preview" });
+```
+
+There are three download modes:
+
+- `"url"`: Only returns the presigned URL and does not download the file automatically. Useful if you want to process the file manually.
+- `"direct-download"`: Downloads the file and triggers a browser download.
+- `"preview"`: Opens the file in a new browser tab.
+
+#### `state`
+
+The `state` object contains the current download state including the progress, status, error and data.
+
+```ts
+console.log(state);
+```
+```json
+{
+	"isLoading": false,
+	"error": null,
+	"data": null,
+	"status": "idle"
+}
+```
+
+## Server
+
+On the server, utilities like direct upload and download are not avaialable. You can still use any endpoints the storage API provides.
+
+### Uploading
+
+If you want to upload a file from the server, create a presigned URL using the `storage.api.uploadUrl` method:
+
+```ts
+await storage.api.uploadUrl({
+	body: {
+		fileInfo: {
+			name: "test.txt",
+			size: 100,
+			contentType: "text/plain",
+		},
+		metadata: {
+			userId: "123"
+		},
+	},
+});
+```
+
+The response will contain the presigned URL and the key. You can then use this URL to upload the file to the storage using the `fetch` API or any other HTTP client.
+
+```ts
+await fetch(presignedUrl, {
+	method: "PUT",
+	body: file,
+	headers: uploadHeaders,
+});
+```
+
+### Downloading
+
+If you want to download a file from the storage, create a presigned URL using the `storage.api.downloadUrl` method:
+
+```ts
+await storage.api.downloadUrl({
+	body: {
+		key: "test.txt",
+	},
+});
+```
+
+The response will contain the presigned URL and the download headers. You can then use this URL to download the file using the `fetch` API or any other HTTP client.
+
+```ts
+const response = await fetch(presignedUrl, {
+	method: "GET",
+	headers: downloadHeaders,
+});
+const blob = await response.blob();
+```

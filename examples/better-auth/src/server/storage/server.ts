@@ -46,3 +46,4 @@ export const storage = createStorage({
 });
 
 export const MetadataSchema = storage.$Infer.metadata;
+
