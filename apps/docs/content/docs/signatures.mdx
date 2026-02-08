@@ -37,6 +37,12 @@ const storage = createStorage({
   signature: {
     secret: process.env.SIGNING_SECRET!,
     requireNonce: true,
+    authHook: async ({ request }) => {
+      // Validate the caller, e.g. check a session token
+      const token = request.headers.get("authorization");
+      if (!token) return { authenticated: false, reason: "Missing token" };
+      return { authenticated: true };
+    },
   },
   middlewares: [
     createVerifySignatureMiddleware({
@@ -63,10 +69,17 @@ Defaults you should know:
 
 Never send your signing secret to a browser. `vs3` provides a built-in signing route at `/sign-request` when `signature` is configured.
 
+The `signature` option requires an `authHook` that validates the caller before issuing a signature. Without it, anyone could request valid signatures and bypass your protection.
+
+The `/sign-request` route is automatically excluded from the signature verification middleware, so you do not need to add it to `skipPaths`. It authenticates callers through its own `authHook` instead.
+
 ```ts
 const response = await fetch("/api/storage/sign-request", {
   method: "POST",
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: "Bearer <session-token>",
+  },
   body: JSON.stringify({
     method: "POST",
     path: "/upload-url",
