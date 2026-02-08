@@ -126,6 +126,8 @@ describe("createAuthMiddleware", () => {
 			const request = createRequest();
 			const ctx = createMiddlewareContext(request);
 
+			await expect(middleware.handler(ctx)).rejects.toThrow(StorageServerError);
+
 			try {
 				await middleware.handler(ctx);
 			} catch (error) {
