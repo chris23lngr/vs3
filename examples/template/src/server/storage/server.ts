@@ -1,6 +1,5 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { createAdapter, createStorage } from "vs3";
-import z from "zod";
 import { env } from "@/env";
 
 /**
@@ -40,11 +39,7 @@ export const storage = createStorage({
 	bucket: "spesen-tool-dev1",
 	apiPath: "/api/storage",
 	adapter: createAdapter({ client: getS3Client() }),
-	metadataSchema: z.object({
-		userId: z.string(),
-		orgId: z.string().optional(),
-	}),
-	maxFileSize: 10 * 1024 * 1024,
+	maxFileSize: 1 * 1024 * 1024,
 });
 
 export const MetadataSchema = storage.$Infer.metadata;
