@@ -127,7 +127,7 @@ createVerifySignatureMiddleware({
 });
 ```
 
-Required headers: `x-signature`, `x-timestamp`. If `requireNonce` is true, `x-nonce` is required. Do not expose your secret to browsers; use a server endpoint to sign requests and return headers to the client.
+Required headers: `x-signature`, `x-timestamp`. If `requireNonce` is true, `x-nonce` is required. Do not expose your secret to browsers; use the built-in `/sign-request` route to obtain headers.
 
 ### Rate limiting
 

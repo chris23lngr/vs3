@@ -34,6 +34,10 @@ import {
 const storage = createStorage({
   bucket: "my-bucket",
   adapter: myAdapter,
+  signature: {
+    secret: process.env.SIGNING_SECRET!,
+    requireNonce: true,
+  },
   middlewares: [
     createVerifySignatureMiddleware({
       secret: process.env.SIGNING_SECRET!,
@@ -55,34 +59,25 @@ Defaults you should know:
 - `requireNonce`: `false`
 - `nonceTtlMs`: `600_000` (10 minutes)
 
-## Server-side signing endpoint
+## Built-in signing route
 
-Never send your signing secret to a browser. Instead, add a server endpoint that signs requests and returns the headers to the client.
+Never send your signing secret to a browser. `vs3` provides a built-in signing route at `/sign-request` when `signature` is configured.
 
 ```ts
-import { createServerRequestSigner, generateNonce } from "vs3";
-
-const signer = createServerRequestSigner({
-  secret: process.env.SIGNING_SECRET!,
+const response = await fetch("/api/storage/sign-request", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    method: "POST",
+    path: "/upload-url",
+    body: JSON.stringify({ fileInfo: { name: "notes.txt" } }),
+  }),
 });
 
-export async function signRequest(input: {
-  method: string;
-  path: string;
-  body?: string;
-}) {
-  const { headers } = await signer.sign({
-    method: input.method,
-    path: input.path,
-    body: input.body,
-    nonce: generateNonce(),
-  });
-
-  return { headers };
-}
+const { headers } = await response.json();
 ```
 
-Your client should call this endpoint, then attach the returned headers to the storage API request.
+Your client should call `/sign-request`, then attach the returned headers to the storage API request.
 
 ## Required headers
 
