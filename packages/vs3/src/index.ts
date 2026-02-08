@@ -27,6 +27,8 @@ export {
 export { toNextJsRouteHandler } from "./integrations/next-js";
 // Middleware system exports
 export type {
+	AuthMiddlewareConfig,
+	AuthMiddlewareResult,
 	ChainExecutionResult,
 	CorsConfig,
 	LogEntry,
@@ -43,6 +45,7 @@ export type {
 	VerifySignatureMiddlewareConfig,
 } from "./middleware";
 export {
+	createAuthMiddleware,
 	createClientRequestSigner,
 	createCorsMiddleware,
 	createInMemoryRateLimitStore,
@@ -55,12 +58,15 @@ export {
 } from "./middleware";
 export { createStorage } from "./storage/create-storage";
 export type { Adapter } from "./types/adapter";
+export type {
+	AuthHandler,
+	AuthHandlerContext,
+	AuthResult,
+	AuthSession,
+} from "./types/auth";
 export type { S3Encryption } from "./types/encryption";
 export type { StorageOptions } from "./types/options";
 export type {
-	AuthHook,
-	AuthHookContext,
-	AuthHookResult,
 	NonceStore,
 	RequestSigningConfig,
 	SignatureHeaders,

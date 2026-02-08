@@ -1,4 +1,9 @@
 export {
+	type AuthMiddlewareConfig,
+	type AuthMiddlewareResult,
+	createAuthMiddleware,
+} from "./auth";
+export {
 	type CorsConfig,
 	createCorsMiddleware,
 	createCorsMiddleware as cors,

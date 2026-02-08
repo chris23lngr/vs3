@@ -1,6 +1,4 @@
 import { StorageErrorCode } from "../../core/error/codes";
-import type { AuthHookResult } from "../../types/security";
-import { runAuthHook } from "./auth-hook";
 import { handleVerificationFailure } from "./errors";
 import {
 	extractPath,
@@ -49,24 +47,13 @@ async function verifySignature(
 	return signatureData;
 }
 
-type VerificationResponseInput = {
-	signatureData: SignatureData;
-	authResult?: AuthHookResult;
-};
-
 function buildVerificationResult(
-	input: VerificationResponseInput,
+	signatureData: SignatureData,
 ): VerificationResult {
 	return {
 		verified: true,
-		timestamp: input.signatureData.timestamp,
-		nonce: input.signatureData.nonce,
-		auth: input.authResult?.authenticated
-			? {
-					userId: input.authResult.userId,
-					metadata: input.authResult.metadata,
-				}
-			: undefined,
+		timestamp: signatureData.timestamp,
+		nonce: signatureData.nonce,
 	};
 }
 
@@ -74,10 +61,5 @@ export async function verifySignedRequest(
 	context: VerificationContext,
 ): Promise<VerificationResult> {
 	const signatureData = await verifySignature(context);
-	const authResult = await runAuthHook(
-		context.request,
-		context.config.authHook,
-		context.config.onVerificationFailure,
-	);
-	return buildVerificationResult({ signatureData, authResult });
+	return buildVerificationResult(signatureData);
 }

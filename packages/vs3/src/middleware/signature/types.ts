@@ -1,10 +1,6 @@
 import type { StorageErrorCode } from "../../core/error/codes";
 import type { createRequestSigner } from "../../core/security/request-signer";
-import type {
-	AuthHook,
-	NonceStore,
-	RequestSigningConfig,
-} from "../../types/security";
+import type { NonceStore, RequestSigningConfig } from "../../types/security";
 
 /**
  * Configuration for the signature verification middleware.
@@ -15,12 +11,6 @@ export type VerifySignatureMiddlewareConfig = RequestSigningConfig & {
 	 * If not provided and requireNonce is true, an in-memory store will be used.
 	 */
 	nonceStore?: NonceStore;
-
-	/**
-	 * Optional auth hook for additional token validation.
-	 * Called after signature verification succeeds.
-	 */
-	authHook?: AuthHook;
 
 	/**
 	 * Skip signature verification for certain paths.
@@ -36,16 +26,12 @@ export type VerifySignatureMiddlewareConfig = RequestSigningConfig & {
 };
 
 /**
- * Result of verification containing extracted auth info.
+ * Result of verification containing extracted signature info.
  */
 export type VerificationResult = {
 	verified: true;
 	timestamp: number;
 	nonce?: string;
-	auth?: {
-		userId?: string;
-		metadata?: Record<string, unknown>;
-	};
 };
 
 export type SignatureData = {

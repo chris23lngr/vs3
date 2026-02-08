@@ -133,27 +133,3 @@ export type NonceStore = {
 	 */
 	cleanup?: () => Promise<void>;
 };
-
-/**
- * Options for auth hook validation.
- */
-export type AuthHookContext = {
-	/** The request being validated */
-	request: Request;
-	/** Extracted headers from the request */
-	headers: Record<string, string | undefined>;
-};
-
-/**
- * Result from an auth hook.
- */
-export type AuthHookResult =
-	| { authenticated: true; userId?: string; metadata?: Record<string, unknown> }
-	| { authenticated: false; reason?: string };
-
-/**
- * Auth hook function type.
- */
-export type AuthHook = (
-	context: AuthHookContext,
-) => AuthHookResult | Promise<AuthHookResult>;
