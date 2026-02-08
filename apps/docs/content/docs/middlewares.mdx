@@ -127,7 +127,7 @@ createVerifySignatureMiddleware({
 });
 ```
 
-Required headers: `x-signature`, `x-timestamp`. If `requireNonce` is true, `x-nonce` is required. On the client, use `createClientRequestSigner` to sign requests before calling the storage API.
+Required headers: `x-signature`, `x-timestamp`. If `requireNonce` is true, `x-nonce` is required. Do not expose your secret to browsers; use a server endpoint to sign requests and return headers to the client.
 
 ### Rate limiting
 
@@ -256,7 +256,7 @@ Public, user-facing APIs for middlewares. All are exported from the `vs3` packag
 | Export | Description |
 |--------|-------------|
 | `createVerifySignatureMiddleware(config)` | Middleware that verifies request signature (and optional nonce), runs optional `authHook`, and adds `signature: VerificationResult` to context. |
-| `createClientRequestSigner(config)` | Builds a client-side signer for adding signature headers to requests. |
+| `createServerRequestSigner(config)` | Builds a server-side signer for adding signature headers to requests. |
 | `VerificationResult` | `{ verified: true; timestamp: number; nonce?: string; auth?: { userId?: string; metadata?: Record<string, unknown> } }`. |
 | `VerifySignatureMiddlewareConfig` | Extends `RequestSigningConfig` with `nonceStore?`, `authHook?`, `skipPaths?`, `onVerificationFailure?`. |
 

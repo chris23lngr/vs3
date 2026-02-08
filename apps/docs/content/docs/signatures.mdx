@@ -1,0 +1,103 @@
+---
+title: Signatures
+description: Protect storage endpoints with HMAC request signatures and server-side signing.
+---
+
+Signatures in `vs3` authenticate and protect storage API requests. A trusted server signs each request using a shared secret, and the storage middleware verifies that signature before the endpoint runs.
+
+## What signatures do
+
+- Verify the request came from a trusted signer.
+- Detect tampering with method, path, or body.
+- Reject requests outside a time window.
+- Optionally prevent replay attacks with nonces.
+
+The signature is an HMAC over a canonical string composed of:
+
+- HTTP method
+- Request path (e.g. `/upload-url`)
+- Timestamp (Unix milliseconds)
+- Optional nonce
+- SHA-256 hash of the body
+
+## Server setup (verification middleware)
+
+Add signature verification to your storage:
+
+```ts
+import {
+  createStorage,
+  createVerifySignatureMiddleware,
+  createInMemoryNonceStore,
+} from "vs3";
+
+const storage = createStorage({
+  bucket: "my-bucket",
+  adapter: myAdapter,
+  middlewares: [
+    createVerifySignatureMiddleware({
+      secret: process.env.SIGNING_SECRET!,
+      timestampToleranceMs: 300_000,
+      requireNonce: true,
+      nonceStore: createInMemoryNonceStore(),
+      skipPaths: ["/upload-url/health"],
+    }),
+  ],
+});
+
+export const { api, handler } = storage;
+```
+
+Defaults you should know:
+
+- `algorithm`: `"SHA-256"`
+- `timestampToleranceMs`: `300_000` (5 minutes)
+- `requireNonce`: `false`
+- `nonceTtlMs`: `600_000` (10 minutes)
+
+## Server-side signing endpoint
+
+Never send your signing secret to a browser. Instead, add a server endpoint that signs requests and returns the headers to the client.
+
+```ts
+import { createServerRequestSigner, generateNonce } from "vs3";
+
+const signer = createServerRequestSigner({
+  secret: process.env.SIGNING_SECRET!,
+});
+
+export async function signRequest(input: {
+  method: string;
+  path: string;
+  body?: string;
+}) {
+  const { headers } = await signer.sign({
+    method: input.method,
+    path: input.path,
+    body: input.body,
+    nonce: generateNonce(),
+  });
+
+  return { headers };
+}
+```
+
+Your client should call this endpoint, then attach the returned headers to the storage API request.
+
+## Required headers
+
+- `x-signature`
+- `x-timestamp`
+- `x-nonce` when `requireNonce` is enabled
+
+## Error cases
+
+Verification fails when:
+
+- The signature header is missing.
+- The timestamp header is missing, invalid, or expired.
+- A nonce is required but missing.
+- A nonce is reused or the nonce store is missing.
+- The signature does not match the request details.
+
+Use `onVerificationFailure` in the middleware config to return a custom response on failures.
