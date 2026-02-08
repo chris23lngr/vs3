@@ -85,6 +85,8 @@ export function createSignRequestRoute() {
 				});
 			}
 
+			// Runtime invariant: SignRequestConfig requires authHook at the type level,
+			// but this guard protects against plain-JS callers that bypass TypeScript.
 			if (!signatureConfig.authHook) {
 				throw new StorageServerError({
 					code: StorageErrorCode.INTERNAL_SERVER_ERROR,

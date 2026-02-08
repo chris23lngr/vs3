@@ -16,10 +16,40 @@ const createMockOperations = (): S3Operations =>
 		deleteObject: vi.fn(),
 	}) as unknown as S3Operations;
 
-const callEndpoint = <T extends (input?: unknown) => unknown>(
-	endpoint: T,
-	input: unknown,
-) => endpoint(input as Parameters<T>[0]);
+/**
+ * Typed input shape for the sign-request endpoint.
+ * Mirrors the context injected by toStorageEndpoints at runtime.
+ */
+type SignRequestTestInput = {
+	body: { method: string; path: string; body?: string };
+	request?: Request;
+	context: Omit<StorageContext, "$middleware">;
+};
+
+/**
+ * Calls the endpoint with a typed input. The cast via `unknown` is required
+ * because better-call's StrictEndpoint signature is opaque, but the input
+ * shape is verified by SignRequestTestInput at the call site.
+ */
+function callEndpoint(
+	endpoint: ReturnType<typeof createSignRequestRoute>,
+	input: SignRequestTestInput,
+): Promise<{ headers: Record<string, string> }> {
+	return (
+		endpoint as (input: unknown) => Promise<{ headers: Record<string, string> }>
+	)(input);
+}
+
+/**
+ * Calls the endpoint with deliberately malformed input to test runtime
+ * guards that protect against plain-JS callers bypassing TypeScript.
+ */
+function callEndpointUnsafe(
+	endpoint: ReturnType<typeof createSignRequestRoute>,
+	input: Record<string, unknown>,
+): Promise<unknown> {
+	return (endpoint as (input: unknown) => Promise<unknown>)(input);
+}
 
 describe("sign-request route", () => {
 	const testSecret = "sign-request-secret";
@@ -56,7 +86,7 @@ describe("sign-request route", () => {
 			context: {
 				$options: options,
 				$operations: operations,
-			} satisfies Omit<StorageContext, "$middleware">,
+			},
 		});
 
 		expect(result.headers["x-signature"]).toBeDefined();
@@ -97,7 +127,7 @@ describe("sign-request route", () => {
 				context: {
 					$options: options,
 					$operations: operations,
-				} satisfies Omit<StorageContext, "$middleware">,
+				},
 			}),
 		).rejects.toMatchObject({
 			code: StorageErrorCode.UNAUTHORIZED,
@@ -121,7 +151,7 @@ describe("sign-request route", () => {
 				context: {
 					$options: options,
 					$operations: operations,
-				} satisfies Omit<StorageContext, "$middleware">,
+				},
 			}),
 		).rejects.toMatchObject({
 			code: StorageErrorCode.INTERNAL_SERVER_ERROR,
@@ -129,12 +159,14 @@ describe("sign-request route", () => {
 		});
 	});
 
+	// Defense-in-depth: tests runtime guard for plain-JS callers that bypass TypeScript.
+	// Uses callEndpointUnsafe because the input deliberately violates the type contract.
 	it("throws INTERNAL_SERVER_ERROR when authHook is missing", async () => {
 		const endpoint = createSignRequestRoute();
 		const operations = createMockOperations();
 
 		await expect(
-			callEndpoint(endpoint, {
+			callEndpointUnsafe(endpoint, {
 				body: {
 					method: "POST",
 					path: "/upload-url",
@@ -154,11 +186,12 @@ describe("sign-request route", () => {
 		});
 	});
 
+	// Defense-in-depth: tests runtime guard for plain-JS callers that bypass TypeScript.
 	it("throws INTERNAL_SERVER_ERROR when context is missing", async () => {
 		const endpoint = createSignRequestRoute();
 
 		await expect(
-			callEndpoint(endpoint, {
+			callEndpointUnsafe(endpoint, {
 				body: {
 					method: "POST",
 					path: "/upload-url",
