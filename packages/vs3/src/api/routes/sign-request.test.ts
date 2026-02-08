@@ -16,7 +16,7 @@ const createMockOperations = (): S3Operations =>
 		deleteObject: vi.fn(),
 	}) as unknown as S3Operations;
 
-const callEndpoint = <T extends (input?: any) => any>(
+const callEndpoint = <T extends (input?: unknown) => unknown>(
 	endpoint: T,
 	input: unknown,
 ) => endpoint(input as Parameters<T>[0]);
