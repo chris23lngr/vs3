@@ -14,12 +14,13 @@ type SignRequestResponse = {
 function buildAuthRequest(
 	request: unknown,
 	headers: Headers | undefined,
+	fallbackUrl: string,
 ): Request {
 	if (request instanceof Request) {
 		return request;
 	}
 
-	return new Request("http://localhost/sign-request", {
+	return new Request(fallbackUrl, {
 		method: "POST",
 		headers,
 	});
@@ -64,7 +65,13 @@ export function createSignRequestRoute() {
 				});
 			}
 
-			const authRequest = buildAuthRequest(ctx.request, ctx.headers);
+			const baseUrl = ctx.context.$options.baseUrl ?? "http://localhost";
+			const apiPath = ctx.context.$options.apiPath ?? "";
+			const authRequest = buildAuthRequest(
+				ctx.request,
+				ctx.headers,
+				`${baseUrl}${apiPath}/sign-request`,
+			);
 			await runAuthHook(
 				authRequest,
 				signatureConfig.authHook,

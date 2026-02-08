@@ -41,7 +41,7 @@ export const routeRegistry = {
 	},
 	"/sign-request": {
 		body: z.object({
-			method: z.string().min(1),
+			method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]),
 			path: z.string().min(1),
 			body: z.string().optional(),
 		}),
