@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { StorageErrorCode } from "../../core/error/codes";
 import { StorageServerError } from "../../core/error/error";
-import type { AuthHandler, AuthResult } from "../../types/auth";
+import type { AuthHandler } from "../../types/auth";
 import { createAuthMiddleware } from "../auth/auth-middleware";
 import { executeMiddlewareChain } from "../core/execute-chain";
 import type { StorageMiddlewareContext } from "../types";
