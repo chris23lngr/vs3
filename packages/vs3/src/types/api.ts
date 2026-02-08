@@ -1,3 +1,4 @@
+import type { VerifySignatureMiddlewareConfig } from "../middleware";
 import type { S3Encryption } from "./encryption";
 import type { FileInfo } from "./file";
 import type { StorageOptions } from "./options";
@@ -61,4 +62,15 @@ export type StorageAPI<O extends StorageOptions> = {
 		{ key: string; expiresIn?: number; encryption?: S3Encryption },
 		{ presignedUrl: string; downloadHeaders?: Record<string, string> }
 	>;
+
+	/**
+	 * Generate signature headers for a storage API request.
+	 * Available when signature configuration is provided.
+	 */
+	signRequest?: O["signature"] extends VerifySignatureMiddlewareConfig
+		? APIMethod<
+				{ method: string; path: string; body?: string },
+				{ headers: Record<string, string> }
+			>
+		: never;
 };

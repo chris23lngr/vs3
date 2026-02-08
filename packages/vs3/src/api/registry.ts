@@ -39,4 +39,15 @@ export const routeRegistry = {
 			downloadHeaders: z.record(z.string(), z.string()).optional(),
 		}),
 	},
+	"/sign-request": {
+		body: z.object({
+			method: z.string().min(1),
+			path: z.string().min(1),
+			body: z.string().optional(),
+		}),
+		requireMetadata: false,
+		output: z.object({
+			headers: z.record(z.string(), z.string()),
+		}),
+	},
 } as const satisfies RouteRegistry;

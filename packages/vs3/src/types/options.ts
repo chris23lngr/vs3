@@ -1,4 +1,7 @@
-import type { StorageMiddleware } from "../middleware";
+import type {
+	StorageMiddleware,
+	VerifySignatureMiddlewareConfig,
+} from "../middleware";
 import type { Adapter } from "./adapter";
 import type { FileInfo } from "./file";
 import type { BeforeHookResult } from "./hooks";
@@ -104,6 +107,12 @@ export type StorageOptions<M extends StandardSchemaV1 = StandardSchemaV1> = {
 	 * ```
 	 */
 	middlewares?: readonly StorageMiddleware[];
+
+	/**
+	 * Signature configuration used by the built-in sign-request route.
+	 * Configure this when you want `/sign-request` to issue headers.
+	 */
+	signature?: VerifySignatureMiddlewareConfig;
 
 	generateKey?: (
 		fileInfo: FileInfo,
