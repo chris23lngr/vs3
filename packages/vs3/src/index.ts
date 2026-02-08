@@ -43,11 +43,11 @@ export type {
 	VerifySignatureMiddlewareConfig,
 } from "./middleware";
 export {
-	createClientRequestSigner,
 	createCorsMiddleware,
 	createInMemoryRateLimitStore,
 	createLoggingMiddleware,
 	createRateLimitMiddleware,
+	createServerRequestSigner,
 	createStorageMiddleware,
 	createTimeoutMiddleware,
 	createVerifySignatureMiddleware,

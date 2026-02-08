@@ -6,7 +6,7 @@ import {
 	createRequestSigner,
 } from "../../core/security/request-signer";
 import { executeMiddlewareChain } from "../core/execute-chain";
-import { createClientRequestSigner } from "../signature/client-signer";
+import { createServerRequestSigner } from "../signature/server-signer";
 import { createVerifySignatureMiddleware } from "../signature/verify-signature";
 import type { StorageMiddlewareContext } from "../types";
 
@@ -601,11 +601,11 @@ describe("createVerifySignatureMiddleware", () => {
 	});
 });
 
-describe("createClientRequestSigner", () => {
-	const testSecret = "client-signer-secret";
+describe("createServerRequestSigner", () => {
+	const testSecret = "server-signer-secret";
 
 	it("signs a request with headers", async () => {
-		const clientSigner = createClientRequestSigner({ secret: testSecret });
+		const clientSigner = createServerRequestSigner({ secret: testSecret });
 
 		const result = await clientSigner.sign({
 			method: "POST",
@@ -620,7 +620,7 @@ describe("createClientRequestSigner", () => {
 	});
 
 	it("includes nonce in headers when provided", async () => {
-		const clientSigner = createClientRequestSigner({ secret: testSecret });
+		const clientSigner = createServerRequestSigner({ secret: testSecret });
 
 		const result = await clientSigner.sign({
 			method: "POST",
@@ -632,7 +632,7 @@ describe("createClientRequestSigner", () => {
 	});
 
 	it("produces signatures that can be verified", async () => {
-		const clientSigner = createClientRequestSigner({ secret: testSecret });
+		const clientSigner = createServerRequestSigner({ secret: testSecret });
 		const middleware = createVerifySignatureMiddleware({
 			secret: testSecret,
 		});

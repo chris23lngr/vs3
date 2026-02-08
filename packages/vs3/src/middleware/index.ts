@@ -19,7 +19,7 @@ export {
 } from "./common";
 export { createStorageMiddleware, executeMiddlewareChain } from "./core";
 export {
-	createClientRequestSigner,
+	createServerRequestSigner,
 	createVerifySignatureMiddleware,
 	type VerificationResult,
 	type VerifySignatureMiddlewareConfig,
