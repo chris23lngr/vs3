@@ -75,12 +75,17 @@ export function createSignRequestRoute() {
 				});
 			}
 
-			const baseUrl = ctx.context.$options.baseUrl ?? "http://localhost";
+			const baseUrl = (ctx.context.$options.baseUrl ?? "http://localhost").replace(
+				/\/+$/,
+				"",
+			);
 			const apiPath = ctx.context.$options.apiPath ?? "";
+			const normalizedApiPath =
+				apiPath && !apiPath.startsWith("/") ? `/${apiPath}` : apiPath;
 			const authRequest = buildAuthRequest(
 				ctx.request,
 				ctx.headers,
-				`${baseUrl}${apiPath}/sign-request`,
+				`${baseUrl}${normalizedApiPath}/sign-request`,
 			);
 			await runAuthHook(
 				authRequest,
