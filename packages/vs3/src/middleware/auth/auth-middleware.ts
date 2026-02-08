@@ -19,8 +19,8 @@ export function createAuthMiddleware(
 	return createStorageMiddleware(
 		{
 			name: "auth",
-			skipPaths: config.skipPaths as string[] | undefined,
-			includePaths: config.includePaths as string[] | undefined,
+			skipPaths: config.skipPaths,
+			includePaths: config.includePaths,
 		},
 		async (ctx) => {
 			const headers = resolveHeaders(ctx.request);

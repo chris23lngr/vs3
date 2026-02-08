@@ -7,10 +7,7 @@ export type AuthMiddlewareConfig = {
 	readonly handler: AuthHandler;
 	readonly skipPaths?: readonly string[];
 	readonly includePaths?: readonly string[];
-	readonly onAuthFailure?: (
-		reason: string,
-		request: Request,
-	) => Response | never;
+	readonly onAuthFailure?: (reason: string, request: Request) => Response | void;
 };
 
 /**
