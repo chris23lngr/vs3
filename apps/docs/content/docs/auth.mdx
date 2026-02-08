@@ -59,7 +59,12 @@ The handler can be synchronous or async.
 
 ## Using with third-party auth providers
 
-Because the handler is a plain function, you can integrate any auth provider. Here are some examples:
+Because the handler is a plain function, you can integrate any auth provider. `vs3` provides dedicated middlewares for the following providers:
+
+- [Clerk](#clerk)
+- [better-auth](#better-auth)
+
+These integrations are just a convenience wrapper around the `createAuthMiddleware` function - they can still be configured like any other middleware.
 
 ### Clerk
 
@@ -82,22 +87,20 @@ createAuthMiddleware({
 
 ### better-auth
 
+The `better-auth` middleware uses the incoming headers from the request and passes them to the `better-auth` instance to get the session. If no session is found, the middleware returns `{ authenticated: false }` and the request is aborted.
+
 ```ts
-import { createAuthMiddleware } from "vs3";
+import { betterAuth } from "vs3/middleware/auth";
 import { auth } from "./auth"; // your better-auth instance
 
-createAuthMiddleware({
-  handler: async ({ request }) => {
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (!session) {
-      return { authenticated: false };
-    }
-    return {
-      authenticated: true,
-      session: { userId: session.user.id },
-    };
-  },
-});
+export const storage = createStorage({
+  middlewares: [
+    betterAuth({
+      auth,
+    }),
+  ]
+})
+
 ```
 
 ## Path filtering
@@ -138,7 +141,7 @@ If `onAuthFailure` returns a `Response`, that response is thrown and stops the m
 
 ## Combining with other middlewares
 
-The auth middleware works like any other VS3 middleware. Place it in the `middlewares` array in the order you want it to run:
+The auth middleware works like any other `vs3` middleware. Place it in the `middlewares` array in the order you want it to run:
 
 ```ts
 import {
@@ -166,7 +169,7 @@ const storage = createStorage({
 
 ## API reference
 
-### `createAuthMiddleware(config)`
+### `createAuthMiddleware()`
 
 Creates an authentication middleware instance.
 
