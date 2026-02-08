@@ -47,7 +47,17 @@
 				"default": "./dist/adapters.cjs"
 			}
 		},
-		"./package.json": "./package.json"
+		"./package.json": "./package.json",
+		"./middleware/auth": {
+			"import": {
+				"types": "./dist/middleware-auth.d.ts",
+				"default": "./dist/middleware-auth.js"
+			},
+			"require": {
+				"types": "./dist/middleware-auth.d.cts",
+				"default": "./dist/middleware-auth.cjs"
+			}
+		}
 	},
 	"files": [
 		"dist"
@@ -63,6 +73,9 @@
 			],
 			"adapters": [
 				"./dist/adapters.d.ts"
+			],
+			"middleware/auth": [
+				"./dist/middleware-auth.d.ts"
 			]
 		}
 	},

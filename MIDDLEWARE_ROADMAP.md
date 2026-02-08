@@ -7,7 +7,7 @@ Redesign VS3's middleware system from a single monolithic signature verification
 ## Current Problems
 
 1. **No Composition**: Cannot chain multiple middlewares together
-2. **Poor Extensibility**: Only 2 extension points (authHook, onVerificationFailure); adding new middleware requires core modifications
+2. **Poor Extensibility**: Only 2 extension points (onVerificationFailure, skipPaths); adding new middleware requires core modifications
 3. **Limited Scalability**: In-memory nonce store unsuitable for distributed deployments
 4. **Weak Type Safety**: Uses generic `Request` type, no typed context flow through middleware chain
 5. **Manual Application**: Middlewares must be manually applied; not integrated with routing system
@@ -181,31 +181,26 @@ Create **`/packages/vs3/src/middleware/__tests__/core.test.ts`**:
    - Validates timestamp within tolerance
    - Validates nonce (if required) via `NonceStore`
 
-4. **`/packages/vs3/src/middleware/signature/auth-hook.ts`** (~30 lines)
-   - Extract `runAuthHookValidation()` function
-   - Calls optional `AuthHook` with context
-   - Returns auth result or throws on failure
-
-5. **`/packages/vs3/src/middleware/signature/errors.ts`** (~40 lines)
+4. **`/packages/vs3/src/middleware/signature/errors.ts`** (~40 lines)
    - Extract `createVerificationError()` function
    - Uses existing `VERIFICATION_ERROR_MAP` pattern
    - Maps `VerificationFailureReason` to `StorageErrorCode`
    - Handles `onVerificationFailure` callback
 
-6. **`/packages/vs3/src/middleware/signature/verify-signature.ts`** (~40 lines, REFACTORED)
+5. **`/packages/vs3/src/middleware/signature/verify-signature.ts`** (~40 lines, REFACTORED)
    - Main middleware factory: `createVerifySignatureMiddleware()`
-   - Orchestrates extraction, verification, and auth hook
+   - Orchestrates extraction and verification (auth is separate via `createAuthMiddleware`)
    - Returns `StorageMiddleware` using `createStorageMiddleware()`
    - Context includes: `{ signature: SignatureVerificationResult }`
 
-7. **`/packages/vs3/src/middleware/signature/index.ts`** (10 lines)
+6. **`/packages/vs3/src/middleware/signature/index.ts`** (10 lines)
    - Public API exports
 
 #### Existing Code to Preserve
 
 - `createRequestSigner()` from `/src/core/security/request-signer.ts` - reuse as-is
 - `createInMemoryNonceStore()` - reuse as-is
-- `NonceStore`, `AuthHook`, `RequestSigningConfig` types from `/src/types/security.ts`
+- `NonceStore`, `RequestSigningConfig` types from `/src/types/security.ts`
 - `VERIFICATION_ERROR_MAP` pattern - migrate to errors.ts
 
 #### Files to Modify
@@ -227,7 +222,7 @@ Create **`/packages/vs3/src/middleware/__tests__/core.test.ts`**:
 
 Update **`/packages/vs3/src/middleware/__tests__/verify-signature.test.ts`** (550 lines):
 - Migrate all 20+ test cases to new architecture
-- Test individual functions: `extractSignatureData()`, `verifyRequestSignature()`, `runAuthHookValidation()`
+- Test individual functions: `extractSignatureData()`, `verifyRequestSignature()`
 - Test full middleware integration via `createVerifySignatureMiddleware()`
 - Maintain same test coverage (comprehensive test suite is excellent!)
 - Add new tests for middleware-specific behavior (path skipping, context merging)
@@ -407,7 +402,6 @@ createStorageEndpoint("/upload", {
 - `/packages/vs3/src/middleware/signature/types.ts` - Signature types
 - `/packages/vs3/src/middleware/signature/extract-signature.ts` - Header extraction
 - `/packages/vs3/src/middleware/signature/verify-request.ts` - Signature verification
-- `/packages/vs3/src/middleware/signature/auth-hook.ts` - Auth hook execution
 - `/packages/vs3/src/middleware/signature/errors.ts` - Error handling
 - `/packages/vs3/src/middleware/signature/verify-signature.ts` - Main middleware (refactored)
 - `/packages/vs3/src/middleware/signature/index.ts` - Signature exports

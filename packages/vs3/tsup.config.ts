@@ -14,6 +14,7 @@ export default defineConfig({
 		react: "src/client/react/index.ts",
 		"next-js": "src/integrations/next-js.ts",
 		adapters: "src/adapters/index.ts",
+		"middleware-auth": "src/middleware/auth/index.ts",
 	},
 	format: ["esm", "cjs"],
 	dts: true,
