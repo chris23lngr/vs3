@@ -5,9 +5,12 @@ export default function HomePage() {
 	return (
 		<main className="min-h-svh py-20">
 			<section className="mx-auto w-full max-w-5xl px-8">
-				<h1 className="font-semibold text-2xl text-zinc-800">Template Example</h1>
+				<h1 className="font-semibold text-2xl text-zinc-800">
+					Better Auth Example
+				</h1>
 				<p className="mt-2 max-w-lg text-sm text-zinc-500">
-					This is a template for new examples on using vs3.
+					This is an example of using vs3 with better-auth. Both uploading and
+					downloading will fail because no session is found.
 				</p>
 			</section>
 			<section className="mx-auto mt-12 grid w-full max-w-5xl grid-cols-2 gap-8 px-8">
