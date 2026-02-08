@@ -29,6 +29,7 @@ export { toNextJsRouteHandler } from "./integrations/next-js";
 export type {
 	AuthMiddlewareConfig,
 	AuthMiddlewareResult,
+	BetterAuthMiddlewareConfig,
 	ChainExecutionResult,
 	CorsConfig,
 	LogEntry,
@@ -46,6 +47,7 @@ export type {
 } from "./middleware";
 export {
 	createAuthMiddleware,
+	createBetterAuthMiddleware,
 	createClientRequestSigner,
 	createCorsMiddleware,
 	createInMemoryRateLimitStore,

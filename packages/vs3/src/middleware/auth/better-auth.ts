@@ -1,21 +1,24 @@
 import type { Auth } from "better-auth";
+import type { StorageMiddleware } from "../types";
 import { createAuthMiddleware } from "./auth-middleware";
-import type { AuthMiddlewareConfig } from "./types";
+import type { AuthMiddlewareConfig, AuthMiddlewareResult } from "./types";
 
-type BetterAuthMiddlewareConfig = Omit<AuthMiddlewareConfig, "handler"> & {
-	auth: Auth;
+export type BetterAuthMiddlewareConfig = Omit<
+	AuthMiddlewareConfig,
+	"handler"
+> & {
+	readonly auth: Auth;
 };
 
-export function createBetterAuthMiddleware(config: BetterAuthMiddlewareConfig) {
+export function createBetterAuthMiddleware(
+	config: BetterAuthMiddlewareConfig,
+): StorageMiddleware<object, AuthMiddlewareResult> {
+	const { auth, ...rest } = config;
 	return createAuthMiddleware({
-		handler: async ({ request, headers }) => {
-			const internalHeaders: Headers = new Headers({
-				...request.headers,
-				...headers,
-			});
-
-			const session = await config.auth.api.getSession({
-				headers: internalHeaders,
+		...rest,
+		handler: async ({ request }) => {
+			const session = await auth.api.getSession({
+				headers: request.headers,
 			});
 
 			if (!session) {
@@ -24,6 +27,5 @@ export function createBetterAuthMiddleware(config: BetterAuthMiddlewareConfig) {
 
 			return { authenticated: true, session: { userId: session.user.id } };
 		},
-		...config,
 	});
 }
