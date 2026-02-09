@@ -30,6 +30,6 @@ Read the [documentation](https://vs3-docs.vercel.app/docs) for more information.
 
 #### Contributing
 
-Thank you for your interest in `vs3`! We highly welcome contributions from the community – please read the [contributing](https://github.com/chris23lngr/vs3/blob/master/CONTRIBUTING.md) guide to get started.
+Thank you for your interest in `vS3`! We highly welcome contributions from the community – please read the [contributing](https://github.com/chris23lngr/vs3/blob/master/CONTRIBUTING.md) guide to get started.
 
 > **License:** This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
