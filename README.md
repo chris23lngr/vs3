@@ -1,15 +1,35 @@
-[![npm](https://img.shields.io/npm/v/vs3/beta?style=flat-square&labelColor=%23FFFFFF&color=%23000000)](https://www.npmjs.com/package/vs3) [![GitHub Issues](https://img.shields.io/github/issues/chris23lngr/vs3?style=flat-square&labelColor=%23FFFFFF&color=%23000000)](https://github.com/chris23lngr/vs3/issues)
+<p align="center">
+  <picture>
+    <img src="https://github.com/user-attachments/assets/c1650117-5227-491c-b310-f921b24fd60e" alt="Better Auth Logo"/>
+  </picture>
+  <h2 align="center">
+    vS3
+  </h2>
 
-# vs3
+  <p align="center">
+    Stop rebuilding S3 access in every app - we got you covered.
+    <br />
+    <a href="https://vs3-docs.vercel.app/docs"><strong>Read the Docs</strong></a>
+    <br />
+    <br />
+    <a href="https://vs3-docs.vercel.app">Website</a>
+    ·
+    <a href="https://github.com/chris23lngr/vs3/issues">Issues</a>
+  </p>
 
-`vs3` is a TypeScript-first library for secure S3 storage access. It generates presigned upload URLs, enforces validation and integrates cleanly with modern runtimes. We use the official AWS S3 SDK (`@aws-sdk/client-s3`) under the hood to interact with your storage provider.
+[![npm](https://img.shields.io/npm/dm/vs3?style=flat&colorA=000000&colorB=000000)](https://npm.chart.dev/better-auth?primary=neutral&gray=neutral&theme=dark)
+[![npm version](https://img.shields.io/npm/v/vs3.svg?style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/better-auth)
+[![GitHub stars](https://img.shields.io/github/stars/chris23lngr/vs3?style=flat&colorA=000000&colorB=000000)](https://github.com/better-auth/better-auth/stargazers)
+</p>
 
-Read the [documentation](https://vs3.dev) for more information.
+`vS3` is a TypeScript-first library for effortless S3 storage access. Skip the boilerplate and use exactly what you need. Framework-agnostic and feature-rich, it includes authentication, validation, signatures, and more. Under the hood, `vS3` leverages industry standards like pre-signed URLs and encryption to make your app both performant and secure. 
+
+Read the [documentation](https://vs3-docs.vercel.app/docs) for more information.
+
+<hr />
 
 #### Contributing
 
 Thank you for your interest in `vs3`! We highly welcome contributions from the community – please read the [contributing](https://github.com/chris23lngr/vs3/blob/master/CONTRIBUTING.md) guide to get started.
 
-#### License 
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+> **License:** This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
