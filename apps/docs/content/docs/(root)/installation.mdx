@@ -155,6 +155,7 @@ export const storageClient = createStorageClient<typeof storage.$Infer>({
 </CodeTabs>
 
 Pass `typeof storage.$Infer` to share all server-inferred types with the client from a single generic.
+Use a type-only import (`import type`) so no server code is pulled into the client bundle.
 
 
 </Step>

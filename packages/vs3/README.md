@@ -66,6 +66,8 @@ const client = createStorageClient<typeof storage.$Infer>({
   apiPath: "/api/storage",
 });
 
+// Keep the import type-only to avoid pulling server code into client bundles.
+
 function UploadForm() {
   const { upload, progress, isUploading } = client.useUpload();
 
