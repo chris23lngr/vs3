@@ -1,6 +1,6 @@
 import type { InferredTypes } from "../types/infer";
 
-export type StorageClientOptions<T extends InferredTypes = InferredTypes> = {
+export type StorageClientOptions<_T extends InferredTypes = InferredTypes> = {
 	baseURL?: string;
 	apiPath?: string;
 	/**
