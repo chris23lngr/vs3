@@ -2,4 +2,4 @@
 "vs3": minor
 ---
 
-vue integration
+Add Vue 3 composables (`useUpload`, `useDownload`) via the `vs3/vue` entrypoint.
