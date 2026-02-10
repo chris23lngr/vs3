@@ -130,7 +130,7 @@
 	"devDependencies": {
 		"@aws-sdk/client-s3": "^3.981.0",
 		"@types/node": "^25.2.0",
-		"@types/react": "^18.3.27",
+		"@types/react": "^19.2.13",
 		"@vitest/coverage-v8": "4.0.18",
 		"@vitest/ui": "^4.0.18",
 		"better-auth": "^1.4.18",
