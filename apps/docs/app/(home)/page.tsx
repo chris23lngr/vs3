@@ -20,7 +20,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button-v2";
 import { SiteConfig } from "@/lib/config";
-import { cn } from "@/lib/utils";
 import CornerLeftLight from "../../public/corner-left-light.svg";
 import FooterTrapeze from "../../public/footer-trapeze.svg";
 
@@ -52,11 +51,16 @@ export default function HomePage() {
 							</PageDescription>
 						</div>
 						<div className="flex w-fit items-center justify-start gap-4 border-zinc-200 border-r border-b border-dashed bg-background p-8">
-							<Button variant="default">Get Started</Button>
-							<Button variant="outline">
-								<StarIcon className="size-3.5 fill-current" />
-								<span>Star on GitHub</span>
-							</Button>
+							<Button
+								nativeButton={false}
+								render={<Link href={SiteConfig.paths.docs}>Get Started</Link>}
+								variant="default"
+							/>
+							<Button
+								nativeButton={false}
+								render={<Link href={SiteConfig.repository.url}>Star on GitHub</Link>}
+								variant="outline"
+							/>
 						</div>
 					</div>
 				</div>
