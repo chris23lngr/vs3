@@ -21,25 +21,47 @@ export const components = {
 	...Steps,
 	...Tabs,
 	// ...Callout,
-	h1: ({ children }: { children: React.ReactNode }) => (
-		<h1 className="font-bold text-9xl text-red-600">{children}</h1>
+	h1: ({ children, className, ...props }: React.ComponentProps<"h1">) => (
+		<h1 className={cn("font-bold text-9xl text-red-600", className)} {...props}>
+			{children}
+		</h1>
 	),
-	h2: ({ children }: { children: React.ReactNode }) => (
-		<h2 className="mt-12 mb-2 font-semibold text-2xl text-zinc-800">
+	h2: ({ children, className, ...props }: React.ComponentProps<"h2">) => (
+		<h2
+			className={cn(
+				"mt-12 mb-2 scroll-mt-24 font-semibold text-2xl text-zinc-800",
+				className,
+			)}
+			{...props}
+		>
 			{children}
 		</h2>
 	),
-	h3: ({ children }: { children: React.ReactNode }) => (
-		<h3 className="mt-8 mb-4 font-semibold text-lg">{children}</h3>
+	h3: ({ children, className, ...props }: React.ComponentProps<"h3">) => (
+		<h3
+			className={cn("mt-8 mb-4 scroll-mt-24 font-semibold text-lg", className)}
+			{...props}
+		>
+			{children}
+		</h3>
 	),
-	h4: ({ children }: { children: React.ReactNode }) => (
-		<h4 className="mt-10 mb-4 font-semibold text-base">{children}</h4>
+	h4: ({ children, className, ...props }: React.ComponentProps<"h4">) => (
+		<h4
+			className={cn("mt-10 mb-4 scroll-mt-16 font-semibold text-base", className)}
+			{...props}
+		>
+			{children}
+		</h4>
 	),
-	h5: ({ children }: { children: React.ReactNode }) => (
-		<h5 className="font-bold text-sm">{children}</h5>
+	h5: ({ children, className, ...props }: React.ComponentProps<"h5">) => (
+		<h5 className={cn("scroll-mt-8 font-bold text-sm", className)} {...props}>
+			{children}
+		</h5>
 	),
-	h6: ({ children }: { children: React.ReactNode }) => (
-		<h6 className="font-bold text-xs">{children}</h6>
+	h6: ({ children, className, ...props }: React.ComponentProps<"h6">) => (
+		<h6 className={cn("scroll-mt-4 font-bold text-xs", className)} {...props}>
+			{children}
+		</h6>
 	),
 	strong: ({ children }: { children: React.ReactNode }) => (
 		<strong className="font-medium text-zinc-800">{children}</strong>

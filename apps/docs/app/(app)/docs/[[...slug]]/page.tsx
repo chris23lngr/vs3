@@ -3,6 +3,7 @@ import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LLMCopyButton, ViewOptions } from "@/components/ai/page-actions";
+import { DocsToc } from "@/components/docs-toc";
 import { PageDescription, PageTitle } from "@/components/typography";
 import { Button } from "@/components/ui/button-v2";
 import { SiteConfig } from "@/lib/config";
@@ -145,16 +146,12 @@ export default async function Page(props: {
 					</div>
 				</div>
 			</div>
-			<div className="sticky top-[calc(var(--header-height)+1px)] z-30 ml-auto hidden h-[90svh] w-(--sidebar-width) flex-col gap-4 overflow-hidden overscroll-none pb-8 xl:flex">
-				<div className="h-(--top-spacing) shrink-0"></div>
+			<div className="sticky top-24 h-[calc(100svh-var(--header-height))] w-72 overflow-y-auto">
 				{doc.toc?.length ? (
 					<div className="no-scrollbar flex flex-col gap-8 overflow-y-auto px-8">
-						{/* <DocsTableOfContents toc={doc.toc} /> */}
+						<DocsToc toc={doc.toc} />
 					</div>
 				) : null}
-				<div className="hidden flex-1 flex-col gap-6 px-6 xl:flex">
-					{/* <OpenInV0Cta /> */}
-				</div>
 			</div>
 		</div>
 	);

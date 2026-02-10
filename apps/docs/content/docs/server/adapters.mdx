@@ -3,16 +3,7 @@ title: Adapters
 description: Connect vs3 to any S3-compatible storage provider.
 ---
 
-Adapters provide a preconfigured S3 client for your storage provider. Every adapter uses the official AWS S3 SDK (`@aws-sdk/client-s3`) under the hood — the only difference between adapters is how the client is configured (endpoint, region, credentials, etc.). We currently provide support for the following adapters:
-
-- [AWS S3](#aws-s3)
-- [Cloudflare R2](#cloudflare-r2)
-- [MinIO](#minio)
-- [Backblaze B2](#backblaze-b2)
-- [DigitalOcean Spaces](#digitalocean-spaces)
-- [Wasabi](#wasabi)
-
-If you cannot find an adapter for your provider, you can always create your own adapter by following the [custom adapters](#custom-adapters) section.
+Adapters provide a preconfigured S3 client for your storage provider. Every adapter uses the official AWS S3 SDK (`@aws-sdk/client-s3`) under the hood — the only difference between adapters is how the client is configured (endpoint, region, credentials, etc.).
 
 Pass an adapter to `createStorage` to connect vs3 to your provider:
 
@@ -38,7 +29,20 @@ All adapters require the `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner
 
 ---
 
-## AWS S3
+## Built-in Adapters
+
+We currently provide built-in support for the following adapters:
+
+- [AWS S3](#aws-s3)
+- [Cloudflare R2](#cloudflare-r2)
+- [MinIO](#minio)
+- [Backblaze B2](#backblaze-b2)
+- [DigitalOcean Spaces](#digitalocean-spaces)
+- [Wasabi](#wasabi)
+
+If you cannot find an adapter for your provider, you can always create your own adapter by following the [custom adapters](#custom-adapters) section.
+
+### AWS S3
 
 The `aws` adapter connects to Amazon S3. It accepts the same options as the AWS SDK `S3Client` constructor.
 
@@ -63,7 +67,7 @@ Any additional [`S3ClientConfig`](https://docs.aws.amazon.com/AWSJavaScriptSDK/v
 
 ---
 
-## Cloudflare R2
+### Cloudflare R2
 
 The `cloudflareR2` adapter configures the S3 client for Cloudflare R2 with the correct endpoint and region.
 
@@ -87,7 +91,7 @@ const adapter = cloudflareR2({
 
 ---
 
-## MinIO
+### MinIO
 
 The `minio` adapter configures the S3 client with path-style access, which is required by MinIO.
 
@@ -111,7 +115,7 @@ const adapter = minio({
 
 ---
 
-## Backblaze B2
+### Backblaze B2
 
 The `backblazeB2` adapter configures the S3-compatible endpoint for Backblaze B2.
 
@@ -134,7 +138,7 @@ const adapter = backblazeB2({
 
 ---
 
-## DigitalOcean Spaces
+### DigitalOcean Spaces
 
 The `digitaloceanSpaces` adapter configures the S3 client for DigitalOcean Spaces.
 
@@ -157,7 +161,7 @@ const adapter = digitaloceanSpaces({
 
 ---
 
-## Wasabi
+### Wasabi
 
 The `wasabi` adapter configures the S3 client for Wasabi Hot Cloud Storage.
 
