@@ -8,7 +8,7 @@
 		"check": "biome check .",
 		"check:unsafe": "biome check --write --unsafe .",
 		"check:write": "biome check --write .",
-		"dev": "nuxt dev --port 3000",
+		"dev": "nuxt dev --port 3010",
 		"preview": "nuxt preview",
 		"typecheck": "nuxt prepare && tsc --noEmit -p .nuxt/tsconfig.json"
 	},
@@ -16,7 +16,7 @@
 		"@aws-sdk/client-s3": "^3.981.0",
 		"nuxt": "^3.19.3",
 		"vs3": "workspace:*",
-		"zod": "^3.24.2"
+		"zod": "^4.3.6"
 	},
 	"devDependencies": {
 		"typescript": "^5.9.3"
