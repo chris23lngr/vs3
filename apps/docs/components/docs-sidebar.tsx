@@ -59,7 +59,7 @@ export function DocsSidebar({
 			<SidebarContent className="">
 				<SidebarGroup className="pt-6">
 					<SidebarGroupContent>
-						<SidebarMenu>
+						<SidebarMenu className="space-y-0.5">
 							{TOP_LEVEL_SECTIONS.map(({ name, href, icon: Icon }) => (
 								<SidebarMenuItem key={name}>
 									<SidebarMenuButton
