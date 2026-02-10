@@ -17,9 +17,9 @@
     <a href="https://github.com/chris23lngr/vs3/issues">Issues</a>
   </p>
 
-[![npm](https://img.shields.io/npm/dm/vs3?style=flat&colorA=000000&colorB=000000)](https://npm.chart.dev/better-auth?primary=neutral&gray=neutral&theme=dark)
-[![npm version](https://img.shields.io/npm/v/vs3.svg?style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/better-auth)
-[![GitHub stars](https://img.shields.io/github/stars/chris23lngr/vs3?style=flat&colorA=000000&colorB=000000)](https://github.com/better-auth/better-auth/stargazers)
+[![npm](https://img.shields.io/npm/dm/vs3?style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/vs3)
+[![npm version](https://img.shields.io/npm/v/vs3.svg?style=flat&colorA=000000&colorB=000000)](https://www.npmjs.com/package/vs3)
+[![GitHub stars](https://img.shields.io/github/stars/chris23lngr/vs3?style=flat&colorA=000000&colorB=000000)](https://github.com/chris23lngr/vs3/stargazers)
 </p>
 
 `vS3` is a TypeScript-first library for effortless S3 storage access. Skip the boilerplate and use exactly what you need. Framework-agnostic and feature-rich, it includes authentication, validation, signatures, and more. Under the hood, `vS3` leverages industry standards like pre-signed URLs and encryption to make your app both performant and secure. 
