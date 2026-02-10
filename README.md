@@ -1,6 +1,6 @@
 <p align="center">
   <picture>
-    <img src="https://github.com/user-attachments/assets/c1650117-5227-491c-b310-f921b24fd60e" alt="Better Auth Logo"/>
+    <img src="https://github.com/user-attachments/assets/c1650117-5227-491c-b310-f921b24fd60e" alt="vS3 Logo"/>
   </picture>
   <h2 align="center">
     vS3
