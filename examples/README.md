@@ -9,6 +9,7 @@ Each example is a standalone app that you can run independently. They use the `v
 | Example | Description |
 |---------|-------------|
 | `template` | Base template for new examples |
+| `vue` | Nuxt 3 app using `vs3/vue` composables and a Nitro API route |
 
 ## Running Examples
 

@@ -75,3 +75,6 @@ config.js
 **/dist
 
 .roadmap/
+
+**/.output/
+**/.nuxt/
