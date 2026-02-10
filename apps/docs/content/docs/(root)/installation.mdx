@@ -50,7 +50,7 @@ bun add vS3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 To interact with the storage provider you need to create an adapter. See [Adapters](/docs/adapters) for a full list of supported adapters.
 
 ```ts title="server/storage/server.ts"
-import { aws } from "vS3/adapters";
+import { aws } from "vs3/adapters";
 
 const adapter = aws({
     region: process.env.AWS_REGION!,
@@ -118,7 +118,7 @@ To access the storage API from the client you need to create a client instance. 
 ```ts title="server/storage/client.ts"
 "use client";
 
-import { createStorageClient } from "vS3/react";
+import { createStorageClient } from "vs3/react";
 import type { StorageMetadata } from "./server";
 
 export const storageClient = createStorageClient<StorageMetadata>({
