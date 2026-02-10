@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button-v2";
 import { SiteConfig } from "@/lib/config";
 import CornerLeftLight from "../../public/corner-left-light.svg";
 import FooterTrapeze from "../../public/footer-trapeze.svg";
+import { FrameworksSection } from "./sections/frameworks";
 
 export default function HomePage() {
 	return (
@@ -144,25 +145,7 @@ export default function HomePage() {
 					</div>
 				</div>
 			</section>
-			<section className="py-32 dark:bg-zinc-900" id="features">
-				<div className="mx-auto w-full max-w-7xl px-8">
-					<p className="flex items-center justify-start gap-1.5 font-medium text-sm text-violet-600">
-						<PackageIcon className="size-3.5" />
-						Framework Agnostic
-					</p>
-					<h2 className="mt-5 max-w-3xl font-medium text-4xl">
-						Works with the framework of your choice
-					</h2>
-				</div>
-				<div className="mx-auto mt-12 border-zinc-200 border-y border-dashed px-8">
-					<div className="mx-auto grid max-w-304 grid-cols-3 gap-8 border-zinc-200 border-x border-dashed">
-						<div className="col-span-2 rounded-lg bg-white p-8 shadow-sm ring-1 ring-zinc-200"></div>
-						<div className="row-span-2 rounded-lg bg-white p-8 shadow-sm ring-1 ring-zinc-200"></div>
-						<div className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-zinc-200"></div>
-						<div className="rounded-lg bg-white p-8 shadow-sm ring-1 ring-zinc-200"></div>
-					</div>
-				</div>
-			</section>
+			<FrameworksSection />
 			<div className="flex translate-y-px items-center justify-center">
 				<Image alt="Footer Trapeze" src={FooterTrapeze} />
 			</div>

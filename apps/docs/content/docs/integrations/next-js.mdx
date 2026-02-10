@@ -1,0 +1,19 @@
+---
+title: Next.js
+description: Integrate vS3 with Next.js
+---
+
+We provide a built-in integration for Next.js. This integration allows you to use vS3 with Next.js out of the box.
+
+## Usage
+
+To use the built-in integration for Next.js, use the `toNextJsRouteHandler` function to convert the storage handler to a Next.js route handler.
+
+```ts title="app/api/storage/[...all]/route.ts"
+import { toNextJsRouteHandler } from "vs3/integrations/next-js";
+import { storage } from "../storage";
+
+export const { GET, POST, PUT, DELETE } = toNextJsRouteHandler({ handler: storage.handler });
+```
+
+This will automatically handle all the HTTP methods for you.
