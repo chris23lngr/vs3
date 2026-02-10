@@ -79,7 +79,6 @@ export default async function Page(props: {
 	const neighbours = isChangelog
 		? { previous: null, next: null }
 		: findNeighbour(source.pageTree, page.url);
-	const _raw = await page.data.getText("raw");
 
 	doc.toc;
 	return (
