@@ -11,7 +11,7 @@ export default function Layout({ children }: LayoutProps<"/docs">) {
 			<DocsSidebar tree={source.getPageTree()} />
 			<main className="relative flex-1">
 				<SiteNav
-					className="sticky top-0 z-20 border-zinc-200 border-b bg-background"
+					className="sticky top-0 z-20 border-border border-b bg-background"
 					items={SiteConfig.nav.items}
 				/>
 				{children}

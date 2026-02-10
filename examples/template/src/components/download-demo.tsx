@@ -18,7 +18,7 @@ export function DownloadDemo({
 				className="flex w-full items-center justify-start gap-2"
 			>
 				<input
-					className="grow rounded-md border border-zinc-200 p-2 text-sm shadow-xs"
+					className="grow rounded-md border border-border p-2 text-sm shadow-xs"
 					name="key"
 					placeholder="Key"
 					type="text"
@@ -52,7 +52,7 @@ export function DownloadDemo({
 				<div className="col-span-2 space-y-1">
 					<p className="font-medium text-xs text-zinc-700">Data</p>
 					{state.data ? (
-						<div className="rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm shadow-xs">
+						<div className="rounded-md border border-border bg-zinc-50 px-4 py-3 text-sm shadow-xs">
 							{Object.entries(state.data).map(([key, value]) => (
 								<div className="space-y-1" key={key}>
 									<p className="font-medium text-zinc-700">{key}: </p>

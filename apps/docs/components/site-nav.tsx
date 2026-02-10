@@ -2,6 +2,7 @@ import Link from "next/link";
 import type React from "react";
 import type { JSX } from "react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./theme-toggle";
 
 export function SiteNav({
 	className,
@@ -22,7 +23,7 @@ export function SiteNav({
 			<div className="ml-auto flex items-center justify-center gap-8 [&_svg]:size-4 [&_svg]:fill-zinc-600 [&_svg]:group-hover/nav-item:fill-violet-600">
 				{items.map(({ href, icon: Icon, label }) => (
 					<Link
-						className="group/nav-item flex items-center justify-center gap-2 font-medium text-sm text-zinc-600 transition-colors hover:text-violet-600"
+						className="group/nav-item flex items-center justify-center gap-2 font-medium text-sm text-zinc-600 transition-colors hover:text-violet-600 dark:text-zinc-200 dark:hover:text-violet-500"
 						href={href}
 						key={href}
 					>
@@ -31,6 +32,7 @@ export function SiteNav({
 					</Link>
 				))}
 			</div>
+			<ThemeToggle className="ms-4" />
 		</nav>
 	);
 }

@@ -59,6 +59,9 @@ importers:
       next:
         specifier: 16.1.6
         version: 16.1.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       radix-ui:
         specifier: ^1.4.3
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.10))(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -8329,20 +8332,20 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.25.76))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)':
+  '@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.2.1(zod@4.3.6))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)':
     dependencies:
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.21
       '@standard-schema/spec': 1.1.0
-      better-call: 1.1.8(zod@4.3.6)
+      better-call: 1.2.1(zod@4.3.6)
       jose: 6.1.3
       kysely: 0.28.11
       nanostores: 1.1.0
       zod: 4.3.6
 
-  '@better-auth/telemetry@1.4.18(@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.25.76))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0))':
+  '@better-auth/telemetry@1.4.18(@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.6))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0))':
     dependencies:
-      '@better-auth/core': 1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.25.76))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)
+      '@better-auth/core': 1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.2.1(zod@4.3.6))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.21
 
@@ -9015,34 +9018,12 @@ snapshots:
 
   '@inquirer/ansi@1.0.2': {}
 
-  '@inquirer/confirm@5.1.21(@types/node@20.19.31)':
-    dependencies:
-      '@inquirer/core': 10.3.2(@types/node@20.19.31)
-      '@inquirer/type': 3.0.10(@types/node@20.19.31)
-    optionalDependencies:
-      '@types/node': 20.19.31
-    optional: true
-
   '@inquirer/confirm@5.1.21(@types/node@25.2.0)':
     dependencies:
       '@inquirer/core': 10.3.2(@types/node@25.2.0)
       '@inquirer/type': 3.0.10(@types/node@25.2.0)
     optionalDependencies:
       '@types/node': 25.2.0
-
-  '@inquirer/core@10.3.2(@types/node@20.19.31)':
-    dependencies:
-      '@inquirer/ansi': 1.0.2
-      '@inquirer/figures': 1.0.15
-      '@inquirer/type': 3.0.10(@types/node@20.19.31)
-      cli-width: 4.1.0
-      mute-stream: 2.0.0
-      signal-exit: 4.1.0
-      wrap-ansi: 6.2.0
-      yoctocolors-cjs: 2.1.3
-    optionalDependencies:
-      '@types/node': 20.19.31
-    optional: true
 
   '@inquirer/core@10.3.2(@types/node@25.2.0)':
     dependencies:
@@ -9065,11 +9046,6 @@ snapshots:
       '@types/node': 25.2.0
 
   '@inquirer/figures@1.0.15': {}
-
-  '@inquirer/type@3.0.10(@types/node@20.19.31)':
-    optionalDependencies:
-      '@types/node': 20.19.31
-    optional: true
 
   '@inquirer/type@3.0.10(@types/node@25.2.0)':
     optionalDependencies:
@@ -11369,15 +11345,6 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.18(msw@2.12.9(@types/node@20.19.31)(typescript@5.9.3))(vite@7.3.1(@types/node@20.19.31)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))':
-    dependencies:
-      '@vitest/spy': 4.0.18
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-    optionalDependencies:
-      msw: 2.12.9(@types/node@20.19.31)(typescript@5.9.3)
-      vite: 7.3.1(@types/node@20.19.31)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)
-
   '@vitest/mocker@4.0.18(msw@2.12.9(@types/node@25.2.0)(typescript@5.9.3))(vite@7.3.1(@types/node@25.2.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))':
     dependencies:
       '@vitest/spy': 4.0.18
@@ -11413,7 +11380,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vitest: 4.0.18(@types/node@20.19.31)(@vitest/ui@4.0.18)(jiti@2.6.1)(lightningcss@1.30.2)(msw@2.12.9(@types/node@20.19.31)(typescript@5.9.3))(terser@5.46.0)(yaml@2.8.2)
+      vitest: 4.0.18(@types/node@25.2.0)(@vitest/ui@4.0.18)(jiti@2.6.1)(lightningcss@1.30.2)(msw@2.12.9(@types/node@25.2.0)(typescript@5.9.3))(terser@5.46.0)(yaml@2.8.2)
 
   '@vitest/utils@4.0.18':
     dependencies:
@@ -11706,8 +11673,8 @@ snapshots:
 
   better-auth@1.4.18(next@16.1.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(vitest@4.0.18)(vue@3.5.28(typescript@5.9.3)):
     dependencies:
-      '@better-auth/core': 1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.25.76))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)
-      '@better-auth/telemetry': 1.4.18(@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@3.25.76))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0))
+      '@better-auth/core': 1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.2.1(zod@4.3.6))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0)
+      '@better-auth/telemetry': 1.4.18(@better-auth/core@1.4.18(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.21)(better-call@1.1.8(zod@4.3.6))(jose@6.1.3)(kysely@0.28.11)(nanostores@1.1.0))
       '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.21
       '@noble/ciphers': 2.1.1
@@ -11722,7 +11689,7 @@ snapshots:
       next: 16.1.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      vitest: 4.0.18(@types/node@20.19.31)(@vitest/ui@4.0.18)(jiti@2.6.1)(lightningcss@1.30.2)(msw@2.12.9(@types/node@20.19.31)(typescript@5.9.3))(terser@5.46.0)(yaml@2.8.2)
+      vitest: 4.0.18(@types/node@25.2.0)(@vitest/ui@4.0.18)(jiti@2.6.1)(lightningcss@1.30.2)(msw@2.12.9(@types/node@25.2.0)(typescript@5.9.3))(terser@5.46.0)(yaml@2.8.2)
       vue: 3.5.28(typescript@5.9.3)
 
   better-call@1.1.8(zod@4.3.6):
@@ -13870,32 +13837,6 @@ snapshots:
 
   ms@2.1.3: {}
 
-  msw@2.12.9(@types/node@20.19.31)(typescript@5.9.3):
-    dependencies:
-      '@inquirer/confirm': 5.1.21(@types/node@20.19.31)
-      '@mswjs/interceptors': 0.41.2
-      '@open-draft/deferred-promise': 2.2.0
-      '@types/statuses': 2.0.6
-      cookie: 1.1.1
-      graphql: 16.12.0
-      headers-polyfill: 4.0.3
-      is-node-process: 1.2.0
-      outvariant: 1.4.3
-      path-to-regexp: 6.3.0
-      picocolors: 1.1.1
-      rettime: 0.10.1
-      statuses: 2.0.2
-      strict-event-emitter: 0.5.1
-      tough-cookie: 6.0.0
-      type-fest: 5.4.3
-      until-async: 3.0.2
-      yargs: 17.7.2
-    optionalDependencies:
-      typescript: 5.9.3
-    transitivePeerDependencies:
-      - '@types/node'
-    optional: true
-
   msw@2.12.9(@types/node@25.2.0)(typescript@5.9.3):
     dependencies:
       '@inquirer/confirm': 5.1.21(@types/node@25.2.0)
@@ -15950,22 +15891,6 @@ snapshots:
       vite: 7.3.1(@types/node@25.2.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)
       vue: 3.5.28(typescript@5.9.3)
 
-  vite@7.3.1(@types/node@20.19.31)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2):
-    dependencies:
-      esbuild: 0.27.2
-      fdir: 6.5.0(picomatch@4.0.3)
-      picomatch: 4.0.3
-      postcss: 8.5.6
-      rollup: 4.57.1
-      tinyglobby: 0.2.15
-    optionalDependencies:
-      '@types/node': 20.19.31
-      fsevents: 2.3.3
-      jiti: 2.6.1
-      lightningcss: 1.30.2
-      terser: 5.46.0
-      yaml: 2.8.2
-
   vite@7.3.1(@types/node@25.2.0)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2):
     dependencies:
       esbuild: 0.27.2
@@ -15981,44 +15906,6 @@ snapshots:
       lightningcss: 1.30.2
       terser: 5.46.0
       yaml: 2.8.2
-
-  vitest@4.0.18(@types/node@20.19.31)(@vitest/ui@4.0.18)(jiti@2.6.1)(lightningcss@1.30.2)(msw@2.12.9(@types/node@20.19.31)(typescript@5.9.3))(terser@5.46.0)(yaml@2.8.2):
-    dependencies:
-      '@vitest/expect': 4.0.18
-      '@vitest/mocker': 4.0.18(msw@2.12.9(@types/node@20.19.31)(typescript@5.9.3))(vite@7.3.1(@types/node@20.19.31)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))
-      '@vitest/pretty-format': 4.0.18
-      '@vitest/runner': 4.0.18
-      '@vitest/snapshot': 4.0.18
-      '@vitest/spy': 4.0.18
-      '@vitest/utils': 4.0.18
-      es-module-lexer: 1.7.0
-      expect-type: 1.3.0
-      magic-string: 0.30.21
-      obug: 2.1.1
-      pathe: 2.0.3
-      picomatch: 4.0.3
-      std-env: 3.10.0
-      tinybench: 2.9.0
-      tinyexec: 1.0.2
-      tinyglobby: 0.2.15
-      tinyrainbow: 3.0.3
-      vite: 7.3.1(@types/node@20.19.31)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2)
-      why-is-node-running: 2.3.0
-    optionalDependencies:
-      '@types/node': 20.19.31
-      '@vitest/ui': 4.0.18(vitest@4.0.18)
-    transitivePeerDependencies:
-      - jiti
-      - less
-      - lightningcss
-      - msw
-      - sass
-      - sass-embedded
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - yaml
 
   vitest@4.0.18(@types/node@25.2.0)(@vitest/ui@4.0.18)(jiti@2.6.1)(lightningcss@1.30.2)(msw@2.12.9(@types/node@25.2.0)(typescript@5.9.3))(terser@5.46.0)(yaml@2.8.2):
     dependencies:

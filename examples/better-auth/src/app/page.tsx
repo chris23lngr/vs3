@@ -14,11 +14,11 @@ export default function HomePage() {
 				</p>
 			</section>
 			<section className="mx-auto mt-12 grid w-full max-w-5xl grid-cols-2 gap-8 px-8">
-				<div className="rounded-lg border border-zinc-200 p-8 shadow-xs">
+				<div className="rounded-lg border border-border p-8 shadow-xs">
 					<p className="font-medium text-sm">Uploading</p>
 					<UploadDemo className="mt-6" />
 				</div>
-				<div className="rounded-lg border border-zinc-200 p-8 shadow-xs">
+				<div className="rounded-lg border border-border p-8 shadow-xs">
 					<p className="font-medium text-sm">Downloading</p>
 					<DownloadDemo className="mt-6" />
 				</div>

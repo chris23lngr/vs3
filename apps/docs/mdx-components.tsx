@@ -23,7 +23,10 @@ export const components = {
 	// ...Callout,
 	h1: ({ children, className, ...props }: React.ComponentProps<"h1">) => (
 		<h1
-			className={cn("scroll-mt-24 font-bold text-3xl text-zinc-800", className)}
+			className={cn(
+				"scroll-mt-24 font-bold text-3xl text-zinc-800 dark:text-zinc-100",
+				className,
+			)}
 			{...props}
 		>
 			{children}
@@ -32,7 +35,7 @@ export const components = {
 	h2: ({ children, className, ...props }: React.ComponentProps<"h2">) => (
 		<h2
 			className={cn(
-				"mt-12 mb-2 scroll-mt-24 font-semibold text-2xl text-zinc-800",
+				"mt-12 mb-2 scroll-mt-24 font-semibold text-2xl text-zinc-800 dark:text-zinc-100",
 				className,
 			)}
 			{...props}
@@ -42,7 +45,10 @@ export const components = {
 	),
 	h3: ({ children, className, ...props }: React.ComponentProps<"h3">) => (
 		<h3
-			className={cn("mt-8 mb-4 scroll-mt-24 font-semibold text-lg", className)}
+			className={cn(
+				"mt-8 mb-4 scroll-mt-24 font-semibold text-lg text-zinc-800 dark:text-zinc-100",
+				className,
+			)}
 			{...props}
 		>
 			{children}
@@ -50,32 +56,49 @@ export const components = {
 	),
 	h4: ({ children, className, ...props }: React.ComponentProps<"h4">) => (
 		<h4
-			className={cn("mt-10 mb-4 scroll-mt-24 font-semibold text-base", className)}
+			className={cn(
+				"mt-10 mb-4 scroll-mt-24 font-semibold text-base text-zinc-800 dark:text-zinc-100",
+				className,
+			)}
 			{...props}
 		>
 			{children}
 		</h4>
 	),
 	h5: ({ children, className, ...props }: React.ComponentProps<"h5">) => (
-		<h5 className={cn("scroll-mt-24 font-bold text-sm", className)} {...props}>
+		<h5
+			className={cn(
+				"scroll-mt-24 font-bold text-sm text-zinc-800 dark:text-zinc-100",
+				className,
+			)}
+			{...props}
+		>
 			{children}
 		</h5>
 	),
 	h6: ({ children, className, ...props }: React.ComponentProps<"h6">) => (
-		<h6 className={cn("scroll-mt-24 font-bold text-xs", className)} {...props}>
+		<h6
+			className={cn(
+				"scroll-mt-24 font-bold text-xs text-zinc-800 dark:text-zinc-100",
+				className,
+			)}
+			{...props}
+		>
 			{children}
 		</h6>
 	),
 	strong: ({ children }: { children: React.ReactNode }) => (
-		<strong className="font-medium text-zinc-800">{children}</strong>
+		<strong className="font-medium text-zinc-800 dark:text-zinc-100">
+			{children}
+		</strong>
 	),
 	p: ({ children }: { children: React.ReactNode }) => (
-		<p className="mb-4 text-[0.9375rem] text-zinc-600 leading-relaxed">
+		<p className="mb-4 text-[0.9375rem] text-zinc-600 leading-relaxed dark:text-zinc-400">
 			{children}
 		</p>
 	),
 	ul: ({ children }: { children: React.ReactNode }) => (
-		<ul className="mt-4 mb-6 list-outside list-disc space-y-2 pl-3.5 text-[0.9375rem] text-body text-zinc-600 leading-7 marker:text-zinc-300 [&>li]:pl-2">
+		<ul className="mt-4 mb-6 list-outside list-disc space-y-2 pl-3.5 text-[0.9375rem] text-body text-zinc-600 leading-7 marker:text-zinc-300 dark:text-zinc-400 dark:marker:text-zinc-500 [&>li]:pl-2">
 			{children}
 		</ul>
 	),
@@ -86,7 +109,7 @@ export const components = {
 	),
 	a: ({ children, href }: { children: React.ReactNode; href: string }) => (
 		<Link
-			className="rounded-sm font-medium text-zinc-800 underline underline-offset-4 transition-colors hover:text-violet-600 focus-visible:text-violet-500 focus-visible:decoration-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+			className="rounded-sm font-medium text-zinc-800 underline underline-offset-4 transition-colors hover:text-violet-600 focus-visible:text-violet-500 focus-visible:decoration-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 dark:text-zinc-200 dark:hover:text-violet-500"
 			href={href}
 		>
 			{children}
@@ -124,7 +147,7 @@ export const components = {
 			return (
 				<code
 					className={cn(
-						"mx-0.5 rounded-md border border-zinc-200 bg-background px-1.5 py-0.5 font-mono text-sm shadow-xs",
+						"mx-0.5 rounded-md border border-border bg-background px-1.5 py-0.5 font-mono text-sm shadow-xs",
 					)}
 					{...props}
 				>

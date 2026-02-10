@@ -15,7 +15,9 @@ const buttonVariants = cva(
 					"border border-violet-600 bg-linear-to-b from-violet-500 to-violet-600 text-white",
 					"inset-shadow-2xs inset-shadow-white/20",
 				],
-				outline: ["bg-background text-zinc-700 shadow-sm ring-1 ring-zinc-700/10"],
+				outline: [
+					"bg-background text-zinc-700 shadow-sm ring-1 ring-zinc-700/10 dark:text-zinc-200 dark:ring-zinc-200/20",
+				],
 			},
 			size: {
 				default: "h-7 px-3 py-1 text-sm [&_svg:not([class*='size-'])]:size-3.5",

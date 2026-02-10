@@ -54,7 +54,7 @@ export function FrameworksSection() {
 					</div>
 				</div>
 				<div className="flex items-center justify-center">
-					<div className="grid w-full max-w-96 grid-cols-3 grid-rows-3 divide-x divide-y divide-dashed divide-zinc-200 border-zinc-200 border-t border-l border-dashed [&_div]:aspect-square [&_div]:last:border-r [&_div]:last:border-b [&_div]:last:border-dashed">
+					<div className="grid w-full max-w-96 grid-cols-3 grid-rows-3 divide-x divide-y divide-dashed divide-border border-border border-t border-l border-dashed [&_div]:aspect-square [&_div]:last:border-r [&_div]:last:border-b [&_div]:last:border-dashed">
 						<div className="flex items-center justify-center p-6">
 							<Image
 								alt="Next.js"
@@ -77,7 +77,7 @@ export function FrameworksSection() {
 						</div>
 						{Array.from({ length: 5 }).map((_, index) => (
 							// biome-ignore lint/suspicious/noArrayIndexKey: Just a placeholder
-							<div className="bg-zinc-50" key={index} />
+							<div className="bg-zinc-50 dark:bg-zinc-900" key={index} />
 						))}
 					</div>
 				</div>

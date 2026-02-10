@@ -6,7 +6,7 @@ export const badgeVariants = cva(
 	{
 		variants: {
 			variant: {
-				outline: ["border shadow-xs", "border-zinc-200 text-zinc-600"],
+				outline: ["border shadow-xs", "border-border text-zinc-600"],
 			},
 			size: {
 				default:

@@ -48,7 +48,7 @@ export function DocsSidebar({
 
 	return (
 		<Sidebar
-			className="sticky top-0 h-svh border-zinc-200 border-r border-dashed bg-transparent"
+			className="sticky top-0 h-svh border-border border-r border-dashed bg-transparent"
 			collapsible="none"
 			{...props}
 		>
@@ -63,14 +63,14 @@ export function DocsSidebar({
 							{TOP_LEVEL_SECTIONS.map(({ name, href, icon: Icon }) => (
 								<SidebarMenuItem key={name}>
 									<SidebarMenuButton
-										className="group/menu-button relative font-medium text-sm text-zinc-600"
+										className="group/menu-button relative font-medium text-sm text-zinc-600 dark:text-zinc-200"
 										isActive={
 											href === "/docs" ? pathname === href : pathname.startsWith(href)
 										}
 										render={
 											<Link href={href}>
 												{Icon && (
-													<Icon className="size-3.5 fill-zinc-100 text-zinc-500 group-data-active/menu-button:fill-violet-200 group-data-active/menu-button:text-violet-500" />
+													<Icon className="size-3.5 fill-zinc-100 text-zinc-500 group-data-active/menu-button:fill-violet-200 group-data-active/menu-button:text-violet-500 dark:fill-zinc-700 dark:text-zinc-400" />
 												)}
 												<span className="absolute inset-0 flex w-(--sidebar-menu-width) bg-transparent" />
 												{name}

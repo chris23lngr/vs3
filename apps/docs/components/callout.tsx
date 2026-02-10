@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const calloutVariants = cva(
-	"my-8 flex gap-5 rounded-xl border border-zinc-200 p-4 shadow-xs first:mt-0 last:mb-0 [&_p]:last:mb-0",
+	"my-8 flex gap-5 rounded-xl border border-border p-4 shadow-xs first:mt-0 last:mb-0 [&_p]:last:mb-0",
 	{
 		variants: {
 			type: {
@@ -29,10 +29,10 @@ const calloutVariants = cva(
 const barVariants = cva("w-0.75 self-stretch rounded-full", {
 	variants: {
 		type: {
-			info: "bg-blue-500",
-			warn: "bg-yellow-500",
-			error: "bg-red-500",
-			success: "bg-green-500",
+			info: "bg-blue-500 dark:bg-blue-700",
+			warn: "bg-yellow-500 dark:bg-yellow-700",
+			error: "bg-red-500 dark:bg-red-700",
+			success: "bg-green-500 dark:bg-green-700",
 		},
 	},
 	defaultVariants: {
@@ -43,10 +43,10 @@ const barVariants = cva("w-0.75 self-stretch rounded-full", {
 const titleVariants = cva("block font-medium text-sm", {
 	variants: {
 		type: {
-			info: "text-blue-600",
-			warn: "text-yellow-600",
-			error: "text-red-600",
-			success: "text-green-600",
+			info: "text-blue-600 dark:text-blue-500",
+			warn: "text-yellow-600 dark:text-yellow-500",
+			error: "text-red-600 dark:text-red-500",
+			success: "text-green-600 dark:text-green-500",
 		},
 	},
 	defaultVariants: {
@@ -69,18 +69,40 @@ function CalloutIcon({
 	const base = "size-3.5 shrink-0";
 	switch (type) {
 		case "info":
-			return <InfoIcon className={cn(base, "fill-blue-100 text-blue-500")} />;
+			return (
+				<InfoIcon
+					className={cn(
+						base,
+						"fill-blue-100 text-blue-500 dark:fill-blue-950 dark:text-blue-500",
+					)}
+				/>
+			);
 		case "warn":
 			return (
 				<TriangleAlertIcon
-					className={cn(base, "fill-yellow-100 text-yellow-500")}
+					className={cn(
+						base,
+						"fill-yellow-100 text-yellow-500 dark:fill-yellow-950 dark:text-yellow-500",
+					)}
 				/>
 			);
 		case "error":
-			return <CircleXIcon className={cn(base, "fill-red-100 text-red-500")} />;
+			return (
+				<CircleXIcon
+					className={cn(
+						base,
+						"fill-red-100 text-red-500 dark:fill-red-950 dark:text-red-500",
+					)}
+				/>
+			);
 		case "success":
 			return (
-				<CircleCheckIcon className={cn(base, "fill-green-100 text-green-500")} />
+				<CircleCheckIcon
+					className={cn(
+						base,
+						"fill-green-100 text-green-500 dark:fill-green-950 dark:text-green-500",
+					)}
+				/>
 			);
 	}
 }

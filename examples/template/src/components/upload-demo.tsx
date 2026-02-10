@@ -12,7 +12,7 @@ export function UploadDemo({
 	return (
 		<div className={cn("", className)} {...props}>
 			<input
-				className="w-full rounded-md border border-zinc-200 p-2 text-sm shadow-xs"
+				className="w-full rounded-md border border-border p-2 text-sm shadow-xs"
 				onChange={(e) => {
 					e.target.files?.[0] &&
 						upload(e.target.files[0], {
@@ -46,7 +46,7 @@ export function UploadDemo({
 				<div className="col-span-2 space-y-1">
 					<p className="font-medium text-xs text-zinc-700">Data</p>
 					{state.data ? (
-						<div className="space-y-6 rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm shadow-xs">
+						<div className="space-y-6 rounded-md border border-border bg-zinc-50 px-4 py-3 text-sm shadow-xs">
 							{Object.entries(state.data).map(([key, value]) => (
 								<div className="space-y-1" key={key}>
 									<p className="font-medium text-zinc-700">{key}: </p>
