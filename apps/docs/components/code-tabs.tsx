@@ -35,6 +35,7 @@ export function CodeTabsTrigger({
 		<TabsPrimitive.Tab
 			className={cn(
 				"group/tab relative inline-flex cursor-pointer py-2 font-medium text-sm text-zinc-300 transition-colors hover:text-zinc-100 data-active:text-violet-500 data-active:hover:text-violet-500",
+				className,
 			)}
 			value={value}
 			{...props}
