@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: How to get up and running with vs3.
+description: How to get up and running with vS3.
 ---
 
 <Steps>
@@ -11,33 +11,35 @@ description: How to get up and running with vs3.
 
 Install the required dependencies with a package manager of your choice:
 
-<Tabs groupId="package-manager" defaultValue="pnpm" items={["pnpm", "npm", "yarn", "bun"]}>
+<CodeTabs groupId="package-manager" defaultValue="pnpm" values={["pnpm", "npm", "yarn", "bun"]}>
 
-<Tab value="pnpm">
+<CodeTabsContent value="pnpm">
 ```bash
-pnpm install vs3
+pnpm install vS3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
-</Tab>
+</CodeTabsContent>
 
-<Tab value="npm">
+<CodeTabsContent value="npm">
 ```bash
-npm install vs3
+npm install vS3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
-</Tab>
+</CodeTabsContent>
 
-<Tab value="yarn">
+<CodeTabsContent value="yarn">
 ```bash
-yarn add vs3
+yarn add vS3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
-</Tab>
+</CodeTabsContent>
 
-<Tab value="bun">
+<CodeTabsContent value="bun">
 ```bash
-bun add vs3
+bun add vS3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
-</Tab>
+</CodeTabsContent>
 
-</Tabs>
+</CodeTabs>
+
+`vS3` requires the `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` packages to be installed. 
 
 </Step>
 
@@ -45,10 +47,10 @@ bun add vs3
 
 ## Create a storage adapter
 
-`vs3` requires an adapter to interact with the storage. See [Adapters](/docs/adapters) for a full list of supported adapters.
+To interact with the storage provider you need to create an adapter. See [Adapters](/docs/adapters) for a full list of supported adapters.
 
 ```ts title="server/storage/server.ts"
-import { aws } from "vs3/adapters";
+import { aws } from "vS3/adapters";
 
 const adapter = aws({
     region: process.env.AWS_REGION!,
@@ -58,10 +60,6 @@ const adapter = aws({
     },
 });
 ```
-
-<Callout type="info">
-For `aws` make sure you have the `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` packages installed.
-</Callout>
 
 </Step>
 
@@ -92,18 +90,18 @@ While this will work without any other options you might want to pass in some ad
 
 Mount the handlers to your framework of choice at `/api/storage/[...all]`. If you prefer to use a different path, you can pass the `apiPath` option when creating the storage instance. See the [Configuration](/docs/configuration) section for more information.
 
-<Tabs groupId="framework" defaultValue="nextjs" items={["nextjs"]}>
+<CodeTabs groupId="framework" defaultValue="nextjs" values={["nextjs"]}>
 
-<Tab value="nextjs">
+<CodeTabsContent value="nextjs">
 ```ts title="app/api/storage/[...all]/route.ts"
 export const { GET, POST, OPTIONS, PUT } = toNextJsRouteHandler({ handler: storage.handler });
 ```
-</Tab>
+</CodeTabsContent>
 
-</Tabs>
+</CodeTabs>
 
 <Callout type="info">
-Although we currently only provide an integration for Next.js, `vs3` supports any backend framework that uses standard request and response objects.
+Although we currently only provide an integration for Next.js, `vS3` supports any backend framework that uses standard request and response objects.
 </Callout>
 
 </Step>
@@ -114,27 +112,27 @@ Although we currently only provide an integration for Next.js, `vs3` supports an
 
 To access the storage API from the client you need to create a client instance. Create a client instance by importing `createStorageClient` for the framework of your choice and passing in the same options you passed to the storage instance.
 
-<Tabs groupId="frontend-framework" defaultValue="react" items={["react"]}>
+<CodeTabs groupId="frontend-framework" defaultValue="react" values={["react"]}>
 
-<Tab value="react">
+<CodeTabsContent value="react">
 ```ts title="server/storage/client.ts"
 "use client";
 
-import { createStorageClient } from "vs3/react";
+import { createStorageClient } from "vS3/react";
 import type { StorageMetadata } from "./server";
 
 export const storageClient = createStorageClient<StorageMetadata>({
     // Optional configuration
 });
 ```
-</Tab>
+</CodeTabsContent>
 
-</Tabs>
+</CodeTabs>
 
 If you passed the `StorageMetadata` type to the client instance, you do not need to pass the metadata schema again. The schema will be inferred automatically.
 
 <Callout type="warn">
-This will likely change in the future to allow for more flexibility. See [this issue](https://github.com/chris23lngr/vs3/issues/49) for more information.
+This will likely change in the future to allow for more flexibility. See [this issue](https://github.com/chris23lngr/vS3/issues/49) for more information.
 </Callout>
 
 
@@ -144,7 +142,7 @@ This will likely change in the future to allow for more flexibility. See [this i
 
 ## All done
 
-That's it! You can now use `vs3` to upload and download files. Check out the [usage](/docs/usage) section for more information on how to use the client and server APIs.
+That's it! You can now use `vS3` to upload and download files. Check out the [usage](/docs/usage) section for more information on how to use the client and server APIs.
 
 ```ts title="client-demo.tsx"
 "use client";

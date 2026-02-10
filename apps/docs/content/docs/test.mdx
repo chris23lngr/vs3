@@ -1,0 +1,61 @@
+---
+title: Test
+description: Test
+---
+
+```ts title="src/app/page.tsx"
+// Using 'typeof' to infer types
+const person = { name: "Alice", age: 30 };
+type PersonType = typeof person;  // { name: string; age: number }
+
+// 'satisfies' to ensure a type matches but allows more specific types
+type Animal = { name: string };
+const dog = { name: "Buddy", breed: "Golden Retriever" } satisfies Animal;
+
+// Generics with 'extends' and default values
+function identity<T extends number | string = string>(arg: T): T {
+  return arg;
+}
+```
+
+
+<CodeTabs values={["npm", "pnpm", "yarn", "bun"]}>
+
+<CodeTabsContent value="npm">
+```bash title="terminal"
+npm install vs3
+```
+</CodeTabsContent>
+
+<CodeTabsContent value="pnpm">
+```bash title="terminal"
+pnpm add vs3
+```
+</CodeTabsContent>
+<CodeTabsContent value="yarn">
+```bash title="terminal"
+yarn add vs3
+```
+</CodeTabsContent>
+<CodeTabsContent value="bun">
+```bash title="terminal"
+bun add vs3
+```
+</CodeTabsContent>
+</CodeTabs>
+
+<Callout type="info">
+**Imporant information:** Users who are not logged in will see a message saying "You are not logged in". See more information [here](/docs/authentication).
+</Callout>
+
+<Callout type="warn">
+**Imporant information:** Users who are not logged in will see a message saying "You are not logged in". See more information [here](/docs/authentication).
+</Callout>
+
+<Callout type="error">
+**Imporant information:** Users who are not logged in will see a message saying "You are not logged in". See more information [here](/docs/authentication).
+</Callout>
+
+<Callout type="success" title="This is a success message">
+**Imporant information:** Users who are not logged in will see a message saying "You are not logged in". See more information [here](/docs/authentication).
+</Callout>
