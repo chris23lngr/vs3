@@ -102,13 +102,9 @@ async function executeDownload<M extends StandardSchemaV1>(
 	try {
 		actions.reset();
 		actions.setLoading();
-		const result = await client.downloadFile(key, {
-			...downloadOptions,
-			onSuccess: (value) => {
-				actions.setSuccess(value);
-				callbacks.onSuccess?.(value);
-			},
-		});
+		const result = await client.downloadFile(key, downloadOptions);
+		actions.setSuccess(result);
+		callbacks.onSuccess?.(result);
 		return result;
 	} catch (error) {
 		const storageError = normalizeStorageError(
