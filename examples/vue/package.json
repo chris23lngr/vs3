@@ -8,7 +8,7 @@
 		"check": "biome check .",
 		"check:unsafe": "biome check --write --unsafe .",
 		"check:write": "biome check --write .",
-		"dev": "nuxt dev --port 3010",
+		"dev": "nuxt dev --port 3000",
 		"preview": "nuxt preview",
 		"typecheck": "nuxt prepare && tsc --noEmit -p .nuxt/tsconfig.json"
 	},

@@ -5,9 +5,11 @@ export function CodeTabs({
 	values,
 	children,
 	className,
+	groupId: _groupId,
 	...props
 }: React.ComponentProps<typeof TabsPrimitive.Root> & {
 	values?: string[];
+	groupId?: string;
 }) {
 	return (
 		<TabsPrimitive.Root
