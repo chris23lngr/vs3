@@ -113,13 +113,28 @@ Although we currently only provide an integration for Next.js, `vS3` supports an
 
 To access the storage API from the client you need to create a client instance. Create a client instance by importing `createStorageClient` for the framework of your choice and passing in the same options you passed to the storage instance.
 
-<CodeTabs groupId="frontend-framework" defaultValue="react" values={["react"]}>
+<CodeTabs
+	groupId="frontend-framework"
+	defaultValue="react"
+	values={["react", "vue"]}
+>
 
 <CodeTabsContent value="react">
 ```ts title="server/storage/client.ts"
 "use client";
 
 import { createStorageClient } from "vs3/react";
+import type { StorageMetadata } from "./server";
+
+export const storageClient = createStorageClient<StorageMetadata>({
+    // Optional configuration
+});
+```
+</CodeTabsContent>
+
+<CodeTabsContent value="vue">
+```ts title="server/storage/client.ts"
+import { createStorageClient } from "vs3/vue";
 import type { StorageMetadata } from "./server";
 
 export const storageClient = createStorageClient<StorageMetadata>({
@@ -145,12 +160,22 @@ This will likely change in the future to allow for more flexibility. See [this i
 
 That's it! You can now use `vS3` to upload and download files. Check out the [usage](/docs/usage) section for more information on how to use the client and server APIs.
 
+<CodeTabs defaultValue="react" values={["react", "vue"]}>
+<CodeTabsContent value="react">
 ```ts title="client-demo.tsx"
 "use client";
 
 const { upload } = storageClient.useUpload();
 upload(file, { userId: "123" });
 ```
+</CodeTabsContent>
+<CodeTabsContent value="vue">
+```ts title="client-demo.ts"
+const { upload } = storageClient.useUpload();
+await upload(file, { userId: "123" });
+```
+</CodeTabsContent>
+</CodeTabs>
 
 </Step>
 

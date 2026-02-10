@@ -6,14 +6,24 @@ description: How to use vs3 to upload and download files.
 ## Client
 
 The storage client allows you to interact with the storage API from the client.
+`vs3` provides framework-specific integrations for both React (`vs3/react`) and Vue 3 (`vs3/vue`).
 
 ### useUpload
 
 The `useUpload` hook allows you to upload a file to the storage.
 
+<CodeTabs defaultValue="react" values={["react", "vue"]}>
+<CodeTabsContent value="react">
 ```ts
 const { upload, reset, state } = storageClient.useUpload();
 ```
+</CodeTabsContent>
+<CodeTabsContent value="vue">
+```ts
+const { upload, reset, state } = storageClient.useUpload();
+```
+</CodeTabsContent>
+</CodeTabs>
 
 The upload hook will return a `upload` function that you can use to upload a file to the storage. The state object contains the current upload state including the progress, status, error and data.
 
@@ -39,9 +49,18 @@ reset();
 
 The `state` object contains the current upload state including the progress, status, error and data.
 
+<CodeTabs defaultValue="react" values={["react", "vue"]}>
+<CodeTabsContent value="react">
 ```ts
 console.log(state);
 ```
+</CodeTabsContent>
+<CodeTabsContent value="vue">
+```ts
+console.log(state.value);
+```
+</CodeTabsContent>
+</CodeTabs>
 ```json
 {
 	"isLoading": false,
@@ -56,9 +75,18 @@ console.log(state);
 
 The `useDownload` hook allows you to download a file from the storage.
 
+<CodeTabs defaultValue="react" values={["react", "vue"]}>
+<CodeTabsContent value="react">
 ```ts
 const { download, state } = storageClient.useDownload();
 ```
+</CodeTabsContent>
+<CodeTabsContent value="vue">
+```ts
+const { download, state } = storageClient.useDownload();
+```
+</CodeTabsContent>
+</CodeTabs>
 
 #### `download`
 
@@ -78,9 +106,18 @@ There are three download modes:
 
 The `state` object contains the current download state including the progress, status, error and data.
 
+<CodeTabs defaultValue="react" values={["react", "vue"]}>
+<CodeTabsContent value="react">
 ```ts
 console.log(state);
 ```
+</CodeTabsContent>
+<CodeTabsContent value="vue">
+```ts
+console.log(state.value);
+```
+</CodeTabsContent>
+</CodeTabs>
 ```json
 {
 	"isLoading": false,
