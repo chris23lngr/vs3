@@ -118,7 +118,7 @@
 |---|---|
 | `createStorage` | `/docs/server/create-storage` |
 | `StorageOptions` (`maxFileSize`, `allowedFileTypes`, `metadataSchema`, `generateKey`, `hooks`, `middlewares`, etc.) | `/docs/server/storage-options` |
-| Upload/download endpoints | `/docs/server/endpoints/upload-url`, `/docs/server/endpoints/download-url` |
+| Upload/download endpoints | `/docs/server/endpoints` |
 | Multipart endpoints and flow | `/docs/server/endpoints/multipart`, `/docs/client/*/use-multipart-upload` |
 | React SDK (`vs3/react`) | `/docs/client/react/*` |
 | Vue SDK (`vs3/vue`) | `/docs/client/vue/*` |
