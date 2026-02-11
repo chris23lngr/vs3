@@ -44,6 +44,12 @@ export enum StorageErrorCode {
 	MIDDLEWARE_FAILED = "MIDDLEWARE_FAILED",
 	/** Request processing timed out */
 	MIDDLEWARE_TIMEOUT = "MIDDLEWARE_TIMEOUT",
+	/** Multipart upload ID not found or expired */
+	MULTIPART_UPLOAD_NOT_FOUND = "MULTIPART_UPLOAD_NOT_FOUND",
+	/** S3 multipart operation failed */
+	MULTIPART_UPLOAD_FAILED = "MULTIPART_UPLOAD_FAILED",
+	/** Parts list is invalid for multipart completion */
+	INVALID_PARTS = "INVALID_PARTS",
 }
 
 export type StorageErrorDefinition = {
@@ -254,6 +260,25 @@ const STORAGE_ERROR_DEFINITIONS: Record<
 		description: "Middleware execution timed out.",
 		httpStatus: 504,
 		recoverySuggestion: "Retry or increase middleware timeout.",
+	},
+	[StorageErrorCode.MULTIPART_UPLOAD_NOT_FOUND]: {
+		code: StorageErrorCode.MULTIPART_UPLOAD_NOT_FOUND,
+		description: "Multipart upload ID not found or expired.",
+		httpStatus: 404,
+		recoverySuggestion: "Start a new multipart upload.",
+	},
+	[StorageErrorCode.MULTIPART_UPLOAD_FAILED]: {
+		code: StorageErrorCode.MULTIPART_UPLOAD_FAILED,
+		description: "S3 multipart operation failed.",
+		httpStatus: 502,
+		recoverySuggestion: "Retry the multipart operation or check S3 availability.",
+	},
+	[StorageErrorCode.INVALID_PARTS]: {
+		code: StorageErrorCode.INVALID_PARTS,
+		description: "Parts list is invalid for multipart completion.",
+		httpStatus: 400,
+		recoverySuggestion:
+			"Ensure parts list is non-empty with valid part numbers and ETags.",
 	},
 };
 
