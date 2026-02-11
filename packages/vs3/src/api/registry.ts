@@ -39,4 +39,58 @@ export const routeRegistry = {
 			downloadHeaders: z.record(z.string(), z.string()).optional(),
 		}),
 	},
+	"/multipart/create": {
+		body: z.object({
+			fileInfo: fileInfoSchema,
+			acl: z.enum(["public-read", "private"]).optional(),
+			encryption: s3EncryptionSchema.optional(),
+		}),
+		requireMetadata: true,
+		output: z.object({
+			uploadId: z.string(),
+			key: z.string(),
+		}),
+	},
+	"/multipart/presign-parts": {
+		body: z.object({
+			key: z.string().min(1),
+			uploadId: z.string().min(1),
+			parts: z.array(z.object({ partNumber: z.number().int().min(1) })),
+		}),
+		requireMetadata: false,
+		output: z.object({
+			parts: z.array(
+				z.object({
+					partNumber: z.number(),
+					presignedUrl: z.string(),
+				}),
+			),
+		}),
+	},
+	"/multipart/complete": {
+		body: z.object({
+			key: z.string().min(1),
+			uploadId: z.string().min(1),
+			parts: z.array(
+				z.object({
+					partNumber: z.number().int().min(1),
+					eTag: z.string().min(1),
+				}),
+			),
+		}),
+		requireMetadata: false,
+		output: z.object({
+			key: z.string(),
+		}),
+	},
+	"/multipart/abort": {
+		body: z.object({
+			key: z.string().min(1),
+			uploadId: z.string().min(1),
+		}),
+		requireMetadata: false,
+		output: z.object({
+			success: z.boolean(),
+		}),
+	},
 } as const satisfies RouteRegistry;
