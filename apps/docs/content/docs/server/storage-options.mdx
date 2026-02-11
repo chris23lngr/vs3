@@ -18,7 +18,7 @@ const storage = createStorage({
 
 ### adapter
 
-S3 provider integration used for presigned URLs and object operations. See [Adapters](/docs/adapters/overview) for a full list of supported adapters.
+S3 provider integration used for presigned URLs and object operations. See [Adapters](/docs/server/adapters) for a full list of supported adapters.
 
 ```ts
 import { aws } from "vs3/adapters";
@@ -170,7 +170,7 @@ createStorage({
 
 ### middlewares
 
-Global middleware chain executed before endpoint logic. Defaults to `[]` (no middlewares applied). Middlewares are applied in the order they are provided. See [Middlewares](/docs/server/middlewares) for more information.
+Global middleware chain executed before endpoint logic. Defaults to `[]` (no middlewares applied). Middlewares are applied in the order they are provided. See [Middleware Overview](/docs/middleware/overview) for more information.
 
 ```ts
 middlewares: [
