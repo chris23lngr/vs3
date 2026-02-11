@@ -1,9 +1,6 @@
-import { DocsFooter } from "@/components/docs-footer";
 import { DocsNav } from "@/components/docs-nav";
 import { DocsSidebar } from "@/components/docs-sidebar";
-import { SiteNav } from "@/components/site-nav";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { SiteConfig } from "@/lib/config";
 import { source } from "@/lib/source";
 
 export default function Layout({ children }: LayoutProps<"/docs">) {

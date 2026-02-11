@@ -3,7 +3,6 @@ import type React from "react";
 import type { JSX } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./theme-toggle";
-import { SidebarTrigger } from "./ui/sidebar";
 
 export function SiteNav({
 	className,
