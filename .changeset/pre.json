@@ -6,7 +6,15 @@
 		"docs": "0.0.0",
 		"vs3": "0.0.1",
 		"vs3-examples-better-auth": "0.1.0",
-		"vs3-examples-template": "0.1.0"
+		"vs3-examples-template": "0.1.0",
+		"vs3-examples-vue": "0.1.0"
 	},
-	"changesets": ["lazy-bananas-see", "major-cars-sort", "swift-hoops-melt"]
+	"changesets": [
+		"big-sails-trade",
+		"eager-aliens-create",
+		"kind-buttons-sin",
+		"lazy-bananas-see",
+		"major-cars-sort",
+		"swift-hoops-melt"
+	]
 }
