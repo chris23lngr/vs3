@@ -1,3 +1,4 @@
+import type { MultipartUploadPart } from "../internal/s3-operations.types";
 import type { S3Encryption } from "./encryption";
 import type { FileInfo } from "./file";
 import type { StorageOptions } from "./options";
@@ -60,5 +61,61 @@ export type StorageAPI<O extends StorageOptions> = {
 	downloadUrl: APIMethod<
 		{ key: string; expiresIn?: number; encryption?: S3Encryption },
 		{ presignedUrl: string; downloadHeaders?: Record<string, string> }
+	>;
+
+	/**
+	 * Create a multipart upload
+	 * Requires metadata if metadataSchema is defined
+	 */
+	multipartCreate: APIMethod<
+		WithMetadata<
+			{
+				fileInfo: FileInfo;
+				acl?: "public-read" | "private";
+				encryption?: S3Encryption;
+			},
+			O,
+			true
+		>,
+		{ uploadId: string; key: string }
+	>;
+
+	/**
+	 * Presign upload URLs for individual parts
+	 */
+	multipartPresignParts: APIMethod<
+		{
+			key: string;
+			uploadId: string;
+			parts: { partNumber: number }[];
+			encryption?: S3Encryption;
+		},
+		{
+			parts: {
+				partNumber: number;
+				presignedUrl: string;
+				uploadHeaders?: Record<string, string>;
+			}[];
+		}
+	>;
+
+	/**
+	 * Complete a multipart upload by assembling parts
+	 */
+	multipartComplete: APIMethod<
+		{
+			key: string;
+			uploadId: string;
+			parts: MultipartUploadPart[];
+		},
+		{ key: string }
+	>;
+
+	/**
+	 * Abort a multipart upload
+	 */
+	multipartAbort: APIMethod<
+		{ key: string; uploadId: string },
+		{ success: boolean }
 	>;
 };

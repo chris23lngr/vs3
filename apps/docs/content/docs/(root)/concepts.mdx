@@ -11,9 +11,9 @@ This is particularly beneficial in serverless environments like Vercel, as the a
 
 ### Large files
 
-For very large files (over ~100MB) it is recommended to use multipart uploads. While `vs3` currently does not support multipart uploads, we plan to add support for this in the near future. 
+For very large files (over ~100MB), use multipart uploads. `vs3` supports multipart upload through dedicated multipart endpoints and the `useMultipartUpload` client hook.
 
-You can track the progress of this feature in Issue [#48](https://github.com/chris23lngr/vs3/issues/48).
+See [Multipart Uploads](/docs/client/multipart-uploads) for the full flow and client usage.
 
 ## Downloading
 

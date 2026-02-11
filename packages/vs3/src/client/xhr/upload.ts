@@ -1,13 +1,10 @@
 import {
-	calculateRetryDelay,
 	DEFAULT_RETRY_CONFIG,
 	type RetryConfig,
-	sleep,
 } from "../../core/resilience/retry";
+import { executeWithRetries, resolveMaxAttempts } from "./retry-utils";
 import type { Headers } from "./types";
 import { XhrFactory } from "./xhr-factory";
-
-const DEFAULT_RETRY_ATTEMPTS = 3;
 
 export type XhrUploadOptions = {
 	/**
@@ -70,73 +67,12 @@ type UploadRequestParams = {
 	signal?: AbortSignal;
 };
 
-type RetryExecutionParams = {
-	maxAttempts: number;
-	retryConfig: RetryConfig;
-	execute: () => Promise<XhrUploadResult>;
-};
-
 function normalizeHeaders(headers: Headers): Headers {
 	const normalized: Headers = {};
 	for (const [key, value] of Object.entries(headers)) {
 		normalized[key.toLowerCase()] = value;
 	}
 	return normalized;
-}
-
-function resolveMaxAttempts(retry?: undefined | true | number): number {
-	if (typeof retry === "number") {
-		return Math.max(1, retry);
-	}
-
-	if (retry === true) {
-		return DEFAULT_RETRY_ATTEMPTS;
-	}
-
-	return 1;
-}
-
-function normalizeError(error: unknown): Error | DOMException {
-	if (error instanceof DOMException || error instanceof Error) {
-		return error;
-	}
-
-	return new Error("Upload failed with an unknown error");
-}
-
-async function executeWithRetries({
-	maxAttempts,
-	retryConfig,
-	execute,
-}: RetryExecutionParams): Promise<XhrUploadResult> {
-	let attempt = 0;
-	let lastError: Error | DOMException | undefined;
-
-	while (attempt < maxAttempts) {
-		try {
-			return await execute();
-		} catch (error) {
-			const normalizedError = normalizeError(error);
-			lastError = normalizedError;
-			attempt++;
-
-			if (
-				normalizedError instanceof DOMException &&
-				normalizedError.name === "AbortError"
-			) {
-				throw normalizedError;
-			}
-
-			if (attempt >= maxAttempts) {
-				throw normalizedError;
-			}
-
-			const delayMs = calculateRetryDelay(attempt, retryConfig);
-			await sleep(delayMs);
-		}
-	}
-
-	throw lastError ?? new Error("Upload failed: no attempts made");
 }
 
 function createUploadRequest({
@@ -203,5 +139,9 @@ export async function xhrUpload(
 				onProgress,
 				signal,
 			}),
+		unknownErrorMessage: "Upload failed with an unknown error",
+		noAttemptsMessage: "Upload failed: no attempts made",
+		signal,
+		abortMessage: "Upload aborted",
 	});
 }

@@ -1,9 +1,13 @@
 import {
+	AbortMultipartUploadCommand,
+	CompleteMultipartUploadCommand,
+	CreateMultipartUploadCommand,
 	DeleteObjectCommand,
 	GetObjectCommand,
 	HeadObjectCommand,
 	PutObjectCommand,
 	type S3Client,
+	UploadPartCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { resolveS3EncryptionConfig } from "../adapters/s3/encryption";
@@ -115,6 +119,85 @@ export function createS3Operations(
 			const command = new DeleteObjectCommand({
 				Bucket: resolveBucket(bucket),
 				Key: key,
+			});
+			await client.send(command);
+		},
+
+		async createMultipartUpload(key, requestOptions) {
+			const {
+				acl,
+				metadata = {},
+				contentType,
+				bucket,
+				encryption,
+			} = requestOptions ?? {};
+
+			const metadataEntries = Object.entries(metadata ?? {}).filter(
+				([, value]) => value !== undefined,
+			);
+
+			const encryptionConfig = resolveS3EncryptionConfig(encryption);
+			const command = new CreateMultipartUploadCommand({
+				Bucket: resolveBucket(bucket),
+				Key: key,
+				ContentType: contentType,
+				ACL: acl,
+				Metadata: metadataEntries.length
+					? Object.fromEntries(metadataEntries)
+					: undefined,
+				...(encryptionConfig.input ?? {}),
+			});
+
+			const response = await client.send(command);
+
+			if (!response.UploadId) {
+				throw new Error("S3 did not return an UploadId");
+			}
+
+			return { uploadId: response.UploadId };
+		},
+
+		async presignUploadPart(input, requestOptions) {
+			const { expiresIn = 3600, bucket, encryption } = requestOptions ?? {};
+			const encryptionConfig = resolveS3EncryptionConfig(encryption);
+			const command = new UploadPartCommand({
+				Bucket: resolveBucket(bucket),
+				Key: input.key,
+				UploadId: input.uploadId,
+				PartNumber: input.partNumber,
+				...(encryptionConfig.input ?? {}),
+			});
+			const url = await getSignedUrl(client, command, { expiresIn });
+
+			if (encryptionConfig.headers) {
+				return { url, headers: encryptionConfig.headers };
+			}
+
+			return url;
+		},
+
+		async completeMultipartUpload(input, requestOptions) {
+			const { bucket } = requestOptions ?? {};
+			const command = new CompleteMultipartUploadCommand({
+				Bucket: resolveBucket(bucket),
+				Key: input.key,
+				UploadId: input.uploadId,
+				MultipartUpload: {
+					Parts: input.parts.map((part) => ({
+						PartNumber: part.partNumber,
+						ETag: part.eTag,
+					})),
+				},
+			});
+			await client.send(command);
+		},
+
+		async abortMultipartUpload(key, uploadId, requestOptions) {
+			const { bucket } = requestOptions ?? {};
+			const command = new AbortMultipartUploadCommand({
+				Bucket: resolveBucket(bucket),
+				Key: key,
+				UploadId: uploadId,
 			});
 			await client.send(command);
 		},

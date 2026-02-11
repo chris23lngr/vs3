@@ -25,6 +25,10 @@ export {
 	runContentValidators,
 } from "./core/validation";
 export { toNextJsRouteHandler } from "./integrations/next-js";
+export type {
+	MultipartUploadPart,
+	PresignedPartResult,
+} from "./internal/s3-operations.types";
 // Middleware system exports
 export type {
 	AuthMiddlewareConfig,

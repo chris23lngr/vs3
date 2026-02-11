@@ -26,6 +26,13 @@ import {
 	triggerBrowserDownload,
 } from "./browser/download";
 import { createFetchSchema } from "./fetch-schema";
+import {
+	executeMultipartUpload,
+	type MultipartUploadOptions,
+	type MultipartUploadResult,
+} from "./multipart/orchestrator";
+export type { MultipartUploadOptions, MultipartUploadResult };
+
 import type { StorageClientOptions } from "./types";
 import { xhrUpload } from "./xhr/upload";
 
@@ -520,6 +527,52 @@ export function createBaseClient<
 					onProgress,
 					retry,
 				);
+				onSuccess?.(result);
+				return result;
+			} catch (error) {
+				handleUploadError(error, onError);
+			}
+		},
+
+		/**
+		 * Uploads a file to storage using multipart upload.
+		 *
+		 * @param file - The file to upload
+		 * @param metadata - Metadata to associate with the file
+		 * @param options - Multipart options including callbacks and transfer settings
+		 * @returns Multipart upload result containing key and upload metadata
+		 *
+		 * @example
+		 * ```typescript
+		 * const result = await client.multipartUpload(file, { userId: "123" });
+		 * console.log("Uploaded to:", result.key);
+		 * ```
+		 */
+		multipartUpload: async (
+			file: File,
+			metadata: StandardSchemaV1.InferInput<T["metadata"]>,
+			options?: Partial<
+				MultipartUploadOptions & {
+					onError?: (error: StorageError) => void;
+					onSuccess?: (result: MultipartUploadResult) => void;
+				}
+			>,
+		): Promise<MultipartUploadResult> => {
+			const { onError, onSuccess, ...uploadOptions } = options ?? {};
+			await validateUploadFileInput({
+				file,
+				maxFileSize,
+				allowedFileTypes,
+				onError,
+			});
+
+			try {
+				const result = await executeMultipartUpload({
+					$fetch,
+					file,
+					metadata,
+					options: uploadOptions,
+				});
 				onSuccess?.(result);
 				return result;
 			} catch (error) {

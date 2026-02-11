@@ -66,6 +66,16 @@ export class XhrFactory {
 		};
 	}
 
+	appendRawProgressHandler(handler?: (loaded: number) => void) {
+		if (!handler) {
+			return;
+		}
+
+		this.xhr.upload.onprogress = (event) => {
+			handler(event.loaded);
+		};
+	}
+
 	appendAbortHandler(handler: () => void) {
 		this.xhr.onabort = () => {
 			this.cleanup();
@@ -107,6 +117,10 @@ export class XhrFactory {
 			// TODO: add error handling for non-success responses
 			handler(false, this.xhr.status, this.xhr.statusText, this.cleanup);
 		};
+	}
+
+	getResponseHeader(name: string): string | null {
+		return this.xhr.getResponseHeader(name);
 	}
 
 	send(body: Document | XMLHttpRequestBodyInit) {

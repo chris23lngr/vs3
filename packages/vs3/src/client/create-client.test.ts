@@ -837,4 +837,58 @@ describe("createBaseClient", () => {
 			);
 		});
 	});
+
+	describe("multipartUpload", () => {
+		it("preserves typed server error payloads", async () => {
+			const { createFetch } = await import("@better-fetch/fetch");
+			const mockFetchFn = vi.fn().mockResolvedValue({
+				error: {
+					origin: "server",
+					code: StorageErrorCode.METADATA_VALIDATION_ERROR,
+					message: "Invalid metadata.",
+					details: { field: "userId" },
+					httpStatus: 400,
+				},
+				data: null,
+			});
+			(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+			const client = createBaseClient({
+				baseURL: mockBaseURL,
+				apiPath: mockApiPath,
+			});
+			const mockFile = new File(["test content"], "test.txt", {
+				type: "text/plain",
+			});
+
+			await expect(client.multipartUpload(mockFile, {})).rejects.toMatchObject({
+				code: StorageErrorCode.METADATA_VALIDATION_ERROR,
+				message: "Invalid metadata.",
+				origin: "server",
+			});
+		});
+
+		it("rejects invalid multipart options before network calls", async () => {
+			const { createFetch } = await import("@better-fetch/fetch");
+			const mockFetchFn = vi.fn();
+			(createFetch as ReturnType<typeof vi.fn>).mockReturnValue(mockFetchFn);
+
+			const client = createBaseClient({
+				baseURL: mockBaseURL,
+				apiPath: mockApiPath,
+			});
+			const mockFile = new File(["test content"], "test.txt", {
+				type: "text/plain",
+			});
+
+			await expect(
+				client.multipartUpload(mockFile, {}, { partSize: 0 }),
+			).rejects.toMatchObject({
+				code: StorageErrorCode.INVALID_FILE_INFO,
+				message: "Invalid multipart partSize.",
+			});
+
+			expect(mockFetchFn).not.toHaveBeenCalled();
+		});
+	});
 });
