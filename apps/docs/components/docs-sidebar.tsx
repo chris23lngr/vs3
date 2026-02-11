@@ -49,7 +49,6 @@ export function DocsSidebar({
 	return (
 		<Sidebar
 			className="sticky top-0 h-svh border-border border-r border-dashed bg-transparent"
-			collapsible="none"
 			{...props}
 		>
 			<SidebarHeader className="flex h-(--header-height) flex-row items-center justify-center border-b">

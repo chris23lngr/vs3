@@ -88,12 +88,12 @@ export default async function Page(props: {
 		>
 			<div className="flex min-w-0 flex-1 flex-col">
 				<div className="h-(--top-spacing) shrink-0" />
-				<div className="mx-auto flex w-full min-w-0 max-w-[40rem] flex-1 flex-col gap-6 px-4 py-6 text-neutral-800 md:px-0 lg:py-8 dark:text-neutral-300">
+				<div className="mx-auto flex w-full min-w-0 max-w-[40rem] flex-1 flex-col gap-6 px-4 py-6 text-neutral-800 lg:py-8 dark:text-neutral-300">
 					<div className="flex flex-col gap-2">
 						<div className="flex flex-col gap-2">
 							<div className="flex items-center justify-between md:items-start">
 								<PageTitle className="scroll-m-24">{doc.title}</PageTitle>
-								<div className="docs-nav flex items-center gap-2">
+								<div className="docs-nav hidden items-center gap-2 md:flex">
 									<div className="ml-auto flex gap-2">
 										<LLMCopyButton markdownUrl={`${page.url}.mdx`} />
 										<ViewOptions
@@ -107,12 +107,8 @@ export default async function Page(props: {
 							{doc.description && <PageDescription>{doc.description}</PageDescription>}
 						</div>
 					</div>
-					<div className="w-full flex-1 pb-16 *:data-[slot=alert]:first:mt-0 sm:pb-0">
+					<div className="flex-1 pb-16 *:data-[slot=alert]:first:mt-0 sm:pb-0">
 						<MDX components={components} />
-					</div>
-					<div className="mt-8 grid grid-cols-2 gap-4">
-						<div></div>
-						<div></div>
 					</div>
 					<div className="grid grid-cols-2 gap-8">
 						<div className="flex items-start justify-start">
@@ -145,7 +141,7 @@ export default async function Page(props: {
 					</div>
 				</div>
 			</div>
-			<div className="sticky top-24 h-[calc(100svh-var(--header-height))] w-72 overflow-y-auto">
+			<div className="sticky top-24 hidden h-[calc(100svh-var(--header-height))] w-72 overflow-y-auto xl:block">
 				{doc.toc?.length ? (
 					<div className="no-scrollbar flex flex-col gap-8 overflow-y-auto px-8">
 						<DocsToc toc={doc.toc} />
