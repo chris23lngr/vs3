@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { StorageError } from "../../../core/error/error";
 import type { InferredTypes } from "../../../types/infer";
 import type { StandardSchemaV1 } from "../../../types/standard-schema";
@@ -112,9 +112,20 @@ function useMultipartUploadState(): {
 		}));
 	}, []);
 
+	const actions = useMemo<MultipartUploadStateActions>(
+		() => ({
+			reset,
+			setLoading,
+			setProgress,
+			setSuccess,
+			setFailure,
+		}),
+		[reset, setLoading, setProgress, setSuccess, setFailure],
+	);
+
 	return {
 		state,
-		actions: { reset, setLoading, setProgress, setSuccess, setFailure },
+		actions,
 	};
 }
 
@@ -202,14 +213,22 @@ function useMultipartUploadInternal<T extends InferredTypes>(
 		client["~options"].throwOnError,
 	);
 
-	const uploadOptions: Partial<MultipartUploadOptions> | undefined =
-		partSize !== undefined || concurrency !== undefined
-			? { partSize, concurrency }
-			: undefined;
+	const uploadOptions = useMemo<Partial<MultipartUploadOptions> | undefined>(
+		() =>
+			partSize !== undefined || concurrency !== undefined
+				? { partSize, concurrency }
+				: undefined,
+		[partSize, concurrency],
+	);
+
+	const callbacks = useMemo<MultipartUploadCallbacks>(
+		() => ({ onProgress, onSuccess, onError, throwOnError: shouldThrow }),
+		[onProgress, onSuccess, onError, shouldThrow],
+	);
 
 	const upload = useMultipartUploadHandler(
 		client,
-		{ onProgress, onSuccess, onError, throwOnError: shouldThrow },
+		callbacks,
 		actions,
 		abortControllerRef,
 		uploadOptions,
