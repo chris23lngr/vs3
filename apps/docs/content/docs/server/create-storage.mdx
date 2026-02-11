@@ -12,15 +12,17 @@ description: Build a storage instance with typed endpoints and a framework-agnos
 ## Basic Setup
 
 ```ts
-import { S3Client } from "@aws-sdk/client-s3";
 import { aws, createStorage } from "vs3";
 import { z } from "zod";
 
 export const storage = createStorage({
   bucket: "my-bucket",
   adapter: aws({
-    bucket: "my-bucket",
-    client: new S3Client({ region: "us-east-1" }),
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
   }),
   metadataSchema: z.object({
     userId: z.string(),
@@ -76,5 +78,5 @@ At runtime, endpoint boundaries still validate request input and metadata.
 ## Next Steps
 
 - [Storage Options](/docs/server/storage-options) for full configuration.
-- [Endpoints](/docs/server/endpoints/upload-url) for request/response contracts.
+- [Endpoints](/docs/server/endpoints) for request/response contracts.
 - [Metadata Schemas](/docs/server/metadata-schemas) for schema behavior.
