@@ -72,6 +72,9 @@ export function createMultipartPresignPartsRoute<M extends StandardSchemaV1>(
 
 				return { parts: presignedParts };
 			} catch (error) {
+				if (error instanceof StorageServerError) {
+					throw error;
+				}
 				if (isNoSuchUploadError(error)) {
 					throw new StorageServerError({
 						code: StorageErrorCode.MULTIPART_UPLOAD_NOT_FOUND,

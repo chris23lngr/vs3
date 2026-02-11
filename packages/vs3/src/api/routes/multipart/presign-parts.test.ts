@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import z from "zod";
 import { StorageErrorCode } from "../../../core/error/codes";
+import { StorageServerError } from "../../../core/error/error";
 import type { S3Operations } from "../../../internal/s3-operations.types";
 import type { Adapter } from "../../../types/adapter";
 import type { StorageContext } from "../../../types/context";
@@ -231,6 +232,33 @@ describe("multipart/presign-parts route", () => {
 				error: "Some S3 error",
 			}),
 		});
+	});
+
+	it("re-throws StorageServerError without wrapping", async () => {
+		const endpoint = createMultipartPresignPartsRoute();
+		const { options, operations } = createContext();
+		const existingError = new StorageServerError({
+			code: StorageErrorCode.MULTIPART_UPLOAD_NOT_FOUND,
+			message: "Multipart upload not found or expired.",
+			details: { key: "uploads/file.bin", uploadId: "upload-123" },
+		});
+		(operations.presignUploadPart as ReturnType<typeof vi.fn>).mockRejectedValue(
+			existingError,
+		);
+
+		await expect(
+			callEndpoint(endpoint, {
+				body: {
+					key: "uploads/file.bin",
+					uploadId: "upload-123",
+					parts: [{ partNumber: 1 }],
+				},
+				context: {
+					$options: options,
+					$operations: operations,
+				} satisfies Omit<StorageContext, "$middleware">,
+			}),
+		).rejects.toBe(existingError);
 	});
 
 	it("rejects invalid object key", async () => {
