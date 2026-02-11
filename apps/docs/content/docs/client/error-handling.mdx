@@ -1,0 +1,118 @@
+---
+title: Error Handling
+description: Handle client errors with callbacks, reactive state, and throwOnError control.
+---
+
+Every `vs3` client operation can fail — from local validation to network errors to server rejections. The client provides three complementary strategies for handling errors.
+
+## Error State
+
+By default, errors are stored in the hook/composable state and never thrown:
+
+<CodeTabs groupId="frontend-framework" defaultValue="react" values={["react", "vue"]}>
+
+<CodeTabsContent value="react">
+```tsx
+const { state, upload } = useUpload();
+
+await upload(file, metadata);
+
+if (state.status === "error") {
+  console.log(state.error?.code);    // e.g. "FILE_TOO_LARGE"
+  console.log(state.error?.message); // Human-readable description
+}
+```
+</CodeTabsContent>
+
+<CodeTabsContent value="vue">
+```ts
+const { state, upload } = useUpload();
+
+await upload(file, metadata);
+
+if (state.value.status === "error") {
+  console.log(state.value.error?.code);    // e.g. "FILE_TOO_LARGE"
+  console.log(state.value.error?.message); // Human-readable description
+}
+```
+</CodeTabsContent>
+
+</CodeTabs>
+
+This works well for rendering error UI without try/catch blocks.
+
+## Error Callbacks
+
+Use the `onError` callback for side effects like logging or analytics:
+
+```ts
+const { upload } = useUpload({
+  onError: (error) => {
+    reportToAnalytics(error.code, error.message);
+  },
+});
+```
+
+Callbacks run regardless of the `throwOnError` setting. They fire after the error is stored in state.
+
+## throwOnError
+
+When `throwOnError` is `true`, the hook/composable rethrows the error after storing it in state and invoking callbacks:
+
+```ts
+const { upload } = useUpload({ throwOnError: true });
+
+try {
+  await upload(file, metadata);
+} catch (error) {
+  // error is a StorageError
+}
+```
+
+### Priority
+
+`throwOnError` can be set at two levels. The hook/composable option takes priority:
+
+1. **Hook/composable option** — `useUpload({ throwOnError: true })`
+2. **Client option** — `createStorageClient({ throwOnError: true })`
+3. **Default** — `false`
+
+Set it on the client to apply globally, then override per-hook where needed.
+
+## StorageError
+
+All errors are instances of `StorageError` with structured fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `code` | `StorageErrorCode` | Machine-readable error code |
+| `message` | `string` | Human-readable description |
+| `origin` | `"client" \| "server"` | Whether the error was raised on the client or server |
+| `details` | `unknown` | Additional context (file info, validation details) |
+| `httpStatus` | `number` | HTTP status code (server errors) |
+| `recoverySuggestion` | `string` | Suggested fix for the error |
+
+### Client vs Server Errors
+
+- **Client errors** (`origin: "client"`) are raised before any network request — validation failures, network errors, or invalid responses.
+- **Server errors** (`origin: "server"`) are returned by the server — auth failures, metadata validation, storage errors.
+
+## Common Error Codes
+
+| Code | Origin | When |
+|---|---|---|
+| `FILE_TOO_LARGE` | client | File exceeds `maxFileSize` |
+| `FILE_TYPE_NOT_ALLOWED` | client | File type not in `allowedFileTypes` |
+| `INVALID_FILENAME` | client | File name contains invalid characters |
+| `NETWORK_ERROR` | client | Network request failed |
+| `UPLOAD_FAILED` | client | XHR upload returned non-success status |
+| `METADATA_VALIDATION_ERROR` | server | Metadata failed schema validation |
+| `UNAUTHORIZED` | server | Missing or invalid auth credentials |
+| `FORBIDDEN` | server | Auth valid but insufficient permissions |
+
+For the full list, see [Error Model](/docs/concepts/error-model).
+
+## Next Steps
+
+- [Client Overview](/docs/client/overview) for the shared state model.
+- [Error Model](/docs/concepts/error-model) for the complete error taxonomy.

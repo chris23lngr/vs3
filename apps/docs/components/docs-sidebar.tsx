@@ -33,11 +33,6 @@ const TOP_LEVEL_SECTIONS = [
 		href: "/docs/installation",
 		icon: DownloadIcon,
 	},
-	{
-		name: "Concepts",
-		href: "/docs/concepts",
-		icon: BookmarkIcon,
-	},
 ];
 
 export function DocsSidebar({

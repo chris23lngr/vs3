@@ -1,0 +1,125 @@
+---
+title: useUpload
+description: Upload files to S3 with progress tracking, callbacks, and reactive state.
+---
+
+`useUpload` handles single-file uploads using presigned URLs. It validates the file locally, requests a presigned URL from the server, and uploads the file directly to S3.
+
+## Basic Usage
+
+<CodeTabs groupId="frontend-framework" defaultValue="react" values={["react", "vue"]}>
+
+<CodeTabsContent value="react">
+```tsx title="components/upload.tsx"
+import { storageClient } from "@/lib/storage-client";
+
+const { useUpload } = storageClient;
+
+function UploadForm() {
+  const { state, upload, reset } = useUpload({
+    onSuccess: (result) => {
+      console.log("Uploaded:", result.key);
+    },
+  });
+
+  const handleSubmit = async (file: File) => {
+    await upload(file, { userId: "u_1" });
+  };
+
+  return (
+    <div>
+      {state.isLoading && <p>Uploading: {Math.round(state.progress * 100)}%</p>}
+      {state.status === "error" && <p>Error: {state.error?.message}</p>}
+      {state.status === "success" && <p>Uploaded to: {state.data?.key}</p>}
+      <button onClick={reset}>Reset</button>
+    </div>
+  );
+}
+```
+</CodeTabsContent>
+
+<CodeTabsContent value="vue">
+```vue title="components/Upload.vue"
+<script setup lang="ts">
+import { storageClient } from "@/lib/storage-client";
+
+const { useUpload } = storageClient;
+
+const { state, upload, reset } = useUpload({
+  onSuccess: (result) => {
+    console.log("Uploaded:", result.key);
+  },
+});
+
+const handleSubmit = async (file: File) => {
+  await upload(file, { userId: "u_1" });
+};
+</script>
+
+<template>
+  <div>
+    <p v-if="state.isLoading">Uploading: {{ Math.round(state.progress * 100) }}%</p>
+    <p v-if="state.status === 'error'">Error: {{ state.error?.message }}</p>
+    <p v-if="state.status === 'success'">Uploaded to: {{ state.data?.key }}</p>
+    <button @click="reset">Reset</button>
+  </div>
+</template>
+```
+</CodeTabsContent>
+
+</CodeTabs>
+
+## Options
+
+| Option | Type | Description |
+|---|---|---|
+| `onProgress` | `(progress: number) => void` | Called with upload progress from `0` to `1` |
+| `onSuccess` | `(result: UploadFileResult) => void` | Called when the upload completes |
+| `onError` | `(error: StorageError) => void` | Called when the upload fails |
+| `throwOnError` | `boolean` | Override the client-level `throwOnError` setting |
+
+## State
+
+| Field | Type | Description |
+|---|---|---|
+| `status` | `"idle" \| "loading" \| "success" \| "error"` | Current upload status |
+| `isLoading` | `boolean` | `true` while uploading |
+| `progress` | `number` | Upload progress from `0` to `1` |
+| `data` | `UploadFileResult \| null` | Upload result on success |
+| `error` | `StorageError \| null` | Error details on failure |
+
+## Methods
+
+| Method | Signature | Description |
+|---|---|---|
+| `upload` | `(file: File, metadata: T) => Promise<void>` | Start the upload. Metadata is typed from your server schema. |
+| `reset` | `() => void` | Reset state back to `idle` |
+
+## Upload Result
+
+On success, `state.data` contains:
+
+```ts
+type UploadFileResult = {
+  key: string;               // Generated S3 key
+  presignedUrl: string;      // The presigned URL used
+  uploadUrl: string;         // Actual upload URL
+  status: number;            // HTTP status (e.g. 200)
+  statusText: string;        // HTTP status text
+  uploadHeaders?: Record<string, string>;
+};
+```
+
+## Upload Flow
+
+1. Validates file locally (size, name, type).
+2. Sends file info and metadata to the server's `/upload-url` endpoint.
+3. Receives a presigned URL and optional upload headers.
+4. Uploads the file directly to S3 via XHR with progress tracking.
+5. Returns the result with the generated key.
+
+## Next Steps
+
+- [useMultipartUpload](/docs/client/use-multipart-upload) for files that benefit from chunked uploads.
+- [Encryption](/docs/client/encryption) to encrypt files at rest.
+- [Error Handling](/docs/client/error-handling) for error patterns and `throwOnError`.

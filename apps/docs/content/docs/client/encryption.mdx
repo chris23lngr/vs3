@@ -1,0 +1,108 @@
+---
+title: Encryption
+description: Pass S3 server-side encryption options from client uploads and downloads.
+---
+
+`vs3` supports S3 server-side encryption (SSE) from client operations. Encryption options are forwarded to the server, which applies them when generating presigned URLs.
+
+## Encryption Types
+
+| Type | Description |
+|---|---|
+| `SSE-S3` | S3-managed keys. Amazon handles key management. |
+| `SSE-KMS` | AWS KMS-managed keys. Optionally specify a KMS key ID. |
+| `SSE-C` | Customer-provided keys. You manage and supply the encryption key. |
+
+## Usage with Uploads
+
+Pass an `encryption` option to the base client's `uploadFile` method:
+
+```ts
+await client.uploadFile(file, metadata, {
+  encryption: { type: "SSE-S3" },
+});
+```
+
+### SSE-S3
+
+```ts
+encryption: { type: "SSE-S3" }
+```
+
+No additional configuration needed. S3 manages the encryption key.
+
+### SSE-KMS
+
+```ts
+encryption: {
+  type: "SSE-KMS",
+  keyId: "arn:aws:kms:us-east-1:123456789:key/my-key-id",
+}
+```
+
+The `keyId` is optional. When omitted, S3 uses the default KMS key.
+
+### SSE-C
+
+```ts
+encryption: {
+  type: "SSE-C",
+  customerKey: "base64EncodedKey",
+  customerKeyMd5: "base64EncodedMD5",
+  algorithm: "AES256",
+}
+```
+
+`customerKey` is required. `customerKeyMd5` and `algorithm` are optional (`algorithm` defaults to `AES256`).
+
+<Callout type="warn">
+  With SSE-C, you must supply the same key for downloads. If you lose the key, the data is unrecoverable.
+</Callout>
+
+## Usage with Downloads
+
+Pass `encryption` when downloading SSE-C encrypted files:
+
+```ts
+const result = await download("uploads/secret.pdf", {
+  encryption: {
+    type: "SSE-C",
+    customerKey: "base64EncodedKey",
+    customerKeyMd5: "base64EncodedMD5",
+  },
+});
+```
+
+SSE-S3 and SSE-KMS downloads do not require client-side encryption options — S3 decrypts automatically.
+
+## Usage with Multipart Uploads
+
+Encryption is passed through the base client's `multipartUpload` method:
+
+```ts
+await client.multipartUpload(file, metadata, {
+  encryption: { type: "SSE-KMS" },
+});
+```
+
+The encryption config is included in both the `/multipart/create` and `/multipart/presign-parts` requests.
+
+## Type Reference
+
+```ts
+type S3Encryption =
+  | { type: "SSE-S3" }
+  | { type: "SSE-KMS"; keyId?: string }
+  | {
+      type: "SSE-C";
+      customerKey: string;
+      customerKeyMd5?: string;
+      algorithm?: "AES256";
+    };
+```
+
+## Next Steps
+
+- [useUpload](/docs/client/use-upload) for single-file uploads.
+- [useMultipartUpload](/docs/client/use-multipart-upload) for large file uploads.
+- [Endpoints](/docs/server/endpoints) for how the server processes encryption options.

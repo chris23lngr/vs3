@@ -47,7 +47,7 @@ bun add vS3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 
 ## Create a storage adapter
 
-To interact with the storage provider you need to create an adapter. See [Adapters](/docs/server/adapters) for a full list of supported adapters.
+To interact with the storage provider you need to create an adapter. See [Adapters](/docs/adapters/overview) for a full list of supported adapters.
 
 
 ```ts title="server/storage/server.ts"
@@ -187,3 +187,10 @@ await upload(file, { userId: "123" });
 
 
 </Steps>
+
+
+## Next Steps
+
+- [Adapters](/docs/adapters/overview) for connecting to your storage provider.
+- [Configuration](/docs/configuration) for additional options.
+- [Usage](/docs/usage) for more information on how to use the client and server APIs.
