@@ -7,5 +7,10 @@
 	"access": "public",
 	"baseBranch": "master",
 	"updateInternalDependencies": "patch",
-	"ignore": ["docs", "vs3-examples-better-auth", "vs3-examples-template"]
+	"ignore": [
+		"docs",
+		"vs3-examples-better-auth",
+		"vs3-examples-template",
+		"vs3-examples-vue"
+	]
 }
