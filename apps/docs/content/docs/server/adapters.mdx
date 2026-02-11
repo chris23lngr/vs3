@@ -23,28 +23,20 @@ const storage = createStorage({
 });
 ```
 
-<Callout type="info">
-All adapters require the `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` peer dependencies to be installed.
-</Callout>
-
----
-
 ## Built-in Adapters
 
 We currently provide built-in support for the following adapters:
 
 - [AWS S3](#aws-s3)
-- [Cloudflare R2](#cloudflare-r2)
-- [MinIO](#minio)
 - [Backblaze B2](#backblaze-b2)
+- [Cloudflare R2](#cloudflare-r2)
 - [DigitalOcean Spaces](#digitalocean-spaces)
+- [MinIO](#minio)
 - [Wasabi](#wasabi)
-
-If you cannot find an adapter for your provider, you can always create your own adapter by following the [custom adapters](#custom-adapters) section.
 
 ### AWS S3
 
-The `aws` adapter connects to Amazon S3. It accepts the same options as the AWS SDK `S3Client` constructor.
+Use `aws` for standard Amazon S3 buckets.
 
 ```ts
 import { aws } from "vs3/adapters";
@@ -58,66 +50,13 @@ const adapter = aws({
 });
 ```
 
-| Option | Type | Required | Description |
-|---|---|---|---|
-| `region` | `string` | Yes | AWS region (e.g. `us-east-1`). |
-| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
-
-Any additional [`S3ClientConfig`](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/) options are forwarded to the underlying client.
-
----
-
-### Cloudflare R2
-
-The `cloudflareR2` adapter configures the S3 client for Cloudflare R2 with the correct endpoint and region.
-
-```ts
-import { cloudflareR2 } from "vs3/adapters";
-
-const adapter = cloudflareR2({
-  accountId: process.env.CF_ACCOUNT_ID!,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-  },
-});
-```
-
-| Option | Type | Required | Description |
-|---|---|---|---|
-| `accountId` | `string` | Yes | Your Cloudflare account ID. |
-| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
-| `jurisdiction` | `"eu" \| "fedramp"` | No | Data locality jurisdiction. |
-
----
-
-### MinIO
-
-The `minio` adapter configures the S3 client with path-style access, which is required by MinIO.
-
-```ts
-import { minio } from "vs3/adapters";
-
-const adapter = minio({
-  endpoint: "http://localhost:9000",
-  credentials: {
-    accessKeyId: process.env.MINIO_ACCESS_KEY!,
-    secretAccessKey: process.env.MINIO_SECRET_KEY!,
-  },
-});
-```
-
-| Option | Type | Required | Description |
-|---|---|---|---|
-| `endpoint` | `string` | Yes | Full URL to your MinIO instance. |
-| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
-| `region` | `string` | No | Defaults to `us-east-1`. |
-
----
+**Notes:**
+- `aws(options)` accepts AWS SDK `S3ClientConfig` options, except `forcePathStyle`.
+- Use bucket region values like `us-east-1`, `eu-west-1`, `ap-southeast-2`.
 
 ### Backblaze B2
 
-The `backblazeB2` adapter configures the S3-compatible endpoint for Backblaze B2.
+Use `backblazeB2` for Backblaze B2 S3-compatible buckets.
 
 ```ts
 import { backblazeB2 } from "vs3/adapters";
@@ -131,16 +70,33 @@ const adapter = backblazeB2({
 });
 ```
 
-| Option | Type | Required | Description |
-|---|---|---|---|
-| `region` | `string` | Yes | B2 region (e.g. `us-west-000`, `eu-central-003`). |
-| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
+**Notes:**
+- Endpoint is generated as `https://s3.<region>.backblazeb2.com`.
+- Use the exact B2 region string from your bucket configuration.
 
----
+### Cloudflare R2
+
+Use `cloudflareR2` for Cloudflare R2 S3-compatible buckets.
+
+```ts
+import { cloudflareR2 } from "vs3/adapters";
+
+const adapter = cloudflareR2({
+  accountId: process.env.CF_ACCOUNT_ID!,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  },
+});
+```
+
+**Notes:**
+- The adapter sets `region: "auto"` and builds the endpoint from `accountId`.
+- Set `jurisdiction` only if your R2 account uses data locality constraints.
 
 ### DigitalOcean Spaces
 
-The `digitaloceanSpaces` adapter configures the S3 client for DigitalOcean Spaces.
+Use `digitaloceanSpaces` for DigitalOcean Spaces buckets.
 
 ```ts
 import { digitaloceanSpaces } from "vs3/adapters";
@@ -154,16 +110,33 @@ const adapter = digitaloceanSpaces({
 });
 ```
 
-| Option | Type | Required | Description |
-|---|---|---|---|
-| `region` | `string` | Yes | Datacenter region (e.g. `nyc3`, `ams3`, `sgp1`). |
-| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
+**Notes:**
+- Endpoint is generated as `https://<region>.digitaloceanspaces.com`.
+- The preset uses virtual-host style addressing (`forcePathStyle: false`).
 
----
+### MinIO
+
+Use `minio` for self-hosted or managed MinIO instances.
+
+```ts
+import { minio } from "vs3/adapters";
+
+const adapter = minio({
+  endpoint: "http://localhost:9000",
+  credentials: {
+    accessKeyId: process.env.MINIO_ACCESS_KEY!,
+    secretAccessKey: process.env.MINIO_SECRET_KEY!,
+  },
+});
+```
+
+**Notes:**
+- This preset enables `forcePathStyle: true` automatically, which MinIO typically requires.
+- For local development, keep endpoint/protocol aligned with your MinIO server config.
 
 ### Wasabi
 
-The `wasabi` adapter configures the S3 client for Wasabi Hot Cloud Storage.
+Use `wasabi` for Wasabi Hot Cloud Storage buckets.
 
 ```ts
 import { wasabi } from "vs3/adapters";
@@ -177,23 +150,23 @@ const adapter = wasabi({
 });
 ```
 
-| Option | Type | Required | Description |
-|---|---|---|---|
-| `region` | `string` | Yes | Wasabi region (e.g. `us-east-1`, `eu-central-1`). |
-| `credentials` | `object` | Yes | `accessKeyId` and `secretAccessKey`. |
+**Notes:**
+- Endpoint is generated as `https://s3.<region>.wasabisys.com`.
+- Keep region and bucket location aligned to avoid signing/endpoint mismatches.
 
----
 
 ## Custom Adapter
 
-If your provider is not listed above, use `createAdapter` to wrap any existing `S3Client` instance:
+Use `createAdapter` when you need full control over client configuration, or when your provider is not covered by a built-in preset.
+
+### Basic Setup
 
 ```ts
 import { S3Client } from "@aws-sdk/client-s3";
 import { createAdapter } from "vs3/adapters";
 
 const client = new S3Client({
-  endpoint: "https://s3.custom-provider.com",
+  endpoint: "https://s3.custom-provider.example",
   region: "us-east-1",
   credentials: {
     accessKeyId: process.env.S3_ACCESS_KEY!,
@@ -204,4 +177,17 @@ const client = new S3Client({
 const adapter = createAdapter({ client });
 ```
 
-This gives you full control over the S3 client configuration while still integrating with vs3.
+### Why Use This
+
+- your provider requires custom endpoint/signing behavior
+- you need extra `S3Client` settings not covered by a preset
+- you already manage an `S3Client` instance in your app
+
+### Utility: generateObjectKey
+
+`vs3/adapters` also exports `generateObjectKey(fileInfo)` to create default object keys.
+Use it as a helper when implementing custom key strategies outside of `createStorage`.
+
+## Next Steps
+
+- [Storage Options](/docs/server/storage-options) for `generateKey` and upload constraints.

@@ -1,0 +1,65 @@
+---
+title: Client Overview
+description: Understand how vs3 client SDKs communicate with the server and manage upload/download state.
+---
+
+`vs3` ships framework-specific client SDKs (`vs3/react`, `vs3/vue`) that wrap a shared base client. Every SDK follows the same architecture:
+
+1. **Create a client** with `createStorageClient` — configure the server URL, validation rules, and type contract.
+2. **Use hooks/composables** (`useUpload`, `useDownload`, `useMultipartUpload`) to trigger operations and track reactive state.
+
+## Request Flow
+
+All client operations communicate with the server endpoints exposed by `storage.handler`:
+
+```text
+Client SDK
+  -> validates file locally (size, type, name)
+  -> calls server endpoint (e.g. /upload-url)
+  -> receives presigned URL
+  -> uploads/downloads directly to/from S3
+```
+
+The client never sends file bytes through your server. Files flow directly between the browser and S3 using presigned URLs.
+
+## Shared State Model
+
+Every hook/composable returns a reactive `state` object with a consistent shape:
+
+| Field | Type | Description |
+|---|---|---|
+| `status` | `"idle" \| "loading" \| "success" \| "error"` | Current operation status |
+| `isLoading` | `boolean` | `true` while the operation is in progress |
+| `data` | `Result \| null` | Operation result on success |
+| `error` | `StorageError \| null` | Error details on failure |
+| `progress` | `number` | Upload progress from `0` to `1` (upload hooks only) |
+
+State transitions follow a predictable cycle: `idle` → `loading` → `success` or `error`.
+
+## Client-Side Validation
+
+Before making any network request, the client validates:
+
+- **File size** against `maxFileSize` (if configured).
+- **File name** for path traversal and invalid characters.
+- **File type** against `allowedFileTypes` using MIME type, extension, and magic byte detection (PNG, JPEG, GIF, WebP, PDF).
+
+<Callout type="info">
+  Client-side validation is an early-exit optimization. The server always enforces its own rules regardless of what the client checks.
+</Callout>
+
+## Framework Differences
+
+The API surface is identical across frameworks. The only difference is how reactive state is exposed:
+
+- **React**: hooks use `useState` — `state` is a plain object that triggers re-renders.
+- **Vue**: composables use `ref` — `state` is a `Readonly<Ref<T>>`.
+
+All options, callbacks, methods, and result types are shared.
+
+## Next Steps
+
+- [Create a Storage Client](/docs/client/create-storage-client) for setup and type inference.
+- [useUpload](/docs/client/use-upload) for single-file uploads.
+- [useDownload](/docs/client/use-download) for presigned download URLs.
+- [useMultipartUpload](/docs/client/use-multipart-upload) for large file uploads.

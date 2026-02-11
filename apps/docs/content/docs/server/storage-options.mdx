@@ -1,191 +1,193 @@
 ---
 title: Storage Options
-description: Configuring your storage instance.
+description: Complete reference for configuring createStorage.
 ---
 
-## `bucket`
+## Required Options
 
-The `bucket` option is required and specifies the name of the bucket to use for the storage.
+### bucket
+
+Target bucket name for object operations.
 
 ```ts
 const storage = createStorage({
-	bucket: "my-bucket",
-    // ...
+  bucket: "my-bucket",
+  // ...
 });
 ```
 
-## `adapter`
+### adapter
 
-Pass in an adapter to connect vs3 to your storage provider. See [Adapters](/docs/adapters) for a full list of supported adapters and their options.
+S3 provider integration used for presigned URLs and object operations. See [Adapters](/docs/server/adapters) for a full list of supported adapters.
 
 ```ts
 import { aws } from "vs3/adapters";
 
 const storage = createStorage({
-    // ...
-	adapter: aws({
-        region: "us-east-1",
-        credentials: {
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-        },
-    })
+  bucket: "my-bucket",
+  adapter: aws({
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+  }),
+  // ...
 });
 ```
 
-## `maxFileSize`
+## Validation Options
 
-Maximum allowed file size in bytes. Files exceeding this limit will be rejected with a FILE_TOO_LARGE error. Must be a positive number. If not specified, no size limit is enforced.
+### maxFileSize
 
+The maximum allowed file size in bytes. Files larger than this value will be rejected from uploads with a `FILE_TOO_LARGE` error. Value must be a positive number. Defaults to `undefined` (no restriction).
 
 ```ts
-const storage = createStorage({
-	// ...
-	maxFileSize: 10 * 1024 * 1024, // 10 MB
+createStorage({
+  // ...
+  maxFileSize: 10 * 1024 * 1024, // 10MB
 });
 ```
 
-## `allowedFileTypes`
+### allowedFileTypes
 
-Allowed file types for uploads. Supports MIME types (e.g. "image/png" or "image/*") and file extensions (e.g. ".png", ".jpg"). When provided, uploads that do not match are rejected with `FILE_TYPE_NOT_ALLOWED`.
+Allowlist of MIME types and/or extensions. Accepts a string array of MIME types and/or extensions. Defaults to `undefined` (no restriction).
 
 ```ts
-const storage = createStorage({
-	// ...
-	allowedFileTypes: ["image/png", "image/jpeg", ".pdf"],
+createStorage({
+  // ...
+  allowedFileTypes: ["image/png", "image/jpeg", ".pdf"],
 });
 ```
 
-**Note:** Extensions "jpeg" and "jpg" are treated as equivalent.
+### contentValidators
 
+Custom content validators for uploads. Validators are run sequentially after built-in validations (size, file type). If any validator fails, the upload is rejected with a `CONTENT_VALIDATION_ERROR`. Validators can be synchronous or asynchronous functions. Each validator receives the file info and parsed metadata, and must return a validation result.
 
-## `contentValidators`
+```ts title="Simple validator"
+const storage = createStorage({
+  // ...
+  contentValidators: [
+    (ctx) => {
+      if (ctx.fileInfo.name.includes("tmp")) {
+        return { valid: false, reason: "Temporary files are not allowed." };
+      }
+      return { valid: true };
+    },
+  ];
+})
+```
 
-Custom content validators for uploads. Validators are run sequentially after built-in validations (size, file type). If any validator fails, the upload is rejected with a `CONTENT_VALIDATION_ERROR`.
+```ts title="Named validator"
+const storage = createStorage({
+  // ...
+  contentValidators: [
+    {
+      name: "quota-check",
+      validate: async (ctx) => {
+        const usage = await getUserUsage(ctx.metadata.userId);
+        return usage < 1024 * 1024 * 1024
+          ? { valid: true }
+          : { valid: false, reason: "Quota exceeded." };
+      },
+    },
+  ];
+})
+```
 
-Validators can be synchronous or asynchronous functions. Each validator receives the file info and parsed metadata, and must return a validation result.
+<Callout type="info">
+  Named validators provide better error messages when validation fails.
+</Callout>
+
+#### contentValidatorTimeoutMs
+
+Timeout in milliseconds for each content validator. If a validator takes longer than this, the upload is rejected. Defaults to `undefined` (no timeout).
 
 ```ts
-const storage = createStorage({
-	// ...
-	contentValidators: [
-		// Simple function validator
-		(ctx) => {
-			if (ctx.fileInfo.name.includes("temp")) {
-				return { valid: false, reason: "Temporary files not allowed" };
-			}
-			return { valid: true };
-		},
-		// Named validator for better error messages
-		{
-			name: "quota-check",
-			validate: async (ctx) => {
-				const usage = await getUserUsage(ctx.metadata.userId);
-				if (usage + ctx.fileInfo.size > MAX_QUOTA) {
-					return { valid: false, reason: "Storage quota exceeded" };
-				}
-				return { valid: true };
-			},
-		},
-	],
+createStorage({
+  // ...
+  contentValidatorTimeoutMs: 5000, // 5 seconds
 });
 ```
 
-### `contentValidatorTimeoutMs`
+## Metadata and Key Options
 
-The Timeout in milliseconds for each content validator. If a validator takes longer than this, the upload is rejected. Default: no timeout.
+### metadataSchema
+
+Schema used to validate metadata at endpoint boundaries. Defaults to `undefined` (no validation). See [Metadata Schemas](/docs/server/metadata-schemas) for more information.
 
 ```ts
-const storage = createStorage({
-	// ...
-	contentValidatorTimeoutMs: 5000, // 5 seconds
+createStorage({
+  // ...
+  metadataSchema: z.object({
+    userId: z.string(),
+  }),
 });
 ```
 
-## `metadataSchema`
+### generateKey
 
-Optional metadata schema to use for the storage. If provided, uploads will require metadata to be provided. The metadata will be validated against the schema before the upload is allowed. If the validation succeed, the file metadata will be passed on to the S3 Storage and stored in the metadata field of the file.
-
-This can be any `StandardSchema` compatible schema. See [Standard Schema](https://standardschema.dev/schema#what-schema-libraries-implement-the-spec) for available schema libraries.
+Custom function to generate the object key for the uploaded file. Defaults to `undefined` (uses a default key generator). The function receives the file info and metadata, and must return a string or promise resolving to a string.
 
 ```ts
-const storage = createStorage({
-	// ...
-	metadataSchema: z.object({ userId: z.string() }),
+createStorage({
+  // ...
+  generateKey: (fileInfo, metadata) => {
+    return `uploads/${metadata.userId}/${Date.now()}-${fileInfo.name}`,
+  }
 });
 ```
 
 <Callout type="info">
-The above example will require the `userId` field to be provided in the metadata when uploading a file:
-```ts
-await upload(
-    file,
-    {
-        // [!code highlight]
-        userId: "user-1",
-    },
-);
-```
+  This can be helpful when you want to sort different types of uploads into different directories.
 </Callout>
 
-## `baseUrl`
+## API Surface Options
 
-You can specify a custom base URL for the storage API. Defaults to `http://localhost:3000`.
+### baseUrl
+
+The base URL of the API. Defaults to `http://localhost:3000`.
 
 ```ts
-const storage = createStorage({
-	// ...
-	baseUrl: "https://example.com",
+createStorage({
+  // ...
+  baseUrl: "https://example.com",
 });
 ```
 
-## `apiPath`
+### apiPath
 
-Specify where the storage API handler is mounted. Defaults to `/api/storage`. If you are using a different path, you must also specify the `apiPath` option on the client.
+The api path where the API handler is mounted. Defaults to `/api/storage`.
 
 ```ts
-const storage = createStorage({
-	// ...
-	apiPath: "/api/files",
+createStorage({
+  // ...
+  apiPath: "/api/files",
 });
 ```
 
-## `middlewares`
+## Middleware Option
 
-Middlewares to apply to the storage API. Middlewares are applied to every request to the storage API (e.g. `api.uploadUrl()`). Middlewares are applied in the order they are provided. See [Middlewares](/docs/middlewares) for more information.
+### middlewares
 
-```ts
-const storage = createStorage({
-	// ...
-	middlewares: [
-		createLoggingMiddleware({ logger: console.log }),
-	],
-});
-```
-
-## `generateKey`
-
-A function to generate a key for the uploaded file. If not provided, a default function will be used to generate a key based on the file info. The key is used to store the file in the storage and is returned in the response.
+Global middleware chain executed before endpoint logic. Defaults to `[]` (no middlewares applied). Middlewares are applied in the order they are provided. See [Middleware Overview](/docs/middleware/overview) for more information.
 
 ```ts
-const storage = createStorage({
-	// ...
-	generateKey: (fileInfo, metadata) => `${metadata.userId}/${fileInfo.name}`,
-});
+middlewares: [
+  createLoggingMiddleware({ logger: console.log }),
+  createRateLimitMiddleware({
+    maxRequests: 100,
+    windowMs: 60_000,
+    store: createInMemoryRateLimitStore(),
+  }),
+];
 ```
 
-This is especially useful if you want to organize your files into a specific structure. You could for example add a `type` field to the metadata and use it to generate a key like this:   
+## Hook Options
 
-```ts
-const storage = createStorage({
-	// ...
-    metadataSchema: z.object({ type: z.literal("profile-picture", "document", "other") }),
+For more information on hooks, see [Hooks](/docs/server/hooks). The storage instance supports the following hooks:
 
-    // Files will be stored in the following structure:
-    // uploads/
-    //   - profile-picture/
-    //   - document/
-    //   - other/
-	generateKey: (fileInfo, metadata) => `uploads/${metadata.type}/${fileInfo.name}`,
-});
-```
+- `beforeUpload`
+- `afterUpload`
+- `beforeDownload`
+- `afterDownload`

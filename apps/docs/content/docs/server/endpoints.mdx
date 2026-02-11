@@ -1,0 +1,266 @@
+---
+title: Endpoints
+description: Overview of the endpoints provided by vs3.
+---
+
+The following endpoints are provided by the storage instance. Storage endpoints are not directly accessible from the client, but they are used behind the scenes by the client SDKs. 
+
+All endpoints can be called directly from the server using the `storage.api` object.
+
+## /upload-url
+
+`POST /upload-url` creates a presigned upload URL and returns the resolved object key.
+
+### Request Body
+
+```ts
+{
+  fileInfo: {
+    name: string;
+    size: number;
+    contentType: string;
+  };
+  metadata: TMetadata; // required when metadataSchema is configured
+  expiresIn?: number;
+  acl?: "public-read" | "private";
+  encryption?: S3Encryption;
+}
+```
+
+### Response
+
+```ts
+{
+  presignedUrl: string;
+  key: string;
+  uploadHeaders?: Record<string, string>;
+}
+```
+
+`uploadHeaders` is present when the adapter requires additional headers (for example certain encryption modes).
+
+### Example
+
+```ts
+const res = await storage.api.uploadUrl({
+  body: {
+    fileInfo: {
+      name: "avatar.png",
+      size: 156_000,
+      contentType: "image/png",
+    },
+    metadata: { userId: "u_1" },
+    encryption: { type: "SSE-S3" },
+  },
+});
+
+await fetch(res.presignedUrl, {
+  method: "PUT",
+  body: file,
+  headers: res.uploadHeaders,
+});
+```
+
+### Validation and Hooks
+
+Processing order:
+
+1. middleware chain
+2. file name/size/type checks
+3. metadata parsing and validation
+4. custom content validators
+5. `beforeUpload` hook
+6. key generation
+7. presigned URL generation
+8. `afterUpload` hook
+
+### Common Errors
+
+- `METADATA_VALIDATION_ERROR`
+- `FILE_TOO_LARGE`
+- `FILE_TYPE_NOT_ALLOWED`
+- `INVALID_FILENAME`
+- `CONTENT_VALIDATION_ERROR`
+- `FORBIDDEN` (hook or middleware rejection)
+
+
+## /download-url
+
+`POST /download-url` checks key validity and object existence, then returns a presigned URL.
+
+### Request Body
+
+```ts
+{
+  key: string;
+  expiresIn?: number;
+  encryption?: S3Encryption;
+}
+```
+
+Metadata is not required on this endpoint.
+
+### Response
+
+```ts
+{
+  presignedUrl: string;
+  downloadHeaders?: Record<string, string>;
+}
+```
+
+### Example
+
+```ts
+const res = await storage.api.downloadUrl({
+  body: {
+    key: "uploads/u_1/avatar.png",
+    expiresIn: 60,
+  },
+});
+
+const fileResponse = await fetch(res.presignedUrl, {
+  headers: res.downloadHeaders,
+});
+```
+
+### Hook and Existence Flow
+
+Processing order:
+
+1. middleware chain
+2. key validation
+3. `beforeDownload` hook
+4. object existence check
+5. presigned URL generation
+6. `afterDownload` hook
+
+If the object does not exist, the endpoint returns `NOT_FOUND`.
+
+### Common Errors
+
+- `NOT_FOUND`
+- `INVALID_FILE_INFO` or key validation errors
+- `FORBIDDEN` (hook or middleware rejection)
+
+
+## /multipart
+
+Multipart uploads split large files into parts, upload parts in parallel, then finalize.
+
+### /multipart/create
+
+Starts a multipart session.
+
+Request body:
+
+```ts
+{
+  fileInfo: {
+    name: string;
+    size: number;
+    contentType: string;
+  };
+  metadata: TMetadata; // required when metadataSchema is configured
+  acl?: "public-read" | "private";
+  encryption?: S3Encryption;
+}
+```
+
+Response:
+
+```ts
+{
+  uploadId: string;
+  key: string;
+}
+```
+
+This endpoint runs the same upload validation pipeline as `/upload-url` and executes `beforeUpload`.
+
+### /multipart/presign-parts
+
+Presigns one or more part uploads.
+
+Request body:
+
+```ts
+{
+  key: string;
+  uploadId: string;
+  parts: Array<{ partNumber: number }>;
+  encryption?: S3Encryption;
+}
+```
+
+Response:
+
+```ts
+{
+  parts: Array<{
+    partNumber: number;
+    presignedUrl: string;
+    uploadHeaders?: Record<string, string>;
+  }>;
+}
+```
+
+### /multipart/complete
+
+Finalizes the multipart session after all parts are uploaded.
+
+Request body:
+
+```ts
+{
+  key: string;
+  uploadId: string;
+  parts: Array<{
+    partNumber: number;
+    eTag: string;
+  }>;
+}
+```
+
+Response:
+
+```ts
+{
+  key: string;
+}
+```
+
+### /multipart/abort
+
+Best-effort cancellation/cleanup.
+
+Request body:
+
+```ts
+{
+  key: string;
+  uploadId: string;
+}
+```
+
+Response:
+
+```ts
+{
+  success: true;
+}
+```
+
+### End-to-End Client Sequence
+
+1. Call `/multipart/create`.
+2. Call `/multipart/presign-parts` for next batch.
+3. Upload each part with `PUT` to returned URLs.
+4. Call `/multipart/complete` with part numbers and ETags.
+5. On failure, attempt `/multipart/abort`.
+
+### Common Multipart Errors
+
+- `MULTIPART_UPLOAD_NOT_FOUND` for expired/missing sessions.
+- `INVALID_PARTS` when completion payload is invalid.
+- `MULTIPART_UPLOAD_FAILED` for provider failures during presign/complete/abort.

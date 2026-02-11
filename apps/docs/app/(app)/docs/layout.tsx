@@ -1,3 +1,4 @@
+import { DocsFooter } from "@/components/docs-footer";
 import { DocsNav } from "@/components/docs-nav";
 import { DocsSidebar } from "@/components/docs-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -13,7 +14,7 @@ export default function Layout({ children }: LayoutProps<"/docs">) {
 					// items={SiteConfig.nav.items}
 				/>
 				{children}
-				{/* <DocsFooter /> */}
+				<DocsFooter />
 			</main>
 		</SidebarProvider>
 	);

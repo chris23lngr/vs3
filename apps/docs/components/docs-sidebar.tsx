@@ -1,6 +1,6 @@
 "use client";
 
-import { BlocksIcon, BookmarkIcon, DownloadIcon } from "lucide-react";
+import { BlocksIcon, DownloadIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -32,11 +32,6 @@ const TOP_LEVEL_SECTIONS = [
 		name: "Installation",
 		href: "/docs/installation",
 		icon: DownloadIcon,
-	},
-	{
-		name: "Concepts",
-		href: "/docs/concepts",
-		icon: BookmarkIcon,
 	},
 ];
 

@@ -1,0 +1,88 @@
+---
+title: Content Validation
+description: Combine built-in checks and custom validators to enforce upload policies.
+---
+
+Use custom content validators to enforce upload policies. While we provide some built-in checks like filename validity, file size and allowed file types, you can always add your own validators to enforce your own policies.
+
+Files are validated in the following order:
+
+1. Filename validity
+2. File size (`maxFileSize`)
+3. Allowed type/extension (`allowedFileTypes`)
+4. Custom validators (`contentValidators`)
+
+## Custom Validators
+
+Custom validators run sequentially after built-in validation.
+
+```ts
+contentValidators: [
+  (ctx) => {
+    if (ctx.fileInfo.name.endsWith(".tmp")) {
+      return { valid: false, reason: "Temporary files are not accepted." };
+    }
+    return { valid: true };
+  },
+  {
+    name: "quota-check",
+    validate: async (ctx) => {
+      const remaining = await getRemainingBytes(ctx.metadata.userId);
+      if (ctx.fileInfo.size > remaining) {
+        return { valid: false, reason: "Insufficient quota." };
+      }
+      return { valid: true };
+    },
+  },
+];
+```
+
+## Timeout Control
+
+Use `contentValidatorTimeoutMs` to cap execution time per validator. The timeout is applied to all validators in the chain.
+
+```ts
+const storage = createStorage({
+  // ...
+  contentValidatorTimeoutMs: 5000, // 5 seconds
+});
+```
+
+Timed-out or thrown validator errors are treated as validation failures.
+
+## Helper Factories
+
+`vs3` also exports the following reusable validator factories from the main package. These are already implemented in the core package but are exported for convenience.
+
+- `createMaxSizeValidator`
+- `createMinSizeValidator`
+- `createContentTypeValidator`
+- `createExtensionValidator`
+- `createFilenamePatternValidator`
+- `createValidator`
+- `combineValidators`
+- `runContentValidators`
+
+Example:
+
+```ts
+import {
+  createContentTypeValidator,
+  createFilenamePatternValidator,
+} from "vs3";
+
+contentValidators: [
+  createContentTypeValidator(["image/png", "image/jpeg"]),
+  createFilenamePatternValidator(/^[a-z0-9._-]+$/i),
+];
+```
+
+<Callout type="warn" title="Validation Order">
+If you pass in a built-in validator factory to the `contentValidators` array, checks will run twice. Once by the factory and once by the core package.
+</Callout>
+
+## Validation Order Notes
+
+- `beforeUpload` runs after metadata/content validation.
+- Failed validation stops request processing before presigned URL generation.
+- The same validation pipeline applies to single-part and multipart-create requests.

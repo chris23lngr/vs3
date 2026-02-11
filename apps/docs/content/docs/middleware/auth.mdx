@@ -1,0 +1,82 @@
+---
+title: Authentication
+description: Protect storage endpoints with createAuthMiddleware or better-auth integration.
+---
+
+Use the authentication middleware to protect your storage endpoints. This will not protect the storage itself, but it will protect the endpoints that are exposed to the client.
+
+We currently provide built-in support for the following auth providers:
+
+- [better-auth](#better-auth)
+
+You can always use a custom handler to integrate with any auth provider.
+
+## createAuthMiddleware
+
+`createAuthMiddleware` accepts a custom handler and adds `auth` to middleware context on success.
+
+```ts
+import { createAuthMiddleware } from "vs3";
+
+createAuthMiddleware({
+  handler: async ({ request, headers }) => {
+    const token = headers.authorization?.replace("Bearer ", "");
+    if (!token) {
+      return { authenticated: false, reason: "Missing token" };
+    }
+
+    const session = await verifyToken(token);
+    if (!session) {
+      return { authenticated: false, reason: "Invalid token" };
+    }
+
+    return {
+      authenticated: true,
+      session: {
+        userId: session.userId,
+        metadata: { role: session.role },
+      },
+    };
+  },
+});
+```
+
+On failure:
+
+- if `onAuthFailure` returns a `Response`, that response is used
+- otherwise `UNAUTHORIZED` is thrown
+
+## Auth Provider Integrations
+
+### better-auth
+
+Integrate better-auth by importing the `betterAuth` and pass it to your middleware chain with your auth instance as a config option.
+
+```ts
+import { betterAuth } from "vs3/middleware/auth";
+import { auth } from "@/server/auth"; // better-auth instance
+
+export const storage = createStorage({
+  middlewares: [
+    betterAuth({
+      auth,
+    }),
+  ],
+});
+```
+
+It calls `auth.api.getSession({ headers: request.headers })` and aborts the request if no session is found. The request headers are used to retrieve the session.
+
+## Path Filters
+
+Like any other middleware, the auth middleware supports path filtering. 
+
+You can use `skipPaths` to run on all paths except the ones listed, or `includePaths` to run only on the listed paths. They are mutually exclusive and can therefore not be used together.
+
+```ts
+{
+  skipPaths?: string[];
+  includePaths?: string[];
+}
+```
+

@@ -1,0 +1,76 @@
+---
+title: Request Lifecycle
+description: Understand how vs3 processes upload, download, and multipart requests from client to storage.
+---
+
+`vs3` is built around one core idea: your app server should authorize and validate requests, while file bytes move directly between the client and your S3-compatible storage via presigned URLs.
+
+## Mental Model
+
+For every operation, there are two layers:
+
+1. Control plane: your `vs3` API (`/upload-url`, `/download-url`, multipart endpoints) validates input and returns presigned instructions.
+2. Data plane: the browser uploads/downloads bytes directly to/from storage using those instructions.
+
+This keeps your server lightweight and reduces failure modes in serverless deployments.
+
+## Single-Part Upload Flow
+
+1. The client calls `uploadFile` or a framework hook/composable (`useUpload`).
+2. `vs3` client performs optional pre-flight validation (file size/type/name) if configured.
+3. Client calls `POST /upload-url` on your `storage.handler`.
+4. Global middleware chain runs first (`auth`, signature verification, rate limit, CORS, timeout, logging, custom middleware).
+5. Route logic validates:
+   - file info and filename
+   - allowed file types and max size
+   - metadata against `metadataSchema` (if provided)
+   - custom `contentValidators`
+   - optional `beforeUpload` hook
+6. `vs3` generates an object key (`generateKey` or default key strategy).
+7. Adapter creates presigned upload URL (+ optional headers, for example encryption headers).
+8. Client uploads the file directly to storage with XHR `PUT`, tracks progress, then returns `{ key, status, presignedUrl }`.
+
+## Download Flow
+
+1. The client calls `downloadFile` or `useDownload`.
+2. Client requests `POST /download-url`.
+3. Middleware chain runs.
+4. Route validates key and optional options, runs `beforeDownload`, and checks object existence.
+5. Adapter creates presigned download URL (+ optional headers).
+6. Client behavior depends on download mode:
+   - `"url"`: returns URL only.
+   - `"direct-download"`: fetches and triggers browser save.
+   - `"preview"`: opens in browser tab.
+7. `afterDownload` hook runs after URL generation.
+
+## Multipart Upload Flow
+
+Use multipart for large files where reliability and resumability matter.
+
+1. `POST /multipart/create` validates input and starts multipart session -> `{ uploadId, key }`.
+2. `POST /multipart/presign-parts` returns presigned URLs for part numbers.
+3. Client uploads parts in parallel with configurable `partSize` and `concurrency`.
+4. Client collects part ETags.
+5. `POST /multipart/complete` finalizes upload.
+6. On failure, client attempts best-effort cleanup with `POST /multipart/abort`.
+
+## Where Middleware Fits
+
+Middleware runs before endpoint logic, for every storage API request:
+
+```text
+Client -> storage.handler
+       -> middleware chain
+       -> endpoint validation + hooks
+       -> adapter presign/object operation
+       -> response
+```
+
+Middlewares can stop a request early (for example unauthorized request, invalid signature, or rate limit exceeded), which means endpoint logic never runs.
+
+## Why This Architecture Works
+
+- Security: server controls authorization, validation, key generation, and signing.
+- Performance: large files bypass your app server and stream directly to storage.
+- Portability: adapters normalize AWS S3 and S3-compatible providers.
+- Type safety: metadata contracts are shared between server and client from one schema.

@@ -1,0 +1,92 @@
+---
+title: Error Model
+description: Learn how vs3 represents, propagates, and handles storage errors across server and client layers.
+---
+
+`vs3` uses structured errors instead of opaque exceptions. Every storage error carries a machine-readable code, origin, HTTP status, and recovery guidance.
+
+## Error Shape
+
+Errors are serialized with this payload model:
+
+- `origin`: `"client"` or `"server"`
+- `code`: `StorageErrorCode`
+- `message`: human-readable summary
+- `details`: structured context for debugging
+- `httpStatus`: mapped HTTP status
+- `recoverySuggestion`: actionable next step
+
+This shape is used by API responses and client-side parsing.
+
+## Error Classes
+
+- `StorageError`: shared base class.
+- `StorageClientError`: client-side validation/network/parsing errors.
+- `StorageServerError`: server route/middleware/adapter errors.
+
+On client requests, `vs3` parses server error payloads and rehydrates them into typed error classes.
+
+## Where Errors Come From
+
+### Client boundary
+
+Examples:
+
+- Invalid filename
+- File too large (client-configured pre-flight limit)
+- Disallowed file type
+- Network failures during upload/download
+
+These are thrown as `StorageClientError`.
+
+### Server boundary
+
+Examples:
+
+- Metadata validation failure
+- Hook rejection (`beforeUpload`/`beforeDownload`)
+- Missing object on download (`NOT_FOUND`)
+- Multipart session missing/expired (`MULTIPART_UPLOAD_NOT_FOUND`)
+- Adapter failures (`ADAPTER_ERROR`, `MULTIPART_UPLOAD_FAILED`)
+
+These are thrown as `StorageServerError`.
+
+### Middleware boundary
+
+Examples:
+
+- `UNAUTHORIZED` / `FORBIDDEN` from auth middleware
+- Signature/timestamp/nonce failures
+- Rate-limit rejection
+- Timeout or middleware chain failures
+
+If middleware blocks the request, endpoint business logic does not run.
+
+## Common Error Families
+
+| Family | Typical Codes | Typical Action |
+|---|---|---|
+| Validation | `METADATA_VALIDATION_ERROR`, `INVALID_FILE_INFO`, `FILE_TYPE_NOT_ALLOWED`, `INVALID_FILENAME`, `CONTENT_VALIDATION_ERROR` | Fix input and retry |
+| Security/Auth | `UNAUTHORIZED`, `FORBIDDEN`, `SIGNATURE_INVALID`, `TIMESTAMP_EXPIRED`, `NONCE_REUSED` | Refresh credentials/signature and retry |
+| Throughput/Resilience | `RATE_LIMIT_EXCEEDED`, `NETWORK_ERROR`, `UPLOAD_TIMEOUT`, `SERVICE_UNAVAILABLE` | Retry with backoff |
+| Multipart | `MULTIPART_UPLOAD_NOT_FOUND`, `INVALID_PARTS`, `MULTIPART_UPLOAD_FAILED` | Restart or recover upload session |
+| Resource State | `NOT_FOUND`, `CONFLICT`, `DUPLICATE_FILE` | Re-check key/resource state |
+
+## Handling Strategy in UI Code
+
+1. Branch on `error.code` for deterministic behavior.
+2. Show user-friendly text from `message`.
+3. Log `details` for diagnostics.
+4. Use `recoverySuggestion` for next-step hints.
+
+For React/Vue hooks:
+
+- Default behavior: errors are stored in `state.error`.
+- With `throwOnError`: hook also rethrows so caller can handle via `try/catch`.
+
+## Production Recommendations
+
+1. Treat `code` as the stable contract for program logic.
+2. Use centralized error mapping in UI/API clients.
+3. Record `code`, `origin`, and `httpStatus` in logs/metrics.
+4. Add retry only for transient categories (network/service/rate-limit).

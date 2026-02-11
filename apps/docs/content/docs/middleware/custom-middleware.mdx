@@ -1,0 +1,63 @@
+---
+title: Custom
+description: Build custom middleware with createStorageMiddleware and compose typed context.
+---
+
+If you cannot find a built-in middleware that fits your needs, you can always build your own.
+
+Use `createStorageMiddleware` to build your own middleware.
+
+## API
+
+```ts
+createStorageMiddleware(config, handler)
+```
+
+Your middleware must provide a configuration object and a handler function.
+
+The configuration object must contain a `name` to identify the middleware and can optionally contain `skipPaths` and `includePaths`.
+
+```ts
+{
+  name: string;
+  skipPaths?: string[];
+  includePaths?: string[];
+}
+```
+
+Like any other middleware, your middleware supports path filtering. They are mutually exclusive and can therefore not be used together.
+
+## Simple Example
+
+The following custom middleware adds a random request ID to the context.
+
+```ts
+import { createStorageMiddleware } from "vs3";
+
+const requestIdMiddleware = createStorageMiddleware(
+  { name: "request-id" },
+  async () => {
+    const id = crypto.randomUUID();
+    return { requestId: id };
+  },
+);
+```
+
+## Registration
+
+Register your middleware in your storage configuration like you would with any other middleware.
+
+```ts
+const storage = createStorage({
+  bucket: "my-bucket",
+  adapter,
+  middlewares: [customMiddleware],
+});
+```
+
+## Best Practices
+
+1. Keep middleware single-purpose and deterministic.
+2. Fail early with explicit errors or responses.
+3. Return small, well-named context objects.
+4. Use path filters to limit expensive middleware to relevant endpoints.

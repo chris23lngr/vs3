@@ -1,0 +1,160 @@
+---
+title: useMultipartUpload
+description: Upload large files in chunks with configurable part size, concurrency, progress tracking, and abort support.
+---
+
+`useMultipartUpload` splits a file into parts and uploads them in parallel using S3 multipart upload. It handles presigning, concurrency, progress aggregation, and automatic abort on failure.
+
+## Basic Usage
+
+<CodeTabs groupId="frontend-framework" defaultValue="react" values={["react", "vue"]}>
+
+<CodeTabsContent value="react">
+```tsx title="components/large-upload.tsx"
+import { storageClient } from "@/lib/storage-client";
+
+const { useMultipartUpload } = storageClient;
+
+function LargeUploadForm() {
+  const { state, upload, abort, reset } = useMultipartUpload({
+    onProgress: (progress) => {
+      console.log(`${Math.round(progress * 100)}%`);
+    },
+    onSuccess: (result) => {
+      console.log("Uploaded:", result.key, `(${result.totalParts} parts)`);
+    },
+  });
+
+  const handleSubmit = async (file: File) => {
+    await upload(file, { userId: "u_1" });
+  };
+
+  return (
+    <div>
+      {state.isLoading && (
+        <>
+          <p>Uploading: {Math.round(state.progress * 100)}%</p>
+          <button onClick={abort}>Cancel</button>
+        </>
+      )}
+      {state.status === "error" && <p>Error: {state.error?.message}</p>}
+      {state.status === "success" && <p>Done: {state.data?.key}</p>}
+    </div>
+  );
+}
+```
+</CodeTabsContent>
+
+<CodeTabsContent value="vue">
+```vue title="components/LargeUpload.vue"
+<script setup lang="ts">
+import { storageClient } from "@/lib/storage-client";
+
+const { useMultipartUpload } = storageClient;
+
+const { state, upload, abort, reset } = useMultipartUpload({
+  onProgress: (progress) => {
+    console.log(`${Math.round(progress * 100)}%`);
+  },
+  onSuccess: (result) => {
+    console.log("Uploaded:", result.key, `(${result.totalParts} parts)`);
+  },
+});
+
+const handleSubmit = async (file: File) => {
+  await upload(file, { userId: "u_1" });
+};
+</script>
+
+<template>
+  <div>
+    <template v-if="state.isLoading">
+      <p>Uploading: {{ Math.round(state.progress * 100) }}%</p>
+      <button @click="abort">Cancel</button>
+    </template>
+    <p v-if="state.status === 'error'">Error: {{ state.error?.message }}</p>
+    <p v-if="state.status === 'success'">Done: {{ state.data?.key }}</p>
+  </div>
+</template>
+```
+</CodeTabsContent>
+
+</CodeTabs>
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `partSize` | `number` | `10 * 1024 * 1024` (10 MB) | Size of each upload part in bytes |
+| `concurrency` | `number` | `4` | Number of parts uploaded in parallel |
+| `onProgress` | `(progress: number) => void` | — | Called with aggregated progress from `0` to `1` |
+| `onSuccess` | `(result: MultipartUploadResult) => void` | — | Called when the upload completes |
+| `onError` | `(error: StorageError) => void` | — | Called when the upload fails |
+| `throwOnError` | `boolean` | — | Override the client-level `throwOnError` setting |
+
+## State
+
+| Field | Type | Description |
+|---|---|---|
+| `status` | `"idle" \| "loading" \| "success" \| "error"` | Current upload status |
+| `isLoading` | `boolean` | `true` while uploading |
+| `progress` | `number` | Aggregated progress from `0` to `1` across all parts |
+| `data` | `MultipartUploadResult \| null` | Upload result on success |
+| `error` | `StorageError \| null` | Error details on failure |
+
+## Methods
+
+| Method | Signature | Description |
+|---|---|---|
+| `upload` | `(file: File, metadata: T) => Promise<void>` | Start the multipart upload. Metadata is typed from your server schema. |
+| `abort` | `() => void` | Cancel the in-progress upload |
+| `reset` | `() => void` | Reset state back to `idle` |
+
+## Upload Result
+
+On success, `state.data` contains:
+
+```ts
+type MultipartUploadResult = {
+  key: string;        // Generated S3 key
+  uploadId: string;   // S3 multipart upload ID
+  totalParts: number; // Number of parts uploaded
+};
+```
+
+## How It Works
+
+1. Validates the file locally (size, name, type).
+2. Calls `/multipart/create` to initiate the upload and receive a `key` and `uploadId`.
+3. Splits the file into parts based on `partSize`.
+4. Presigns parts in batches of 10 via `/multipart/presign-parts`.
+5. Uploads parts in parallel (controlled by `concurrency`).
+6. Tracks per-part progress and aggregates it into a single `0`–`1` value.
+7. Calls `/multipart/complete` with all part ETags to finalize the upload.
+
+If any step fails, the upload is automatically aborted via `/multipart/abort`.
+
+## Tuning Part Size and Concurrency
+
+Adjust `partSize` and `concurrency` based on your use case:
+
+```ts
+const { state, upload, abort } = useMultipartUpload({
+  partSize: 5 * 1024 * 1024,  // 5 MB parts
+  concurrency: 6,              // 6 parallel uploads
+});
+```
+
+Smaller parts improve progress granularity and allow faster retries on failure. Higher concurrency increases throughput but uses more bandwidth. The defaults (10 MB parts, 4 concurrent) work well for most cases.
+
+## Abort and Cleanup
+
+Call `abort()` to cancel an in-progress upload. The hook also aborts automatically when the component unmounts, preventing orphaned uploads.
+
+When an upload is aborted or fails, the client sends a `/multipart/abort` request to clean up incomplete S3 state.
+
+## Next Steps
+
+- [Encryption](/docs/client/encryption) to encrypt multipart uploads.
+- [Error Handling](/docs/client/error-handling) for error patterns and `throwOnError`.
+- [Endpoints](/docs/server/endpoints) for the multipart server contract.

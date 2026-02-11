@@ -103,7 +103,7 @@ export const components = {
 		</ul>
 	),
 	ol: ({ children }: { children: React.ReactNode }) => (
-		<ol className="mb-4 list-inside list-decimal text-[0.9375rem] text-zinc-600">
+		<ol className="mt-4 mb-6 list-outside list-decimal space-y-2 pl-3.5 text-[0.9375rem] text-body text-zinc-600 leading-6 marker:text-zinc-400 dark:text-zinc-400 dark:marker:text-zinc-400 [&>li]:pl-2">
 			{children}
 		</ol>
 	),
@@ -158,6 +158,44 @@ export const components = {
 		// return children
 		return <code className={cn(className)} {...props} />;
 	},
+	table: ({ className, ...props }: React.ComponentProps<"table">) => (
+		<div className="mt-6 mb-4 overflow-auto rounded-lg border border-border shadow-sm">
+			<table className={cn("w-full text-left text-sm", className)} {...props} />
+		</div>
+	),
+	thead: ({ className, ...props }: React.ComponentProps<"thead">) => (
+		<thead
+			className={cn("border-border border-b bg-zinc-100", className)}
+			{...props}
+		/>
+	),
+	tbody: ({ className, ...props }: React.ComponentProps<"tbody">) => (
+		<tbody className={cn("rounded-lg bg-background p-1", className)} {...props} />
+	),
+	tr: ({ className, ...props }: React.ComponentProps<"tr">) => (
+		<tr
+			className={cn("border-border border-t first:border-t-0", className)}
+			{...props}
+		/>
+	),
+	th: ({ className, ...props }: React.ComponentProps<"th">) => (
+		<th
+			className={cn(
+				"px-4 py-2 text-left font-medium text-sm text-zinc-900 dark:text-zinc-100",
+				className,
+			)}
+			{...props}
+		/>
+	),
+	td: ({ className, ...props }: React.ComponentProps<"td">) => (
+		<td
+			className={cn(
+				"px-4 py-4 text-left text-sm text-zinc-500 dark:text-zinc-400",
+				className,
+			)}
+			{...props}
+		/>
+	),
 	Callout,
 	CodeTabs,
 	CodeTabsContent,

@@ -5,7 +5,7 @@ description: Detailed explanations of the core concepts of vs3.
 
 ## Uploading
 
-`vs3` uses presigned upload URLs to upload files to your storage. When the upload method is invoked, the server generates a presigned upload URL for the specified file, which the client then uses to upload the file via XMLHttpRequests. Once the file has been uploaded, the server verifies the upload and, if successful, returns a success response.
+`vs3` uses presigned upload URLs to upload files to your storage. When the upload method is invoked, the server validates the request and generates a presigned upload URL for the specified file, which the client then uses to upload the file via XMLHttpRequest directly to storage.
 
 This is particularly beneficial in serverless environments like Vercel, as the actual files never touch the server, saving resources and reducing the risk of file corruption.
 
@@ -13,7 +13,7 @@ This is particularly beneficial in serverless environments like Vercel, as the a
 
 For very large files (over ~100MB), use multipart uploads. `vs3` supports multipart upload through dedicated multipart endpoints and the `useMultipartUpload` client hook.
 
-See [Multipart Uploads](/docs/client/multipart-uploads) for the full flow and client usage.
+See [Multipart Uploads](/docs/client/use-multipart-upload) for the full flow and client usage.
 
 ## Downloading
 

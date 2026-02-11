@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: How to get up and running with vS3.
+description: How to get up and running with vs3.
 ---
 
 <Steps>
@@ -15,31 +15,31 @@ Install the required dependencies with a package manager of your choice:
 
 <CodeTabsContent value="pnpm">
 ```bash
-pnpm install vS3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+pnpm install vs3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
 </CodeTabsContent>
 
 <CodeTabsContent value="npm">
 ```bash
-npm install vS3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+npm install vs3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
 </CodeTabsContent>
 
 <CodeTabsContent value="yarn">
 ```bash
-yarn add vS3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+yarn add vs3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
 </CodeTabsContent>
 
 <CodeTabsContent value="bun">
 ```bash
-bun add vS3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+bun add vs3 @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 ```
 </CodeTabsContent>
 
 </CodeTabs>
 
-`vS3` requires the `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` packages to be installed. 
+`vs3` requires the `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` packages to be installed. 
 
 </Step>
 
@@ -77,7 +77,7 @@ export const storage = createStorage({
 });
 ```
 
-While this will work without any other options you might want to pass in some additional options. Check out the [Configuration](/docs/configuration) section for more information.
+While this will work without any other options you might want to pass in some additional options. Check out [Storage Options](/docs/server/storage-options) for more information.
 
 </Step>
 
@@ -85,7 +85,7 @@ While this will work without any other options you might want to pass in some ad
 
 ## Mount handlers
 
-Mount the handlers to your framework of choice at `/api/storage/[...all]`. If you prefer to use a different path, you can pass the `apiPath` option when creating the storage instance. See the [Configuration](/docs/configuration) section for more information.
+Mount the handlers to your framework of choice at `/api/storage/[...all]`. If you prefer to use a different path, you can pass the `apiPath` option when creating the storage instance. See [Storage Options](/docs/server/storage-options) for more information.
 
 <CodeTabs
 	groupId="framework"
@@ -111,7 +111,7 @@ export default fromWebHandler(storage.handler);
 </CodeTabs>
 
 <Callout type="info">
-`vS3` provides a built-in helper for Next.js. Nuxt works through Nitro/H3's `fromWebHandler` bridge because `storage.handler` is a standard Web Request handler.
+`vs3` provides a built-in helper for Next.js. Nuxt works through Nitro/H3's `fromWebHandler` bridge because `storage.handler` is a standard Web Request handler.
 </Callout>
 
 </Step>
@@ -164,7 +164,7 @@ Use a type-only import (`import type`) so no server code is pulled into the clie
 
 ## All done
 
-That's it! You can now use `vS3` to upload and download files. Check out the [usage](/docs/usage) section for more information on how to use the client and server APIs.
+That's it! You can now use `vs3` to upload and download files. Check out [Client Overview](/docs/client/overview) for more information on how to use the client and server APIs.
 
 <CodeTabs defaultValue="react" values={["react", "vue"]}>
 <CodeTabsContent value="react">
@@ -187,3 +187,10 @@ await upload(file, { userId: "123" });
 
 
 </Steps>
+
+
+## Next Steps
+
+- [Adapters](/docs/server/adapters) for connecting to your storage provider.
+- [Storage Options](/docs/server/storage-options) for additional options.
+- [Client Overview](/docs/client/overview) for more information on how to use the client and server APIs.

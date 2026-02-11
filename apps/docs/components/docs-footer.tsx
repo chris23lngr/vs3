@@ -14,7 +14,7 @@ export function DocsFooter({
 			{...props}
 		>
 			<div className="mx-auto w-full max-w-7xl px-8">
-				<div className="flex items-center justify-center gap-4">
+				<div className="flex flex-wrap items-center justify-center gap-4">
 					<Link
 						className="font-medium text-sm text-zinc-700 hover:text-violet-600 dark:text-zinc-200 dark:hover:text-violet-500"
 						href={SiteConfig.paths.home}

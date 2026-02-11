@@ -1,19 +1,30 @@
 ---
 title: Next.js
-description: Integrate vS3 with Next.js
+description: Mount the vs3 request handler in Next.js App Router route handlers.
 ---
 
-We provide a built-in integration for Next.js. This integration allows you to use vS3 with Next.js out of the box.
+`vs3` provides `toNextJsRouteHandler` to map your `storage.handler` to Next.js route exports.
+Use it in an App Router route and mount it at the same path your client calls (default: `/api/storage`).
 
-## Usage
-
-To use the built-in integration for Next.js, use the `toNextJsRouteHandler` function to convert the storage handler to a Next.js route handler.
+## Basic Setup
 
 ```ts title="app/api/storage/[...all]/route.ts"
 import { toNextJsRouteHandler } from "vs3/integrations/next-js";
-import { storage } from "../storage";
+import { storage } from "@/server/storage";
 
-export const { GET, POST, PUT, DELETE } = toNextJsRouteHandler({ handler: storage.handler });
+export const { GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS } =
+  toNextJsRouteHandler({ handler: storage.handler });
 ```
 
-This will automatically handle all the HTTP methods for you.
+## Why This Works
+
+`storage.handler` is a standard Web handler: `(req: Request) => Promise<Response>`.
+
+Next.js route handlers use the same Request/Response model, so the integration is a direct mapping.
+
+
+## Next Steps
+
+- [createStorage](/docs/server/create-storage) for server setup.
+- [Endpoints](/docs/server/endpoints) for request/response contracts.
+- [Nuxt integration](/docs/integrations/nuxt) if you also run Nitro routes.

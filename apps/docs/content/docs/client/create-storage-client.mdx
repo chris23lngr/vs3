@@ -1,0 +1,100 @@
+---
+title: createStorageClient
+description: Create a typed storage client that connects to your vs3 server and returns framework hooks/composables.
+---
+
+`createStorageClient` is the client entrypoint for `vs3`. It configures the server connection, optional client-side validation, and returns typed hooks (React) or composables (Vue).
+
+## Basic Setup
+
+<CodeTabs groupId="frontend-framework" defaultValue="react" values={["react", "vue"]}>
+
+<CodeTabsContent value="react">
+```ts title="lib/storage-client.ts"
+import { createStorageClient } from "vs3/react";
+import type { storage } from "@/server/storage";
+
+export const storageClient = createStorageClient<typeof storage.$Infer>({
+  baseURL: "http://localhost:3000",
+  apiPath: "/api/storage",
+});
+```
+</CodeTabsContent>
+
+<CodeTabsContent value="vue">
+```ts title="lib/storage-client.ts"
+import { createStorageClient } from "vs3/vue";
+import type { storage } from "@/server/storage";
+
+export const storageClient = createStorageClient<typeof storage.$Infer>({
+  baseURL: "http://localhost:3000",
+  apiPath: "/api/storage",
+});
+```
+</CodeTabsContent>
+
+</CodeTabs>
+
+<Callout type="warn">
+  Use a type-only import for your server storage instance. This avoids bundling server code into the browser.
+</Callout>
+
+## Options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `baseURL` | `string` | `"http://localhost:3000"` | Base URL of your server |
+| `apiPath` | `string` | `"/api/storage"` | Path where `storage.handler` is mounted |
+| `maxFileSize` | `number` | — | Client-side file size limit in bytes |
+| `allowedFileTypes` | `string[]` | — | Allowed MIME types or extensions (e.g. `["image/png", ".pdf"]`) |
+| `throwOnError` | `boolean` | `false` | Whether hooks/composables rethrow errors instead of storing them in state |
+
+## Type Inference with $Infer
+
+Pass `typeof storage.$Infer` as the generic parameter to synchronize metadata types between server and client:
+
+```ts
+const storageClient = createStorageClient<typeof storage.$Infer>({});
+```
+
+This ensures that `upload(file, metadata)` requires metadata matching your server's `metadataSchema`. See [Type Safety Model](/docs/concepts/type-safety-model) for the full inference chain.
+
+## Client-Side Validation
+
+`maxFileSize` and `allowedFileTypes` run validation before any network request. These should match your server configuration:
+
+```ts
+export const storageClient = createStorageClient<typeof storage.$Infer>({
+  maxFileSize: 10 * 1024 * 1024, // 10 MB — must match server
+  allowedFileTypes: ["image/png", "image/jpeg", ".pdf"],
+});
+```
+
+The `allowedFileTypes` option validates:
+
+1. **MIME type** — matches the file's `type` property.
+2. **Extension** — matches the file name extension. Extensions `"jpeg"` and `"jpg"` are treated as equivalent.
+3. **Magic bytes** — reads the first bytes of the file to detect PNG, JPEG, GIF, WebP, and PDF.
+
+Wildcard patterns like `"image/*"` are supported.
+
+## Returned API
+
+`createStorageClient` returns an object with three hooks (React) or composables (Vue):
+
+| Method | Description |
+|---|---|
+| `useUpload` | Single-file upload with progress tracking |
+| `useDownload` | Presigned download URL generation |
+| `useMultipartUpload` | Chunked upload for large files |
+
+```ts
+const { useUpload, useDownload, useMultipartUpload } = storageClient;
+```
+
+## Next Steps
+
+- [useUpload](/docs/client/use-upload) for uploading files.
+- [useDownload](/docs/client/use-download) for downloading files.
+- [useMultipartUpload](/docs/client/use-multipart-upload) for large file uploads.
+- [Error Handling](/docs/client/error-handling) for `throwOnError` behavior.

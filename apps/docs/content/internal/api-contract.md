@@ -9,37 +9,19 @@ This document defines the **public API surface**, **error/response contracts**, 
 
 ## 1. Public API Surface (Stable)
 
-Only the exports listed below are considered **public and stable**. Anything not listed is **internal** and may change without notice.
+The public API surface is the set of package entrypoints declared in `packages/vs3/package.json` `exports`.
 
-### Entry: `vs3`
+| Entrypoint | Source |
+| --- | --- |
+| `vs3` | `packages/vs3/src/index.ts` |
+| `vs3/react` | `packages/vs3/src/client/react/index.ts` |
+| `vs3/vue` | `packages/vs3/src/client/vue/index.ts` |
+| `vs3/adapters` | `packages/vs3/src/adapters/index.ts` |
+| `vs3/integrations/next-js` | `packages/vs3/src/integrations/next-js.ts` |
+| `vs3/middleware/auth` | `packages/vs3/src/middleware/auth/index.ts` |
 
-Exports from `packages/vs3/src/index.ts`:
-
-- `createStorage(options): Storage`
-- `aws(options): Adapter`
-- `toNextJsRouteHandler(opts): NextJsRouteHandler`
-- `Adapter` (type)
-- `StorageOptions` (type)
-- `Storage` (type)
-
-### Entry: `vs3/adapters`
-
-Exports from `packages/vs3/src/adapters/index.ts`:
-
-- `aws(options): Adapter`
-- `generateObjectKey(fileInfo): string`
-
-### Entry: `vs3/integrations/next-js`
-
-Exports from `packages/vs3/src/integrations/next-js.ts`:
-
-- `toNextJsRouteHandler(opts): NextJsRouteHandler`
-
-### Entry: `vs3/react`
-
-Exports from `packages/vs3/src/client/react/index.ts`:
-
-- `createStorageClient(options?): { useUpload: HookFactory }`
+All exports from those entrypoint files are considered public.
+Anything not reachable from those package entrypoints is internal and may change without notice.
 
 ## 2. Internal APIs (Unstable)
 
@@ -52,36 +34,20 @@ Internal APIs may change in any release without deprecation.
 
 ## 3. HTTP Endpoint Contract
 
-VS3 currently defines a single storage endpoint in the registry:
+VS3 defines the following storage endpoints in `packages/vs3/src/api/registry.ts`:
 
-### `POST /upload-url`
-
-**Request Body**
-
-```json
-{
-  "fileInfo": {
-    "name": "string",
-    "size": 123,
-    "contentType": "string"
-  },
-  "expiresIn": 3600,
-  "acl": "public-read"
-}
-```
-
-**Response Body**
-
-```json
-{
-  "presignedUrl": "string",
-  "key": "string"
-}
-```
+| Endpoint | Purpose | Response |
+| --- | --- | --- |
+| `POST /upload-url` | Create presigned single-part upload URL | `{ presignedUrl, key, uploadHeaders? }` |
+| `POST /download-url` | Create presigned download URL | `{ presignedUrl, downloadHeaders? }` |
+| `POST /multipart/create` | Start multipart upload session | `{ uploadId, key }` |
+| `POST /multipart/presign-parts` | Presign one or more part uploads | `{ parts: [{ partNumber, presignedUrl, uploadHeaders? }] }` |
+| `POST /multipart/complete` | Complete multipart upload | `{ key }` |
+| `POST /multipart/abort` | Abort multipart upload | `{ success }` |
 
 Notes:
 
-- Request schema is defined in `packages/vs3/src/api/registry.ts`.
+- Request/response schemas are defined in `packages/vs3/src/api/registry.ts`.
 - Route-specific metadata is validated according to the configured `metadataSchema` in `createStorage`.
 
 ## 4. Error Shape Contract
@@ -147,6 +113,9 @@ Current error codes are defined in `packages/vs3/src/core/error/codes.ts`:
 | `CONFLICT` | 409 | Request conflicts with existing resource state. | Resolve the conflict before retrying. |
 | `MIDDLEWARE_FAILED` | 500 | A middleware in the chain failed. | Retry or inspect middleware configuration. |
 | `MIDDLEWARE_TIMEOUT` | 504 | Middleware execution timed out. | Retry or increase middleware timeout. |
+| `MULTIPART_UPLOAD_NOT_FOUND` | 404 | Multipart upload ID not found or expired. | Start a new multipart upload. |
+| `MULTIPART_UPLOAD_FAILED` | 502 | S3 multipart operation failed. | Retry the multipart operation or check S3 availability. |
+| `INVALID_PARTS` | 400 | Parts list is invalid for multipart completion. | Ensure parts list is non-empty with valid part numbers and ETags. |
 
 **Versioning policy for error codes**:
 

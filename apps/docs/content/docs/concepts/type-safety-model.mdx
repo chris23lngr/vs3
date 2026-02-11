@@ -1,0 +1,75 @@
+---
+title: Type Safety Model
+description: How vs3 shares type-safe metadata contracts across server routes, clients, and framework hooks.
+---
+
+`vs3` uses a schema-first model: define metadata once on the server, then reuse inferred types everywhere else.
+
+## One Contract, Multiple Layers
+
+When you create storage, you can pass `metadataSchema` (Standard Schema compatible, for example Zod).
+
+That single schema drives:
+
+- Runtime validation on server endpoints.
+- Compile-time metadata types on `storage.api`.
+- Client metadata types via `typeof storage.$Infer`.
+- React/Vue hook/composable metadata signatures.
+
+## Server Source of Truth
+
+`createStorage` is the source of truth for storage types and behavior:
+
+```ts
+import { createStorage } from "vs3";
+import { z } from "zod";
+
+export const storage = createStorage({
+  bucket: "my-bucket",
+  adapter,
+  metadataSchema: z.object({
+    userId: z.string(),
+    folder: z.string().optional(),
+  }),
+});
+```
+
+The returned object includes `$Infer`, which exposes inferred metadata types for client setup.
+
+## Sharing Types with Client Code
+
+Use a type-only import to avoid bundling server code:
+
+```ts
+import { createStorageClient } from "vs3/react";
+import type { storage } from "../server/storage";
+
+export const client = createStorageClient<typeof storage.$Infer>({
+  apiPath: "/api/storage",
+});
+```
+
+Now `upload(file, metadata)` requires metadata that matches your server schema.
+
+## Runtime Validation Still Matters
+
+TypeScript types help during development, but all external input is validated at runtime on endpoint boundaries.
+
+That means:
+
+- Invalid metadata is rejected with `METADATA_VALIDATION_ERROR`.
+- File constraints are enforced even if a client bypasses UI checks.
+- Server contracts remain safe even when untyped clients call your API.
+
+## Type Safety in Hooks and Middleware
+
+- Upload/download hooks receive typed metadata and return typed result/error state.
+- Custom validators and hooks (`beforeUpload`, `afterUpload`, etc.) receive parsed metadata.
+- Middleware context is compositional; each middleware can add typed context values for later middleware/handlers.
+
+## Practical Rules
+
+1. Define metadata schema on server first.
+2. Export storage instance and reuse `typeof storage.$Infer` on clients.
+3. Keep imports type-only across server/client boundaries.
+4. Treat runtime validation as required, not optional.

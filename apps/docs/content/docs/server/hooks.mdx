@@ -1,0 +1,64 @@
+---
+title: Hooks
+description: Control upload and download behavior with before/after lifecycle hooks.
+---
+
+If you need to perform actions before or after certain events, hooks are the way to go. We currently support the following lifecycle hooks:
+
+- [beforeUpload](#beforeupload)
+- [afterUpload](#afterupload)
+- [beforeDownload](#beforedownload)
+- [afterDownload](#afterdownload)
+
+Use hooks for authorization checks, audit logging, business rules, and side effects.
+
+## Upload Hooks
+
+The following hooks are executed on upload requests.
+
+### beforeUpload
+
+Runs after request validation and before key generation/presigning. If the result is `{ success: false }`, the request fails with `FORBIDDEN` and won't be processed further.
+
+### afterUpload
+
+Runs after upload URL creation and resolved key selection. This is a good place to perform async operations like logging or auditing.
+
+## Download Hooks
+
+The following hooks are executed on download requests.
+
+### beforeDownload
+
+Runs before object existence check and URL generation. If the result is `{ success: false }`, the request fails with `FORBIDDEN` and won't be processed further.
+
+### afterDownload
+
+Runs after presigned download URL generation. This is a good place to perform async operations like logging or auditing.
+
+## Example
+
+In the following example, the upload will only be processed if the user is allowed to upload.
+
+```ts
+import { createStorage } from "vs3";
+
+const storage = createStorage({
+  // ...
+  hooks: {
+    beforeUpload: async (fileInfo, metadata) => {
+      const allowed = await canUpload(metadata.userId, fileInfo.size);
+      return allowed
+        ? { success: true }
+        : { success: false, reason: "Upload policy denied." };
+    },
+  },
+});
+```
+
+## Best Practices
+
+1. Keep hooks fast and deterministic.
+2. Return explicit failure reasons for easier debugging.
+3. Avoid long-running side effects in request path.
+4. Put authentication in middleware and use hooks for storage-specific policy.

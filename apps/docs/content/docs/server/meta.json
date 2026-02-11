@@ -1,0 +1,11 @@
+{
+	"pages": [
+		"create-storage",
+		"storage-options",
+		"adapters",
+		"endpoints",
+		"metadata-schemas",
+		"content-validation",
+		"hooks"
+	]
+}

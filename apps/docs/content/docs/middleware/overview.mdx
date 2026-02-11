@@ -1,0 +1,69 @@
+---
+title: Overview
+description: Understand how the vs3 middleware chain runs and how to compose middleware safely.
+---
+
+`vs3` middleware runs before every storage endpoint request and can:
+
+- allow a request and add context
+- reject a request with a typed error
+- return/throw a `Response` early
+
+## Execution Model
+
+Middleware is configured in `createStorage({ middlewares: [...] })` and executes in array order.
+
+```ts
+const storage = createStorage({
+  bucket: "my-bucket",
+  adapter,
+  middlewares: [
+    createLoggingMiddleware({ logger: console.log }),
+    createVerifySignatureMiddleware({ secret: process.env.SIGNING_SECRET! }),
+    createRateLimitMiddleware({
+      maxRequests: 100,
+      windowMs: 60_000,
+      store: createInMemoryRateLimitStore(),
+    }),
+  ],
+});
+```
+
+## Request Flow
+
+```text
+Incoming request
+-> middleware 1
+-> middleware 2
+-> middleware 3
+-> endpoint handler (/upload-url, /download-url, multipart/*)
+```
+
+If a middleware throws (or returns a `Response` through middleware internals), the chain stops and the endpoint handler does not run.
+
+## Context Merging
+
+Middleware handlers can return objects that are merged into middleware context:
+
+- signature middleware adds `context.signature`
+- auth middleware adds `context.auth`
+- rate-limit middleware adds `context.rateLimit`
+- timeout middleware adds `context.timeout`
+
+Later middleware and endpoint logic can consume values added by earlier middleware.
+
+## Path Filtering
+
+All built-in middleware supports path filters:
+
+- `skipPaths`: run on all paths except listed ones
+- `includePaths`: run only on listed paths
+
+These options are mutually exclusive.
+
+## Built-in Middleware Groups
+
+- [Common Middleware](/docs/middleware/common): CORS, rate limit, logging, timeout.
+- [Auth Middleware](/docs/middleware/auth): generic auth handler + better-auth integration.
+- [Request Signing](/docs/middleware/request-signing): HMAC signing/verification + nonce replay protection.
+- [Custom Middleware](/docs/middleware/custom-middleware): create your own middleware with typed context.

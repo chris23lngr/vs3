@@ -1,3 +1,11 @@
 {
-	"pages": ["usage", "multipart-uploads"]
+	"pages": [
+		"overview",
+		"create-storage-client",
+		"use-upload",
+		"use-download",
+		"use-multipart-upload",
+		"encryption",
+		"error-handling"
+	]
 }

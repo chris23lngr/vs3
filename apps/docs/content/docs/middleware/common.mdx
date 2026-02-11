@@ -1,0 +1,97 @@
+---
+title: Commons
+description: Configure CORS, rate limiting, logging, and timeout middleware on one page.
+---
+
+We provide a set of common middleware that you can use to secure your storage API. These middleware are designed to be used together and can be combined to create a secure and efficient storage API.
+
+- [CORS](#cors)
+- [Rate Limiting](#rate-limiting)
+- [Logging](#logging)
+- [Timeout](#timeout)
+
+## CORS
+
+Use `createCorsMiddleware` to handle preflight requests and provide CORS header data.
+
+```ts
+createCorsMiddleware({
+  allowedOrigins: ["https://app.example.com"],
+  allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  maxAge: 86400,
+});
+```
+
+Notes:
+
+- For `OPTIONS`, middleware responds with `204` and CORS headers.
+- For non-preflight requests, it adds CORS data into middleware context.
+
+## Rate Limiting
+
+Set up rate limiting with a store and limits. Users won't be able to exceed `maxRequests` requests per `windowMs`. A store is required to track requests. We provide an in-memory store out of the box. You can implement the `RateLimitStore` interface to use Redis or any other backing store.
+
+```ts
+const store = createInMemoryRateLimitStore();
+
+createRateLimitMiddleware({
+  maxRequests: 100,
+  windowMs: 60_000,
+  store,
+});
+```
+
+The default bucket key (used to track requests) is `ctx.path`. You can customize this with `keyGenerator`.
+
+```ts
+createRateLimitMiddleware({
+  maxRequests: 20,
+  windowMs: 60_000,
+  store,
+  keyGenerator: (ctx) => `${ctx.path}:${resolveClientIp(ctx.headers)}`,
+});
+```
+
+When limit is exceeded, middleware throws `RATE_LIMIT_EXCEEDED`.
+
+<Callout type="warn" title="Deployment note – proxy headers">
+The `x-forwarded-for` header is only trustworthy when the app sits behind a reverse proxy (nginx, Cloudflare, AWS ALB, etc.) that overwrites the header. If clients can reach the server directly, they can spoof the header and bypass rate limits. 
+
+Configure your proxy to strip or overwrite `x-forwarded-for` before it reaches the application.
+</Callout>
+
+## Logging
+
+Logs each incoming request. You can pass in any logger function that receives a log entry object (`{ method, path, timestamp }`).
+
+```ts
+createLoggingMiddleware({
+  logger: (entry) => {
+    myLogger.info(entry);
+  },
+});
+```
+
+## Timeout
+
+Specify a timeout for requests. This middleware adds an `AbortSignal` that is aborted after the configured timeout so endpoint logic can cancel long-running operations.
+
+```ts
+createTimeoutMiddleware({
+  timeoutMs: 30_000,
+});
+```
+
+The middleware adds `ctx.context.timeout?.signal` to the context which will be consumed by the endpoint handlers.
+
+## Path Filters on Common Middleware
+
+All common middlewares supports path filtering. You can use `skipPaths` to run on all paths except the ones listed, or `includePaths` to run only on the listed paths. They cannot be used together.
+
+```ts
+{
+  skipPaths?: string[];
+  includePaths?: string[];
+}
+```

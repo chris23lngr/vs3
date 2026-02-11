@@ -1,0 +1,134 @@
+---
+title: useDownload
+description: Generate presigned download URLs and trigger browser downloads or previews.
+---
+
+`useDownload` requests a presigned download URL from the server and optionally triggers a browser download or opens the file in a new tab.
+
+## Basic Usage
+
+<CodeTabs groupId="frontend-framework" defaultValue="react" values={["react", "vue"]}>
+
+<CodeTabsContent value="react">
+```tsx title="components/download.tsx"
+import { storageClient } from "@/lib/storage-client";
+
+const { useDownload } = storageClient;
+
+function DownloadButton({ fileKey }: { fileKey: string }) {
+  const { state, download } = useDownload();
+
+  const handleClick = async () => {
+    await download(fileKey, { mode: "direct-download" });
+  };
+
+  return (
+    <button onClick={handleClick} disabled={state.isLoading}>
+      {state.isLoading ? "Preparing…" : "Download"}
+    </button>
+  );
+}
+```
+</CodeTabsContent>
+
+<CodeTabsContent value="vue">
+```vue title="components/DownloadButton.vue"
+<script setup lang="ts">
+import { storageClient } from "@/lib/storage-client";
+
+const { useDownload } = storageClient;
+
+const props = defineProps<{ fileKey: string }>();
+const { state, download } = useDownload();
+
+const handleClick = async () => {
+  await download(props.fileKey, { mode: "direct-download" });
+};
+</script>
+
+<template>
+  <button @click="handleClick" :disabled="state.isLoading">
+    {{ state.isLoading ? "Preparing…" : "Download" }}
+  </button>
+</template>
+```
+</CodeTabsContent>
+
+</CodeTabs>
+
+## Options
+
+| Option | Type | Description |
+|---|---|---|
+| `onSuccess` | `(result: DownloadFileResult) => void` | Called when the download URL is ready |
+| `onError` | `(error: StorageError) => void` | Called when the request fails |
+| `throwOnError` | `boolean` | Override the client-level `throwOnError` setting |
+
+## State
+
+| Field | Type | Description |
+|---|---|---|
+| `status` | `"idle" \| "loading" \| "success" \| "error"` | Current request status |
+| `isLoading` | `boolean` | `true` while requesting the download URL |
+| `data` | `DownloadFileResult \| null` | Result containing the presigned URL |
+| `error` | `StorageError \| null` | Error details on failure |
+
+## Methods
+
+| Method | Signature | Description |
+|---|---|---|
+| `download` | `(key: string, options?: DownloadOptions) => Promise<DownloadFileResult \| undefined>` | Request a download URL. Returns the result or `undefined` on error. |
+| `reset` | `() => void` | Reset state back to `idle` |
+
+## Download Options
+
+Pass options as the second argument to `download()`:
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `mode` | `"url" \| "direct-download" \| "preview"` | `"url"` | How to handle the presigned URL |
+| `expiresIn` | `number` | — | URL expiration time in seconds |
+| `encryption` | `S3Encryption` | — | Encryption config for SSE-C downloads |
+
+## Download Modes
+
+### `"url"` (default)
+
+Returns the presigned URL without triggering any browser action. Use this when you want to display the URL or handle the download yourself:
+
+```ts
+const result = await download("uploads/report.pdf");
+console.log(result?.presignedUrl);
+```
+
+### `"direct-download"`
+
+Fetches the file from the presigned URL and triggers a browser download dialog. The filename is extracted from the S3 key:
+
+```ts
+await download("uploads/report.pdf", { mode: "direct-download" });
+```
+
+### `"preview"`
+
+Opens the file in a new browser tab using `window.open()`:
+
+```ts
+await download("uploads/image.png", { mode: "preview" });
+```
+
+## Download Result
+
+On success, `state.data` contains:
+
+```ts
+type DownloadFileResult = {
+  presignedUrl: string;
+  downloadHeaders?: Record<string, string>;
+};
+```
+
+## Next Steps
+
+- [Encryption](/docs/client/encryption) for downloading SSE-C encrypted files.
+- [Error Handling](/docs/client/error-handling) for error patterns and `throwOnError`.

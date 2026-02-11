@@ -1,0 +1,69 @@
+---
+title: Metadata Schemas
+description: Validate and type metadata using Standard Schema-compatible libraries.
+---
+
+While we use `zod` internally to validate request and response bodies, you can use any Standard Schema-compatible library to create your own metadata schema. For more information and supported validators see [Standard Schema](https://standardschema.dev/schema).
+
+If you set a metadata schema on the storage instance, `vs3` will validate metadata at the endpoint boundaries and use the same schema for type inference:
+
+```ts title="server/storage.ts"
+import { createStorage } from "vs3";
+import { z } from "zod"; // or any other Standard Schema-compatible library
+
+export const storage = createStorage({
+  // ...
+  metadataSchema: z.object({
+    userId: z.string(),
+    folder: z.string().optional(),
+  }),
+});
+```
+
+This schema will then be inferred both on the server and the client:
+
+```ts title="server/client.ts"
+const { upload } = storageClient.useUpload();
+
+upload(
+  new File([], "test.txt"),
+       { userId: "123", folder: "my-folder" }
+);
+```
+
+## Where Metadata Is Required
+
+| Endpoint | Method |Required | Description |
+|----------|----------|----------|----------|
+| `/upload-url` | POST | Yes | Upload a file to the storage. |
+| `/multipart/create` | POST | Yes | Create a multipart upload session. |
+| `/download-url` | POST | No | Download a file from the storage. |
+| `/multipart/presign-parts` | POST | No | Presign parts for a multipart upload. |
+| `/multipart/complete` | POST | No | Finalize a multipart upload. |
+| `/multipart/abort` | POST | No | Cancel a multipart upload. |
+
+## Validation Behavior
+
+If metadata does not match the schema, the request fails with `METADATA_VALIDATION_ERROR`. Validation is always server-side. Client-side typing is helpful, but not a security boundary.
+
+## Sharing Types with Client
+
+Use `storage.$Infer` from your storage instance to keep server and client contracts synchronized:
+
+```ts
+import { createStorageClient } from "vs3/vue";
+import type { storage } from "@/server/storage";
+
+export const client = createStorageClient<typeof storage.$Infer>({});
+```
+
+<Callout type="warn">
+    Use a type-only import to avoid bringing server code into browser bundles.
+</Callout>
+
+## Recommended Practices
+
+1. Keep metadata small and explicit.
+2. Encode authorization-relevant identifiers (`userId`, tenant) in metadata.
+3. Use enums/literals for constrained values.
+4. Add transforms/defaults only when they are deterministic and documented.

@@ -1,0 +1,92 @@
+---
+title: Request Signing
+description: Sign client requests and verify signatures server-side with nonce replay protection.
+---
+
+Request signing adds an HMAC integrity/authentication layer to storage API calls.
+
+Main exports:
+
+- `createClientRequestSigner`
+- `createVerifySignatureMiddleware`
+- `createRequestSigner`
+- `createInMemoryNonceStore`
+- `generateNonce`
+
+## Server Verification
+
+Use `createVerifySignatureMiddleware` in `createStorage` middleware chain:
+
+```ts
+createVerifySignatureMiddleware({
+  secret: process.env.SIGNING_SECRET!,
+  timestampToleranceMs: 300_000,
+  requireNonce: true,
+  nonceStore: createInMemoryNonceStore(),
+});
+```
+
+Verified requests add this to middleware context:
+
+```ts
+{
+  signature: {
+    verified: true,
+    timestamp: number,
+    nonce?: string
+  }
+}
+```
+
+## Client Signing
+
+Use `createClientRequestSigner` to produce signing headers:
+
+```ts
+const signer = createClientRequestSigner({
+  secret: process.env.NEXT_PUBLIC_SIGNING_SECRET!,
+  algorithm: "SHA-256",
+});
+
+const { headers } = await signer.sign({
+  method: "POST",
+  path: "/upload-url",
+  body: JSON.stringify(payload),
+  nonce: generateNonce(),
+});
+```
+
+Attach returned headers to the request:
+
+- `x-signature`
+- `x-timestamp`
+- optional `x-nonce`
+
+## Nonce Replay Protection
+
+For stronger replay protection:
+
+1. enable `requireNonce: true`
+2. provide `nonceStore`
+3. generate a unique nonce per request
+
+If `requireNonce` is enabled and no `nonceStore` is passed, the middleware uses an in-memory nonce store.
+
+## Failure Behavior
+
+Verification failures return typed security errors such as:
+
+- `SIGNATURE_MISSING`
+- `SIGNATURE_INVALID`
+- `TIMESTAMP_MISSING`
+- `TIMESTAMP_EXPIRED`
+- `NONCE_MISSING`
+- `NONCE_REUSED`
+
+Use `onVerificationFailure` to return a custom `Response`.
+
+## Recommended Pattern
+
+1. Sign all client storage requests.
+2. Verify signatures before auth/rate-limit dependent business logic.
+3. Use nonce + timestamp tolerance in production.

@@ -26,7 +26,7 @@ const calloutVariants = cva(
 	},
 );
 
-const barVariants = cva("w-0.75 self-stretch rounded-full", {
+const barVariants = cva("w-0.5 shrink-0 self-stretch rounded-full", {
 	variants: {
 		type: {
 			info: "bg-blue-500 dark:bg-blue-700",
