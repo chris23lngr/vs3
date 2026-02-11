@@ -1,12 +1,12 @@
 ---
 title: Nuxt
-description: Integrate vS3 with Nuxt 3
+description: Mount the vs3 request handler in Nuxt 3 with Nitro and H3.
 ---
 
-`vS3` does not currently provide a dedicated Nuxt integration helper.
-You can integrate it in Nuxt 3 by mounting `storage.handler` through `h3`'s `fromWebHandler`.
+`vs3` does not need a dedicated Nuxt adapter.
+Nuxt 3 (Nitro) can mount the Web handler directly with `h3`'s `fromWebHandler`.
 
-## Usage
+## Basic Setup
 
 ```ts title="server/api/storage/[...all].ts"
 import { fromWebHandler } from "h3";
@@ -15,5 +15,29 @@ import { storage } from "../../storage";
 export default fromWebHandler(storage.handler);
 ```
 
-This mounts the vS3 API at `/api/storage/**` in your Nuxt app.
-If you use a custom `apiPath`, mount the route at the matching server path.
+This mounts the `vs3` API at `/api/storage/**`.
+
+## Why This Works
+
+`storage.handler` is a standard Web `Request -> Response` handler. `fromWebHandler` bridges that handler into Nitro's event system.
+
+## Client Usage
+
+Nuxt apps can use the Vue client from `vs3/vue` and keep types synced with `typeof storage.$Infer`.
+
+```ts title="lib/storage-client.ts"
+import { createStorageClient } from "vs3/vue";
+import type { storage } from "~/server/storage";
+
+export const storageClient = createStorageClient<typeof storage.$Infer>({});
+```
+
+<Callout type="warn">
+    Use a type-only import for `storage` so server code is not bundled into client output.
+</Callout>
+
+## Next Steps
+
+- [createStorage](/docs/server/create-storage) for server setup.
+- [Client usage](/docs/client/usage) for upload/download APIs.
+- [Next.js integration](/docs/integrations/next-js) for App Router setup.
