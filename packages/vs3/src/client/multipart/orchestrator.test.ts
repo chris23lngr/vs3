@@ -101,6 +101,20 @@ describe("executeMultipartUpload", () => {
 		const $fetch = createMockFetch();
 		const file = createSmallFile(100);
 		const onProgress = vi.fn();
+		const uploadPartModule = await import("../xhr/upload-part");
+		const uploadPartMock = vi.mocked(uploadPartModule.xhrUploadPart);
+		uploadPartMock.mockImplementationOnce(
+			async (params: {
+				partNumber: number;
+				onProgress?: (loaded: number) => void;
+			}) => {
+				params.onProgress?.(50);
+				return {
+					partNumber: params.partNumber,
+					eTag: `"etag-${params.partNumber}"`,
+				};
+			},
+		);
 
 		await executeMultipartUpload({
 			$fetch,
@@ -109,10 +123,7 @@ describe("executeMultipartUpload", () => {
 			options: { partSize: 100, onProgress },
 		});
 
-		// xhrUploadPart mock doesn't fire progress, but the orchestrator
-		// should have set up the onPartProgress callback
-		// The completion itself verifies the orchestration works
-		expect(onProgress).toBeDefined();
+		expect(onProgress).toHaveBeenCalledWith(0.5);
 	});
 
 	it("aborts upload on create failure", async () => {
