@@ -42,6 +42,7 @@ type ContextOverrides<M extends StandardSchemaV1> = {
 	contentValidators?: StorageOptions<M>["contentValidators"];
 	contentValidatorTimeoutMs?: number;
 	maxFileSize?: number;
+	hooks?: StorageOptions<M>["hooks"];
 };
 
 const createTestContext = <M extends StandardSchemaV1>(
@@ -404,6 +405,118 @@ describe("multipart/create route", () => {
 		).rejects.toMatchObject({
 			code: StorageErrorCode.CONTENT_VALIDATION_ERROR,
 			message: "Content validation failed: blocked by policy",
+		});
+	});
+
+	describe("upload hooks", () => {
+		it("throws FORBIDDEN when beforeUpload hook rejects", async () => {
+			const metadataSchema = z.object({ userId: z.string() });
+			const endpoint = createMultipartCreateRoute(metadataSchema);
+			const { options, operations } = createTestContext(metadataSchema, {
+				hooks: {
+					beforeUpload: vi
+						.fn()
+						.mockResolvedValue({ success: false, reason: "Not allowed" }),
+				},
+			});
+
+			await expect(
+				callEndpoint(endpoint, {
+					body: {
+						fileInfo: baseFileInfo,
+						metadata: { userId: "user-1" },
+					},
+					context: {
+						$options: options,
+						$operations: operations,
+					} satisfies Omit<StorageContext, "$middleware">,
+				}),
+			).rejects.toMatchObject({
+				code: StorageErrorCode.FORBIDDEN,
+				message: "Not allowed",
+			});
+		});
+
+		it("uses default message when beforeUpload hook rejects without reason", async () => {
+			const metadataSchema = z.object({ userId: z.string() });
+			const endpoint = createMultipartCreateRoute(metadataSchema);
+			const { options, operations } = createTestContext(metadataSchema, {
+				hooks: {
+					beforeUpload: vi.fn().mockResolvedValue({ success: false }),
+				},
+			});
+
+			await expect(
+				callEndpoint(endpoint, {
+					body: {
+						fileInfo: baseFileInfo,
+						metadata: { userId: "user-1" },
+					},
+					context: {
+						$options: options,
+						$operations: operations,
+					} satisfies Omit<StorageContext, "$middleware">,
+				}),
+			).rejects.toMatchObject({
+				code: StorageErrorCode.FORBIDDEN,
+				message: "Upload rejected by hook.",
+			});
+		});
+
+		it("proceeds when beforeUpload hook accepts", async () => {
+			const metadataSchema = z.object({ userId: z.string() });
+			const endpoint = createMultipartCreateRoute(metadataSchema);
+			const beforeUpload = vi.fn().mockResolvedValue({ success: true });
+			const { options, operations } = createTestContext(metadataSchema, {
+				hooks: { beforeUpload },
+			});
+
+			const result = await callEndpoint(endpoint, {
+				body: {
+					fileInfo: baseFileInfo,
+					metadata: { userId: "user-1" },
+				},
+				context: {
+					$options: options,
+					$operations: operations,
+				} satisfies Omit<StorageContext, "$middleware">,
+			});
+
+			expect(result).toMatchObject({
+				uploadId: "mock-upload-id",
+			});
+			expect(beforeUpload).toHaveBeenCalledWith(baseFileInfo, {
+				userId: "user-1",
+			});
+		});
+
+		it("does not call operations when beforeUpload rejects", async () => {
+			const metadataSchema = z.object({ userId: z.string() });
+			const endpoint = createMultipartCreateRoute(metadataSchema);
+			const { options, operations } = createTestContext(metadataSchema, {
+				hooks: {
+					beforeUpload: vi
+						.fn()
+						.mockResolvedValue({ success: false, reason: "denied" }),
+				},
+			});
+
+			try {
+				await callEndpoint(endpoint, {
+					body: {
+						fileInfo: baseFileInfo,
+						metadata: { userId: "user-1" },
+					},
+					context: {
+						$options: options,
+						$operations: operations,
+					} satisfies Omit<StorageContext, "$middleware">,
+				});
+			} catch {
+				// expected
+			}
+
+			expect(operations.createMultipartUpload).not.toHaveBeenCalled();
 		});
 	});
 });
