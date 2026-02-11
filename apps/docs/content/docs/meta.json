@@ -1,4 +1,4 @@
 {
 	"root": true,
-	"pages": ["server", "security", "client", "integrations"]
+	"pages": ["server", "security", "client", "integrations", "concepts"]
 }

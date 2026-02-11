@@ -103,7 +103,7 @@ export const components = {
 		</ul>
 	),
 	ol: ({ children }: { children: React.ReactNode }) => (
-		<ol className="mb-4 list-inside list-decimal text-[0.9375rem] text-zinc-600">
+		<ol className="mt-4 mb-6 list-outside list-decimal space-y-2 pl-3.5 text-[0.9375rem] text-body text-zinc-600 leading-7 marker:text-zinc-400 dark:text-zinc-400 dark:marker:text-zinc-400 [&>li]:pl-2">
 			{children}
 		</ol>
 	),
