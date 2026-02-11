@@ -30,6 +30,7 @@ export function createMultipartCompleteRoute<M extends StandardSchemaV1>(
 		async (ctx) => {
 			validateContext(ctx);
 
+			const { hooks } = ctx.context.$options;
 			const operations = ctx.context.$operations;
 			const { key, uploadId, parts } = ctx.body;
 
@@ -49,8 +50,6 @@ export function createMultipartCompleteRoute<M extends StandardSchemaV1>(
 					uploadId,
 					parts,
 				});
-
-				return { key };
 			} catch (error) {
 				if (error instanceof StorageServerError) {
 					throw error;
@@ -72,6 +71,12 @@ export function createMultipartCompleteRoute<M extends StandardSchemaV1>(
 					},
 				});
 			}
+
+			if (hooks?.afterUpload) {
+				await hooks.afterUpload(null, null, key);
+			}
+
+			return { key };
 		},
 	);
 }

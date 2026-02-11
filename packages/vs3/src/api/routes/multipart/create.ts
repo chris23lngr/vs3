@@ -1,5 +1,7 @@
 import z from "zod";
 import { generateObjectKey } from "../../../adapters/utils";
+import { StorageErrorCode } from "../../../core/error/codes";
+import { StorageServerError } from "../../../core/error/error";
 import {
 	getFileNameValidationIssue,
 	getFileTypeValidationIssue,
@@ -39,6 +41,7 @@ export function createMultipartCreateRoute<M extends StandardSchemaV1>(
 				maxFileSize,
 				contentValidators,
 				contentValidatorTimeoutMs,
+				hooks,
 			} = ctx.context.$options;
 			const operations = ctx.context.$operations;
 			const { fileInfo, acl, encryption } = ctx.body;
@@ -65,6 +68,17 @@ export function createMultipartCreateRoute<M extends StandardSchemaV1>(
 				validators: contentValidators,
 				timeoutMs: contentValidatorTimeoutMs,
 			});
+
+			if (hooks?.beforeUpload) {
+				const hookResult = await hooks.beforeUpload(fileInfo, internalMetadata);
+				if (!hookResult.success) {
+					throw new StorageServerError({
+						code: StorageErrorCode.FORBIDDEN,
+						message: hookResult.reason ?? "Upload rejected by hook.",
+						details: { fileName: fileInfo.name },
+					});
+				}
+			}
 
 			const key = generateKey
 				? await generateKey(fileInfo, internalMetadata)
