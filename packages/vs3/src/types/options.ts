@@ -117,8 +117,8 @@ export type StorageOptions<M extends StandardSchemaV1 = StandardSchemaV1> = {
 		) => BeforeHookResult | Promise<BeforeHookResult>;
 
 		afterUpload?: (
-			fileInfo: FileInfo | null,
-			metadata: StandardSchemaV1.InferOutput<M> | null,
+			fileInfo: FileInfo,
+			metadata: StandardSchemaV1.InferOutput<M>,
 			key: string,
 		) => void | Promise<void>;
 

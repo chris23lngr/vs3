@@ -29,15 +29,12 @@ const callEndpoint = <T extends (input?: any) => any>(
 	input: unknown,
 ) => endpoint(input as Parameters<T>[0]);
 
-function createContext(
-	overrides: Partial<StorageOptions<z.ZodUndefined>> = {},
-) {
+function createContext() {
 	const operations = createMockOperations();
 	const options: StorageOptions<z.ZodUndefined> = {
 		bucket: "test-bucket",
 		adapter: createMockAdapter(),
 		metadataSchema: z.undefined(),
-		...overrides,
 	};
 	return { options, operations };
 }
@@ -214,100 +211,6 @@ describe("multipart/complete route", () => {
 			}),
 		).rejects.toMatchObject({
 			code: StorageErrorCode.INTERNAL_SERVER_ERROR,
-		});
-	});
-
-	describe("upload hooks", () => {
-		it("calls afterUpload hook with null fileInfo, null metadata, and key", async () => {
-			const afterUpload = vi.fn().mockResolvedValue(undefined);
-			const endpoint = createMultipartCompleteRoute();
-			const { options, operations } = createContext({
-				hooks: { afterUpload },
-			});
-
-			await callEndpoint(endpoint, {
-				body: {
-					key: "uploads/file.bin",
-					uploadId: "upload-123",
-					parts: [{ partNumber: 1, eTag: '"etag1"' }],
-				},
-				context: {
-					$options: options,
-					$operations: operations,
-				} satisfies Omit<StorageContext, "$middleware">,
-			});
-
-			expect(afterUpload).toHaveBeenCalledWith(null, null, "uploads/file.bin");
-		});
-
-		it("propagates afterUpload hook errors", async () => {
-			const afterUpload = vi.fn().mockRejectedValue(new Error("hook failed"));
-			const endpoint = createMultipartCompleteRoute();
-			const { options, operations } = createContext({
-				hooks: { afterUpload },
-			});
-
-			await expect(
-				callEndpoint(endpoint, {
-					body: {
-						key: "uploads/file.bin",
-						uploadId: "upload-123",
-						parts: [{ partNumber: 1, eTag: '"etag1"' }],
-					},
-					context: {
-						$options: options,
-						$operations: operations,
-					} satisfies Omit<StorageContext, "$middleware">,
-				}),
-			).rejects.toThrow("hook failed");
-		});
-
-		it("does not call afterUpload when completion fails", async () => {
-			const afterUpload = vi.fn().mockResolvedValue(undefined);
-			const endpoint = createMultipartCompleteRoute();
-			const { options, operations } = createContext({
-				hooks: { afterUpload },
-			});
-			(
-				operations.completeMultipartUpload as ReturnType<typeof vi.fn>
-			).mockRejectedValue(new Error("S3 error"));
-
-			try {
-				await callEndpoint(endpoint, {
-					body: {
-						key: "uploads/file.bin",
-						uploadId: "upload-123",
-						parts: [{ partNumber: 1, eTag: '"etag1"' }],
-					},
-					context: {
-						$options: options,
-						$operations: operations,
-					} satisfies Omit<StorageContext, "$middleware">,
-				});
-			} catch {
-				// expected
-			}
-
-			expect(afterUpload).not.toHaveBeenCalled();
-		});
-
-		it("works without any hooks configured", async () => {
-			const endpoint = createMultipartCompleteRoute();
-			const { options, operations } = createContext();
-
-			const result = await callEndpoint(endpoint, {
-				body: {
-					key: "uploads/file.bin",
-					uploadId: "upload-123",
-					parts: [{ partNumber: 1, eTag: '"etag1"' }],
-				},
-				context: {
-					$options: options,
-					$operations: operations,
-				} satisfies Omit<StorageContext, "$middleware">,
-			});
-
-			expect(result).toEqual({ key: "uploads/file.bin" });
 		});
 	});
 });
