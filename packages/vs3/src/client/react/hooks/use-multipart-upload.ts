@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { StorageError } from "../../../core/error/error";
 import type { InferredTypes } from "../../../types/infer";
 import type { StandardSchemaV1 } from "../../../types/standard-schema";
@@ -236,6 +236,12 @@ function useMultipartUploadInternal<T extends InferredTypes>(
 
 	const abort = useCallback((): void => {
 		abortControllerRef.current.abort();
+	}, []);
+
+	useEffect(() => {
+		return () => {
+			abortControllerRef.current.abort();
+		};
 	}, []);
 
 	return { state, upload, abort, reset: actions.reset };
