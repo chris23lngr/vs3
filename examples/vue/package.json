@@ -13,7 +13,7 @@
 		"typecheck": "nuxt prepare && tsc --noEmit -p .nuxt/tsconfig.json"
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.981.0",
+		"@aws-sdk/client-s3": "^3.990.0",
 		"nuxt": "^3.19.3",
 		"vs3": "workspace:*",
 		"zod": "^4.3.6"
