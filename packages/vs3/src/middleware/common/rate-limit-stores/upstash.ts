@@ -1,4 +1,5 @@
 import type { RateLimitStore } from "../rate-limit";
+import { DEFAULT_KEY_PREFIX, toStorageKey } from "./utils";
 
 /**
  * Configuration for the Upstash HTTP rate limit store.
@@ -12,8 +13,6 @@ export type UpstashRateLimitStoreConfig = {
 	readonly keyPrefix?: string;
 };
 
-const DEFAULT_KEY_PREFIX = "rl:";
-
 const INCR_WITH_TTL_SCRIPT = `
 local count = redis.call('INCR', KEYS[1])
 if count == 1 then
@@ -22,8 +21,10 @@ end
 return count
 `;
 
-function toStorageKey(prefix: string, key: string): string {
-	return `${prefix}${key}`;
+type UpstashResponse = { result?: number; error?: string };
+
+function isUpstashResponse(value: unknown): value is UpstashResponse {
+	return typeof value === "object" && value !== null;
 }
 
 async function upstashCommand(
@@ -45,7 +46,10 @@ async function upstashCommand(
 		throw new Error(`Upstash Redis request failed: ${res.status} ${text}`);
 	}
 
-	const json = (await res.json()) as { result?: number; error?: string };
+	const json: unknown = await res.json();
+	if (!isUpstashResponse(json)) {
+		throw new Error("Upstash Redis invalid response shape");
+	}
 	if (json.error) {
 		throw new Error(`Upstash Redis error: ${json.error}`);
 	}

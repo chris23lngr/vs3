@@ -175,6 +175,35 @@ describe("createRedisRateLimitStore", () => {
 
 		expect(incrCalls).toEqual(["ratelimit:user:123"]);
 	});
+
+	it("uses eval when available for atomic INCR+EXPIRE", async () => {
+		const evalCalls: [string, number, ...string[]][] = [];
+		const client = {
+			incr: vi.fn(),
+			expire: vi.fn(),
+			eval: vi.fn(
+				async (
+					script: string,
+					numKeys: number,
+					...args: string[]
+				): Promise<number> => {
+					evalCalls.push([script, numKeys, ...args]);
+					return 5;
+				},
+			),
+		};
+
+		const store = createRedisRateLimitStore({ client });
+		const count = await store.increment("key", 60_000);
+
+		expect(count).toBe(5);
+		expect(client.incr).not.toHaveBeenCalled();
+		expect(client.expire).not.toHaveBeenCalled();
+		expect(evalCalls).toHaveLength(1);
+		expect(evalCalls[0][1]).toBe(1);
+		expect(evalCalls[0][2]).toBe("rl:key");
+		expect(evalCalls[0][3]).toBe("60000");
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -182,6 +211,8 @@ describe("createRedisRateLimitStore", () => {
 // ---------------------------------------------------------------------------
 
 describe("createUpstashRateLimitStore", () => {
+	afterEach(() => vi.unstubAllGlobals());
+
 	it("returns count from Upstash EVAL response", async () => {
 		const url = "https://test.upstash.io";
 		const token = "test-token";
@@ -208,7 +239,6 @@ describe("createUpstashRateLimitStore", () => {
 			"rl:key",
 			"60000",
 		]);
-		vi.unstubAllGlobals();
 	});
 
 	it("throws on Upstash error response", async () => {
@@ -230,7 +260,6 @@ describe("createUpstashRateLimitStore", () => {
 		await expect(store.increment("key", 60_000)).rejects.toThrow(
 			"Upstash Redis error",
 		);
-		vi.unstubAllGlobals();
 	});
 
 	it("uses custom key prefix", async () => {
@@ -252,8 +281,8 @@ describe("createUpstashRateLimitStore", () => {
 		});
 		await store.increment("path", 60_000);
 
-		expect((fetchBody as string[])[3]).toBe("app:rl:path");
-		vi.unstubAllGlobals();
+		const body = fetchBody as string[];
+		expect(body[3]).toBe("app:rl:path");
 	});
 });
 

@@ -1,14 +1,23 @@
 import type { RateLimitStore } from "../rate-limit";
+import { DEFAULT_KEY_PREFIX, toStorageKey } from "./utils";
 
 /**
  * Minimal Redis client interface for the rate limit store.
  *
  * Compatible with `ioredis` and `redis` (node-redis v4). Both provide
  * `incr(key)` and `expire(key, seconds)` returning promises.
+ *
+ * For atomic INCR+EXPIRE (avoids race on crash), provide `eval`. ioredis
+ * supports it: `redis.eval(script, numKeys, ...keysAndArgs)`.
  */
 export type RedisRateLimitClient = {
 	readonly incr: (key: string) => Promise<number>;
 	readonly expire: (key: string, seconds: number) => Promise<unknown>;
+	readonly eval?: (
+		script: string,
+		numKeys: number,
+		...args: string[]
+	) => Promise<number>;
 };
 
 export type RedisRateLimitStoreConfig = {
@@ -16,18 +25,21 @@ export type RedisRateLimitStoreConfig = {
 	readonly keyPrefix?: string;
 };
 
-const DEFAULT_KEY_PREFIX = "rl:";
-
-function toStorageKey(prefix: string, key: string): string {
-	return `${prefix}${key}`;
-}
+const INCR_WITH_TTL_SCRIPT = `
+local count = redis.call('INCR', KEYS[1])
+if count == 1 then
+  redis.call('PEXPIRE', KEYS[1], ARGV[1])
+end
+return count
+`;
 
 /**
  * Creates a distributed rate limit store backed by Redis with TTL semantics.
  *
- * Uses fixed-window counting: INCR for the bucket key, EXPIRE on first
- * request to auto-cleanup after the window. Suitable for multi-instance
- * deployments (e.g. Kubernetes, serverless with shared Redis).
+ * Uses fixed-window counting with atomic INCR+EXPIRE when the client
+ * provides `eval` (e.g. ioredis). Otherwise falls back to INCR then EXPIRE;
+ * a crash between them can leave a key without TTL. Suitable for
+ * multi-instance deployments (e.g. Kubernetes, serverless with shared Redis).
  *
  * @example
  * ```ts
@@ -48,17 +60,21 @@ export function createRedisRateLimitStore(
 	config: RedisRateLimitStoreConfig,
 ): RateLimitStore {
 	const { client, keyPrefix = DEFAULT_KEY_PREFIX } = config;
+	const useEval = typeof client.eval === "function";
 
 	return {
 		async increment(key: string, windowMs: number): Promise<number> {
 			const storageKey = toStorageKey(keyPrefix, key);
-			const count = await client.incr(storageKey);
 
+			if (useEval && client.eval) {
+				return client.eval(INCR_WITH_TTL_SCRIPT, 1, storageKey, String(windowMs));
+			}
+
+			const count = await client.incr(storageKey);
 			if (count === 1) {
 				const ttlSeconds = Math.ceil(windowMs / 1000);
 				await client.expire(storageKey, ttlSeconds);
 			}
-
 			return count;
 		},
 	};
