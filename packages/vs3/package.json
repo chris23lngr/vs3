@@ -47,6 +47,46 @@
 				"default": "./dist/next-js.cjs"
 			}
 		},
+		"./integrations/h3": {
+			"import": {
+				"types": "./dist/h3.d.ts",
+				"default": "./dist/h3.js"
+			},
+			"require": {
+				"types": "./dist/h3.d.cts",
+				"default": "./dist/h3.cjs"
+			}
+		},
+		"./integrations/express": {
+			"import": {
+				"types": "./dist/express.d.ts",
+				"default": "./dist/express.js"
+			},
+			"require": {
+				"types": "./dist/express.d.cts",
+				"default": "./dist/express.cjs"
+			}
+		},
+		"./integrations/fastify": {
+			"import": {
+				"types": "./dist/fastify.d.ts",
+				"default": "./dist/fastify.js"
+			},
+			"require": {
+				"types": "./dist/fastify.d.cts",
+				"default": "./dist/fastify.cjs"
+			}
+		},
+		"./integrations/cloudflare-workers": {
+			"import": {
+				"types": "./dist/cloudflare-workers.d.ts",
+				"default": "./dist/cloudflare-workers.js"
+			},
+			"require": {
+				"types": "./dist/cloudflare-workers.d.cts",
+				"default": "./dist/cloudflare-workers.cjs"
+			}
+		},
 		"./adapters": {
 			"import": {
 				"types": "./dist/adapters.d.ts",
@@ -83,6 +123,18 @@
 			],
 			"integrations/next-js": [
 				"./dist/next-js.d.ts"
+			],
+			"integrations/h3": [
+				"./dist/h3.d.ts"
+			],
+			"integrations/express": [
+				"./dist/express.d.ts"
+			],
+			"integrations/fastify": [
+				"./dist/fastify.d.ts"
+			],
+			"integrations/cloudflare-workers": [
+				"./dist/cloudflare-workers.d.ts"
 			],
 			"adapters": [
 				"./dist/adapters.d.ts"
@@ -129,7 +181,11 @@
 	"homepage": "https://github.com/chris23lngr/vs3#readme",
 	"devDependencies": {
 		"@aws-sdk/client-s3": "^3.981.0",
+		"@types/express": "^5.0.0",
 		"@testing-library/react": "^16.3.2",
+		"express": "^5.0.0",
+		"fastify": "^5.0.0",
+		"h3": "^1.15.0",
 		"@types/node": "^25.2.0",
 		"@types/react": "^18.3.27",
 		"@vitest/coverage-v8": "4.0.18",
@@ -150,10 +206,22 @@
 	},
 	"peerDependencies": {
 		"@aws-sdk/client-s3": "^3.981.0",
+		"express": ">=4",
+		"fastify": ">=4",
+		"h3": ">=1.0",
 		"react": ">=18",
 		"vue": ">=3.3"
 	},
 	"peerDependenciesMeta": {
+		"express": {
+			"optional": true
+		},
+		"fastify": {
+			"optional": true
+		},
+		"h3": {
+			"optional": true
+		},
 		"react": {
 			"optional": true
 		},
