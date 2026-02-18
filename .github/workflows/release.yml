@@ -25,7 +25,7 @@ jobs:
       PNPM_STORE_DIR: ${{ github.workspace }}/.pnpm-store
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
         uses: actions/setup-node@v4
