@@ -20,8 +20,6 @@ export type RedisRateLimitStoreConfig = {
 	readonly keyPrefix?: string;
 };
 
-const DEFAULT_KEY_PREFIX = "rl:";
-
 const INCR_WITH_TTL_SCRIPT = `
 local count = redis.call('INCR', KEYS[1])
 if count == 1 then
@@ -29,10 +27,6 @@ if count == 1 then
 end
 return count
 `;
-
-function toStorageKey(prefix: string, key: string): string {
-	return `${prefix}${key}`;
-}
 
 /**
  * Creates a distributed rate limit store backed by Redis with TTL semantics.
@@ -61,7 +55,6 @@ export function createRedisRateLimitStore(
 	config: RedisRateLimitStoreConfig,
 ): RateLimitStore {
 	const { client, keyPrefix = DEFAULT_KEY_PREFIX } = config;
-	const useEval = typeof client.eval === "function";
 
 	return {
 		async increment(key: string, windowMs: number): Promise<number> {

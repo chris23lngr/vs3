@@ -170,33 +170,23 @@ describe("createRedisRateLimitStore", () => {
 		expect(evalCalls[0]?.[2]).toBe("ratelimit:user:123");
 	});
 
-	it("uses eval when available for atomic INCR+EXPIRE", async () => {
-		const evalCalls: [string, number, ...string[]][] = [];
+	it("passes TTL in seconds to EVAL script", async () => {
+		const evalCalls: unknown[][] = [];
 		const client = {
-			incr: vi.fn(),
-			expire: vi.fn(),
-			eval: vi.fn(
-				async (
-					script: string,
-					numKeys: number,
-					...args: string[]
-				): Promise<number> => {
-					evalCalls.push([script, numKeys, ...args]);
-					return 5;
-				},
-			),
+			eval: vi.fn(async (...args: unknown[]) => {
+				evalCalls.push(args);
+				return 5;
+			}),
 		};
 
 		const store = createRedisRateLimitStore({ client });
 		const count = await store.increment("key", 60_000);
 
 		expect(count).toBe(5);
-		expect(client.incr).not.toHaveBeenCalled();
-		expect(client.expire).not.toHaveBeenCalled();
 		expect(evalCalls).toHaveLength(1);
-		expect(evalCalls[0][1]).toBe(1);
-		expect(evalCalls[0][2]).toBe("rl:key");
-		expect(evalCalls[0][3]).toBe("60000");
+		expect(evalCalls[0]?.[1]).toBe(1);
+		expect(evalCalls[0]?.[2]).toBe("rl:key");
+		expect(evalCalls[0]?.[3]).toBe(60);
 	});
 });
 
