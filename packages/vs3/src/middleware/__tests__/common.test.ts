@@ -10,6 +10,10 @@ import {
 	type RateLimitStore,
 	resolveClientIp,
 } from "../common/rate-limit";
+import {
+	createRedisRateLimitStore,
+	createUpstashRateLimitStore,
+} from "../common/rate-limit-stores";
 import { createTimeoutMiddleware } from "../common/timeout";
 import { executeMiddlewareChain } from "../core/execute-chain";
 import type { StorageMiddlewareContext } from "../types";
@@ -105,6 +109,164 @@ describe("createInMemoryRateLimitStore", () => {
 		const count = await store.increment("b", 60_000);
 
 		expect(count).toBe(1);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Rate Limit - Redis Store
+// ---------------------------------------------------------------------------
+
+describe("createRedisRateLimitStore", () => {
+	it("returns count from atomic EVAL script", async () => {
+		const evalCalls: unknown[][] = [];
+		const client = {
+			eval: vi.fn(async (...args: unknown[]) => {
+				evalCalls.push(args);
+				return 1;
+			}),
+		};
+
+		const store = createRedisRateLimitStore({ client });
+		const count = await store.increment("key", 60_000);
+
+		expect(count).toBe(1);
+		expect(evalCalls).toHaveLength(1);
+		expect(evalCalls[0]).toEqual([
+			expect.stringContaining("INCR"),
+			1,
+			"rl:key",
+			60,
+		]);
+	});
+
+	it("invokes EVAL on each increment", async () => {
+		const client = {
+			eval: vi.fn().mockResolvedValueOnce(1).mockResolvedValueOnce(2),
+		};
+
+		const store = createRedisRateLimitStore({ client });
+		await store.increment("key", 60_000);
+		const count = await store.increment("key", 60_000);
+
+		expect(count).toBe(2);
+		expect(client.eval).toHaveBeenCalledTimes(2);
+	});
+
+	it("uses custom key prefix", async () => {
+		const evalCalls: unknown[][] = [];
+		const client = {
+			eval: vi.fn(async (...args: unknown[]) => {
+				evalCalls.push(args);
+				return 1;
+			}),
+		};
+
+		const store = createRedisRateLimitStore({
+			client,
+			keyPrefix: "ratelimit:",
+		});
+		await store.increment("user:123", 60_000);
+
+		expect(evalCalls[0]?.[2]).toBe("ratelimit:user:123");
+	});
+
+	it("passes TTL in seconds to EVAL script", async () => {
+		const evalCalls: unknown[][] = [];
+		const client = {
+			eval: vi.fn(async (...args: unknown[]) => {
+				evalCalls.push(args);
+				return 5;
+			}),
+		};
+
+		const store = createRedisRateLimitStore({ client });
+		const count = await store.increment("key", 60_000);
+
+		expect(count).toBe(5);
+		expect(evalCalls).toHaveLength(1);
+		expect(evalCalls[0]?.[1]).toBe(1);
+		expect(evalCalls[0]?.[2]).toBe("rl:key");
+		expect(evalCalls[0]?.[3]).toBe(60);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Rate Limit - Upstash Store
+// ---------------------------------------------------------------------------
+
+describe("createUpstashRateLimitStore", () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	it("returns count from Upstash EVAL response", async () => {
+		const url = "https://test.upstash.io";
+		const token = "test-token";
+		let fetchBody: unknown = null;
+
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_: string, init?: { body?: string }) => {
+				fetchBody = init?.body ? JSON.parse(init.body) : null;
+				return new Response(JSON.stringify({ result: 3 }), {
+					status: 200,
+				});
+			}),
+		);
+
+		const store = createUpstashRateLimitStore({ url, token });
+		const count = await store.increment("key", 60_000);
+
+		expect(count).toBe(3);
+		expect(fetchBody).toEqual([
+			"EVAL",
+			expect.stringContaining("INCR"),
+			"1",
+			"rl:key",
+			"60000",
+		]);
+	});
+
+	it("throws on Upstash error response", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(JSON.stringify({ error: "WRONGPASS" }), {
+						status: 200,
+					}),
+			),
+		);
+
+		const store = createUpstashRateLimitStore({
+			url: "https://test.upstash.io",
+			token: "bad",
+		});
+
+		await expect(store.increment("key", 60_000)).rejects.toThrow(
+			"Upstash Redis error",
+		);
+	});
+
+	it("uses custom key prefix", async () => {
+		let fetchBody: unknown = null;
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_: string, init?: { body?: string }) => {
+				fetchBody = init?.body ? JSON.parse(init.body) : null;
+				return new Response(JSON.stringify({ result: 1 }), {
+					status: 200,
+				});
+			}),
+		);
+
+		const store = createUpstashRateLimitStore({
+			url: "https://test.upstash.io",
+			token: "t",
+			keyPrefix: "app:rl:",
+		});
+		await store.increment("path", 60_000);
+
+		const body = fetchBody as string[];
+		expect(body[3]).toBe("app:rl:path");
 	});
 });
 

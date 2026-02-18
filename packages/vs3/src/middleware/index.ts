@@ -15,16 +15,21 @@ export {
 	createLoggingMiddleware as logging,
 	createRateLimitMiddleware,
 	createRateLimitMiddleware as rateLimit,
+	createRedisRateLimitStore,
 	createTimeoutMiddleware,
 	createTimeoutMiddleware as timeout,
+	createUpstashRateLimitStore,
 	type LogEntry,
 	type LogFn,
 	type LoggingConfig,
 	type RateLimitConfig,
 	type RateLimitKeyGenerator,
 	type RateLimitStore,
+	type RedisRateLimitClient,
+	type RedisRateLimitStoreConfig,
 	resolveClientIp,
 	type TimeoutConfig,
+	type UpstashRateLimitStoreConfig,
 } from "./common";
 export { createStorageMiddleware, executeMiddlewareChain } from "./core";
 export {
