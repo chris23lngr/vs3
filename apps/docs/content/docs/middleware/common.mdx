@@ -38,20 +38,14 @@ Set up rate limiting with a store and limits. Users won't be able to exceed `max
 - **Redis** (`createRedisRateLimitStore`) – shared state across instances; use with `ioredis` or `redis` (node-redis v4).
 - **Upstash** (`createUpstashRateLimitStore`) – HTTP-based; works in serverless and edge (no Redis client needed).
 
-```ts
-// Single instance (dev / single server)
-const store = createInMemoryRateLimitStore();
+Choose one store based on your deployment. Example for distributed (Redis):
 
-// Distributed (Kubernetes, serverless, multi-instance)
+```ts
 import Redis from "ioredis";
+import { createRedisRateLimitStore, createRateLimitMiddleware } from "vs3";
+
 const redis = new Redis(process.env.REDIS_URL!);
 const store = createRedisRateLimitStore({ client: redis });
-
-// Serverless / edge (Upstash Redis REST API)
-const store = createUpstashRateLimitStore({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
 
 createRateLimitMiddleware({
   maxRequests: 100,
@@ -59,6 +53,8 @@ createRateLimitMiddleware({
   store,
 });
 ```
+
+For single-server or dev, use `createInMemoryRateLimitStore()`. For serverless/edge, use `createUpstashRateLimitStore({ url, token })`.
 
 The default bucket key (used to track requests) is `ctx.path`. You can customize this with `keyGenerator`.
 
