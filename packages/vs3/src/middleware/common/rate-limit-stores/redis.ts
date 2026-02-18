@@ -1,4 +1,5 @@
 import type { RateLimitStore } from "../rate-limit";
+import { DEFAULT_KEY_PREFIX, toStorageKey } from "./utils";
 
 /**
  * Minimal Redis client interface for the rate limit store.
@@ -36,9 +37,10 @@ function toStorageKey(prefix: string, key: string): string {
 /**
  * Creates a distributed rate limit store backed by Redis with TTL semantics.
  *
- * Uses fixed-window counting: INCR for the bucket key, EXPIRE on first
- * request to auto-cleanup after the window. Suitable for multi-instance
- * deployments (e.g. Kubernetes, serverless with shared Redis).
+ * Uses fixed-window counting with atomic INCR+EXPIRE when the client
+ * provides `eval` (e.g. ioredis). Otherwise falls back to INCR then EXPIRE;
+ * a crash between them can leave a key without TTL. Suitable for
+ * multi-instance deployments (e.g. Kubernetes, serverless with shared Redis).
  *
  * @example
  * ```ts
@@ -59,6 +61,7 @@ export function createRedisRateLimitStore(
 	config: RedisRateLimitStoreConfig,
 ): RateLimitStore {
 	const { client, keyPrefix = DEFAULT_KEY_PREFIX } = config;
+	const useEval = typeof client.eval === "function";
 
 	return {
 		async increment(key: string, windowMs: number): Promise<number> {
