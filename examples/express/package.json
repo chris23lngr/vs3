@@ -1,0 +1,24 @@
+{
+	"name": "vs3-examples-express",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "tsx watch src/index.ts",
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@aws-sdk/client-s3": "^3.981.0",
+		"express": "^5.0.0",
+		"vs3": "workspace:*",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@types/express": "^5.0.0",
+		"@types/node": "^20.14.10",
+		"tsx": "^4.19.0",
+		"typescript": "^5.8.2"
+	}
+}

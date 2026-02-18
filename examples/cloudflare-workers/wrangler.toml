@@ -1,0 +1,10 @@
+name = "vs3-cloudflare-workers-example"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+STORAGE_BUCKET = "vs3-cf-example"
+STORAGE_REGION = "eu-central-1"
+
+# Add secrets via: wrangler secret put STORAGE_ACCESS_KEY_ID
+# [env.production.vars]

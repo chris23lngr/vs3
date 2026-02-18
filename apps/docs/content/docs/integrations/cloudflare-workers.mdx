@@ -1,0 +1,33 @@
+---
+title: Cloudflare Workers
+description: Mount the vs3 request handler in Cloudflare Workers.
+---
+
+`vs3` provides `toCloudflareWorkerHandler` for explicit typing when using the storage handler in Workers.
+The handler is already compatible with the Workers fetch API.
+
+## Basic Setup
+
+```ts title="src/index.ts"
+import { toCloudflareWorkerHandler } from "vs3/integrations/cloudflare-workers";
+import { createStorageFromEnv } from "./storage";
+
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const storage = createStorageFromEnv(env);
+    const handler = toCloudflareWorkerHandler(storage.handler);
+
+    const url = new URL(request.url);
+    if (!url.pathname.startsWith("/api/storage")) {
+      return new Response("Not Found", { status: 404 });
+    }
+
+    return handler(request);
+  },
+};
+```
+
+## Next Steps
+
+- [createStorage](/docs/server/create-storage) for server setup.
+- [R2 adapter](/docs/adapters) for Cloudflare R2 storage.

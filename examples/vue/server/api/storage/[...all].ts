@@ -1,4 +1,4 @@
-import { fromWebHandler } from "h3";
+import { toH3Handler } from "vs3/integrations/h3";
 import { storage } from "../../storage";
 
-export default fromWebHandler(storage.handler);
+export default toH3Handler(storage.handler);

@@ -24,6 +24,10 @@ export {
 	createValidator,
 	runContentValidators,
 } from "./core/validation";
+export { toCloudflareWorkerHandler } from "./integrations/cloudflare-workers";
+export { toExpressHandler } from "./integrations/express";
+export { toFastifyHandler } from "./integrations/fastify";
+export { toH3Handler } from "./integrations/h3";
 export { toNextJsRouteHandler } from "./integrations/next-js";
 export type {
 	MultipartUploadPart,
