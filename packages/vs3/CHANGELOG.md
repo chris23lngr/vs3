@@ -1,5 +1,17 @@
 # vs3
 
+## 0.1.0-beta.5
+
+### Minor Changes
+
+- [#100](https://github.com/chris23lngr/vS3/pull/100) [`9b6a0f0`](https://github.com/chris23lngr/vS3/commit/9b6a0f01e3c9177c253c7178898c4fa3b951e649) Thanks [@chris23lngr](https://github.com/chris23lngr)! - distributed rate limit stores
+
+- [#105](https://github.com/chris23lngr/vS3/pull/105) [`6362a12`](https://github.com/chris23lngr/vS3/commit/6362a124cc38fb69a9e24565679c22b654e8c915) Thanks [@chris23lngr](https://github.com/chris23lngr)! - adds new framework adapters
+
+### Patch Changes
+
+- [#103](https://github.com/chris23lngr/vS3/pull/103) [`166366f`](https://github.com/chris23lngr/vS3/commit/166366fed5296c44804d5fa10180ca572a610b4a) Thanks [@chris23lngr](https://github.com/chris23lngr)! - handle loading state in client hooks
+
 ## 0.1.0-beta.4
 
 ### Minor Changes
