@@ -117,17 +117,12 @@ describe("createInMemoryRateLimitStore", () => {
 // ---------------------------------------------------------------------------
 
 describe("createRedisRateLimitStore", () => {
-	it("returns 1 for first request and sets TTL", async () => {
-		const incrCalls: string[] = [];
-		const expireCalls: [string, number][] = [];
+	it("returns count from atomic EVAL script", async () => {
+		const evalCalls: unknown[][] = [];
 		const client = {
-			incr: vi.fn(async (key: string) => {
-				incrCalls.push(key);
+			eval: vi.fn(async (...args: unknown[]) => {
+				evalCalls.push(args);
 				return 1;
-			}),
-			expire: vi.fn(async (key: string, seconds: number) => {
-				expireCalls.push([key, seconds]);
-				return "OK";
 			}),
 		};
 
@@ -135,18 +130,18 @@ describe("createRedisRateLimitStore", () => {
 		const count = await store.increment("key", 60_000);
 
 		expect(count).toBe(1);
-		expect(incrCalls).toEqual(["rl:key"]);
-		expect(expireCalls).toEqual([["rl:key", 60]]);
+		expect(evalCalls).toHaveLength(1);
+		expect(evalCalls[0]).toEqual([
+			expect.stringContaining("INCR"),
+			1,
+			"rl:key",
+			60,
+		]);
 	});
 
-	it("increments without re-setting TTL for subsequent requests", async () => {
-		let incrCount = 0;
+	it("invokes EVAL on each increment", async () => {
 		const client = {
-			incr: vi.fn(async () => {
-				incrCount += 1;
-				return incrCount;
-			}),
-			expire: vi.fn(async () => "OK"),
+			eval: vi.fn().mockResolvedValueOnce(1).mockResolvedValueOnce(2),
 		};
 
 		const store = createRedisRateLimitStore({ client });
@@ -154,17 +149,16 @@ describe("createRedisRateLimitStore", () => {
 		const count = await store.increment("key", 60_000);
 
 		expect(count).toBe(2);
-		expect(client.expire).toHaveBeenCalledTimes(1);
+		expect(client.eval).toHaveBeenCalledTimes(2);
 	});
 
 	it("uses custom key prefix", async () => {
-		const incrCalls: string[] = [];
+		const evalCalls: unknown[][] = [];
 		const client = {
-			incr: vi.fn(async (key: string) => {
-				incrCalls.push(key);
+			eval: vi.fn(async (...args: unknown[]) => {
+				evalCalls.push(args);
 				return 1;
 			}),
-			expire: vi.fn(async () => "OK"),
 		};
 
 		const store = createRedisRateLimitStore({
@@ -173,7 +167,7 @@ describe("createRedisRateLimitStore", () => {
 		});
 		await store.increment("user:123", 60_000);
 
-		expect(incrCalls).toEqual(["ratelimit:user:123"]);
+		expect(evalCalls[0]?.[2]).toBe("ratelimit:user:123");
 	});
 
 	it("uses eval when available for atomic INCR+EXPIRE", async () => {
