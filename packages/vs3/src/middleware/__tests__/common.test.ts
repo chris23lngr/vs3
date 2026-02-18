@@ -10,6 +10,10 @@ import {
 	type RateLimitStore,
 	resolveClientIp,
 } from "../common/rate-limit";
+import {
+	createRedisRateLimitStore,
+	createUpstashRateLimitStore,
+} from "../common/rate-limit-stores";
 import { createTimeoutMiddleware } from "../common/timeout";
 import { executeMiddlewareChain } from "../core/execute-chain";
 import type { StorageMiddlewareContext } from "../types";
@@ -105,6 +109,151 @@ describe("createInMemoryRateLimitStore", () => {
 		const count = await store.increment("b", 60_000);
 
 		expect(count).toBe(1);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Rate Limit - Redis Store
+// ---------------------------------------------------------------------------
+
+describe("createRedisRateLimitStore", () => {
+	it("returns 1 for first request and sets TTL", async () => {
+		const incrCalls: string[] = [];
+		const expireCalls: [string, number][] = [];
+		const client = {
+			incr: vi.fn(async (key: string) => {
+				incrCalls.push(key);
+				return 1;
+			}),
+			expire: vi.fn(async (key: string, seconds: number) => {
+				expireCalls.push([key, seconds]);
+				return "OK";
+			}),
+		};
+
+		const store = createRedisRateLimitStore({ client });
+		const count = await store.increment("key", 60_000);
+
+		expect(count).toBe(1);
+		expect(incrCalls).toEqual(["rl:key"]);
+		expect(expireCalls).toEqual([["rl:key", 60]]);
+	});
+
+	it("increments without re-setting TTL for subsequent requests", async () => {
+		let incrCount = 0;
+		const client = {
+			incr: vi.fn(async () => {
+				incrCount += 1;
+				return incrCount;
+			}),
+			expire: vi.fn(async () => "OK"),
+		};
+
+		const store = createRedisRateLimitStore({ client });
+		await store.increment("key", 60_000);
+		const count = await store.increment("key", 60_000);
+
+		expect(count).toBe(2);
+		expect(client.expire).toHaveBeenCalledTimes(1);
+	});
+
+	it("uses custom key prefix", async () => {
+		const incrCalls: string[] = [];
+		const client = {
+			incr: vi.fn(async (key: string) => {
+				incrCalls.push(key);
+				return 1;
+			}),
+			expire: vi.fn(async () => "OK"),
+		};
+
+		const store = createRedisRateLimitStore({
+			client,
+			keyPrefix: "ratelimit:",
+		});
+		await store.increment("user:123", 60_000);
+
+		expect(incrCalls).toEqual(["ratelimit:user:123"]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Rate Limit - Upstash Store
+// ---------------------------------------------------------------------------
+
+describe("createUpstashRateLimitStore", () => {
+	it("returns count from Upstash EVAL response", async () => {
+		const url = "https://test.upstash.io";
+		const token = "test-token";
+		let fetchBody: unknown = null;
+
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_: string, init?: { body?: string }) => {
+				fetchBody = init?.body ? JSON.parse(init.body) : null;
+				return new Response(JSON.stringify({ result: 3 }), {
+					status: 200,
+				});
+			}),
+		);
+
+		const store = createUpstashRateLimitStore({ url, token });
+		const count = await store.increment("key", 60_000);
+
+		expect(count).toBe(3);
+		expect(fetchBody).toEqual([
+			"EVAL",
+			expect.stringContaining("INCR"),
+			"1",
+			"rl:key",
+			"60000",
+		]);
+		vi.unstubAllGlobals();
+	});
+
+	it("throws on Upstash error response", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(JSON.stringify({ error: "WRONGPASS" }), {
+						status: 200,
+					}),
+			),
+		);
+
+		const store = createUpstashRateLimitStore({
+			url: "https://test.upstash.io",
+			token: "bad",
+		});
+
+		await expect(store.increment("key", 60_000)).rejects.toThrow(
+			"Upstash Redis error",
+		);
+		vi.unstubAllGlobals();
+	});
+
+	it("uses custom key prefix", async () => {
+		let fetchBody: unknown = null;
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_: string, init?: { body?: string }) => {
+				fetchBody = init?.body ? JSON.parse(init.body) : null;
+				return new Response(JSON.stringify({ result: 1 }), {
+					status: 200,
+				});
+			}),
+		);
+
+		const store = createUpstashRateLimitStore({
+			url: "https://test.upstash.io",
+			token: "t",
+			keyPrefix: "app:rl:",
+		});
+		await store.increment("path", 60_000);
+
+		expect((fetchBody as string[])[3]).toBe("app:rl:path");
+		vi.unstubAllGlobals();
 	});
 });
 

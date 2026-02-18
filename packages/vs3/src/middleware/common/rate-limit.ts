@@ -79,7 +79,13 @@ export function resolveClientIp(headers: Headers): string {
 	return "unknown";
 }
 
-/** Creates an in-memory rate limit store using fixed windows. */
+/**
+ * Creates an in-memory rate limit store using fixed windows.
+ *
+ * **Not suitable for distributed deployments.** Use
+ * {@link createRedisRateLimitStore} or {@link createUpstashRateLimitStore}
+ * when running multiple instances (Kubernetes, serverless, etc.).
+ */
 export function createInMemoryRateLimitStore(): RateLimitStore {
 	const windows = new Map<string, { count: number; expiresAt: number }>();
 

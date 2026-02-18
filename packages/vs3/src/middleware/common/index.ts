@@ -13,4 +13,11 @@ export {
 	type RateLimitStore,
 	resolveClientIp,
 } from "./rate-limit";
+export {
+	createRedisRateLimitStore,
+	createUpstashRateLimitStore,
+	type RedisRateLimitClient,
+	type RedisRateLimitStoreConfig,
+	type UpstashRateLimitStoreConfig,
+} from "./rate-limit-stores";
 export { createTimeoutMiddleware, type TimeoutConfig } from "./timeout";
