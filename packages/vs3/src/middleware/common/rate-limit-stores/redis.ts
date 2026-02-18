@@ -3,12 +3,15 @@ import type { RateLimitStore } from "../rate-limit";
 /**
  * Minimal Redis client interface for the rate limit store.
  *
- * Compatible with `ioredis` and `redis` (node-redis v4). Both provide
- * `incr(key)` and `expire(key, seconds)` returning promises.
+ * Compatible with `ioredis` and `redis` (node-redis v4) by exposing
+ * a normalized `eval` method.
  */
 export type RedisRateLimitClient = {
-	readonly incr: (key: string) => Promise<number>;
-	readonly expire: (key: string, seconds: number) => Promise<unknown>;
+	readonly eval: (
+		script: string,
+		numberOfKeys: number,
+		...args: readonly (string | number)[]
+	) => Promise<number>;
 };
 
 export type RedisRateLimitStoreConfig = {
@@ -17,6 +20,14 @@ export type RedisRateLimitStoreConfig = {
 };
 
 const DEFAULT_KEY_PREFIX = "rl:";
+
+const INCR_WITH_TTL_SCRIPT = `
+local count = redis.call('INCR', KEYS[1])
+if count == 1 then
+  redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+return count
+`;
 
 function toStorageKey(prefix: string, key: string): string {
 	return `${prefix}${key}`;
@@ -52,12 +63,13 @@ export function createRedisRateLimitStore(
 	return {
 		async increment(key: string, windowMs: number): Promise<number> {
 			const storageKey = toStorageKey(keyPrefix, key);
-			const count = await client.incr(storageKey);
-
-			if (count === 1) {
-				const ttlSeconds = Math.ceil(windowMs / 1000);
-				await client.expire(storageKey, ttlSeconds);
-			}
+			const ttlSeconds = Math.ceil(windowMs / 1000);
+			const count = await client.eval(
+				INCR_WITH_TTL_SCRIPT,
+				1,
+				storageKey,
+				ttlSeconds,
+			);
 
 			return count;
 		},
