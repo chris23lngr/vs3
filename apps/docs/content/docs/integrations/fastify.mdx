@@ -1,0 +1,31 @@
+---
+title: Fastify
+description: Mount the vs3 request handler in Fastify.
+---
+
+`vs3` provides `toFastifyHandler` to map your `storage.handler` to a Fastify route handler.
+Register it at the path your client calls (default: `/api/storage`).
+
+## Basic Setup
+
+```ts title="src/index.ts"
+import Fastify from "fastify";
+import { toFastifyHandler } from "vs3/integrations/fastify";
+import { storage } from "./storage";
+
+const fastify = Fastify();
+
+await fastify.register(
+  async (instance) => {
+    instance.all("/*", toFastifyHandler(storage.handler));
+  },
+  { prefix: "/api/storage" }
+);
+
+await fastify.listen({ port: 3012 });
+```
+
+## Next Steps
+
+- [createStorage](/docs/server/create-storage) for server setup.
+- [Next.js integration](/docs/integrations/next-js) for App Router.

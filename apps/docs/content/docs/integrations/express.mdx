@@ -1,0 +1,25 @@
+---
+title: Express
+description: Mount the vs3 request handler in Express.
+---
+
+`vs3` provides `toExpressHandler` to map your `storage.handler` to Express middleware.
+Mount it at the path your client calls (default: `/api/storage`).
+
+## Basic Setup
+
+```ts title="src/index.ts"
+import express from "express";
+import { toExpressHandler } from "vs3/integrations/express";
+import { storage } from "./storage";
+
+const app = express();
+app.use("/api/storage", toExpressHandler(storage.handler));
+
+app.listen(3011);
+```
+
+## Next Steps
+
+- [createStorage](/docs/server/create-storage) for server setup.
+- [Next.js integration](/docs/integrations/next-js) for App Router.
