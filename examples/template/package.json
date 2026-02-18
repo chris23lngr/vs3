@@ -14,8 +14,8 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.981.0",
-		"@t3-oss/env-nextjs": "^0.12.0",
+		"@aws-sdk/client-s3": "^3.992.0",
+		"@t3-oss/env-nextjs": "^0.13.10",
 		"next": "^16.1.6",
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
@@ -23,12 +23,12 @@
 		"zod": "^3.24.2"
 	},
 	"devDependencies": {
-		"@tailwindcss/postcss": "^4.0.15",
+		"@tailwindcss/postcss": "^4.2.0",
 		"@types/node": "^20.14.10",
 		"@types/react": "^19.0.0",
 		"@types/react-dom": "^19.0.0",
 		"postcss": "^8.5.3",
-		"tailwindcss": "^4.0.15",
+		"tailwindcss": "^4.2.0",
 		"typescript": "^5.8.2"
 	},
 	"ct3aMetadata": {
