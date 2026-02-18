@@ -11,6 +11,6 @@ jobs:
       pull-requests: write
     steps:
       - name: Label PR
-        uses: actions/labeler@v5
+        uses: actions/labeler@v6
         with:
           sync-labels: true
