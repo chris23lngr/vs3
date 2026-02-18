@@ -3,8 +3,8 @@ title: Nuxt
 description: Mount the vs3 request handler in Nuxt 3 with Nitro and H3.
 ---
 
-`vs3` does not need a dedicated Nuxt adapter.
-Nuxt 3 (Nitro) can mount the Web handler directly with `h3`'s `fromWebHandler`.
+`vs3` provides a dedicated H3/Nuxt helper via `vs3/integrations/h3`.
+Nuxt 3 (Nitro) can mount your Web handler with `toH3Handler`.
 
 ## Basic Setup
 
