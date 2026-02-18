@@ -75,7 +75,7 @@ function useUploadState(): { state: UploadState; actions: UploadStateActions } {
 	}, []);
 
 	const setLoading = useCallback((): void => {
-		setState((current) => ({ ...current, status: "loading" }));
+		setState((current) => ({ ...current, isLoading: true, status: "loading" }));
 	}, []);
 
 	const setProgress = useCallback((value: number): void => {
@@ -83,11 +83,21 @@ function useUploadState(): { state: UploadState; actions: UploadStateActions } {
 	}, []);
 
 	const setSuccess = useCallback((value: UploadFileResult): void => {
-		setState((current) => ({ ...current, data: value, status: "success" }));
+		setState((current) => ({
+			...current,
+			isLoading: false,
+			data: value,
+			status: "success",
+		}));
 	}, []);
 
 	const setFailure = useCallback((value: StorageError): void => {
-		setState((current) => ({ ...current, error: value, status: "error" }));
+		setState((current) => ({
+			...current,
+			isLoading: false,
+			error: value,
+			status: "error",
+		}));
 	}, []);
 
 	return {
