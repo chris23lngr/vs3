@@ -5,7 +5,7 @@ import { toFastifyHandler } from "./fastify";
 import { toH3Handler } from "./h3";
 import { toNextJsRouteHandler } from "./next-js";
 
-const webHandler = async (req: Request): Promise<Response> =>
+const webHandler = async (_req: Request): Promise<Response> =>
 	new Response(undefined, { status: 200 });
 
 describe("integrations", () => {
