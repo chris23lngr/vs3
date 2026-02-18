@@ -10,7 +10,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.981.0",
+		"@aws-sdk/client-s3": "^3.992.0",
 		"express": "^5.0.0",
 		"vs3": "workspace:*",
 		"zod": "^4.3.6"
