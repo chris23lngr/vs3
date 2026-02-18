@@ -129,16 +129,18 @@
 	"homepage": "https://github.com/chris23lngr/vs3#readme",
 	"devDependencies": {
 		"@aws-sdk/client-s3": "^3.981.0",
+		"@testing-library/react": "^16.3.2",
 		"@types/node": "^25.2.0",
 		"@types/react": "^18.3.27",
 		"@vitest/coverage-v8": "4.0.18",
 		"@vitest/ui": "^4.0.18",
 		"better-auth": "^1.4.18",
+		"happy-dom": "^20.6.2",
 		"react": "^19.2.4",
 		"tsup": "^8.5.1",
 		"typescript": "^5.9.3",
-		"vue": "^3.5.20",
-		"vitest": "^4.0.18"
+		"vitest": "^4.0.18",
+		"vue": "^3.5.20"
 	},
 	"dependencies": {
 		"@aws-sdk/s3-request-presigner": "^3.981.0",
