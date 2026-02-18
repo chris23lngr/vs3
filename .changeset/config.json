@@ -11,6 +11,9 @@
 		"docs",
 		"vs3-examples-better-auth",
 		"vs3-examples-template",
-		"vs3-examples-vue"
+		"vs3-examples-vue",
+		"vs3-examples-cloudflare-workers",
+		"vs3-examples-express",
+		"vs3-examples-fastify"
 	]
 }
