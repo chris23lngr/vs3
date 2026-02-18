@@ -125,7 +125,7 @@
 | Next.js integration (`toNextJsRouteHandler`) | `/docs/integrations/next-js` |
 | Adapters (`aws`, `cloudflareR2`, `minio`, `backblazeB2`, `digitaloceanSpaces`, `wasabi`, `createAdapter`) | `/docs/adapters/*` |
 | Middleware core and custom middleware | `/docs/middleware/overview`, `/docs/middleware/custom-middleware` |
-| Common middleware (`createCorsMiddleware`, `createRateLimitMiddleware`, `createLoggingMiddleware`, `createTimeoutMiddleware`, `createInMemoryRateLimitStore`) | `/docs/middleware/common/*` |
+| Common middleware (`createCorsMiddleware`, `createRateLimitMiddleware`, `createLoggingMiddleware`, `createTimeoutMiddleware`, `createInMemoryRateLimitStore`, `createRedisRateLimitStore`, `createUpstashRateLimitStore`) | `/docs/middleware/common/*` |
 | Auth middleware (`createAuthMiddleware`) and subpath `vs3/middleware/auth` (`betterAuth`, `createBetterAuthMiddleware`) | `/docs/middleware/auth/*` |
 | Request signing (`createRequestSigner`, `createClientRequestSigner`, verification middleware, nonce store) | `/docs/middleware/request-signing/*` |
 | Content validator helpers (`createMaxSizeValidator`, `createContentTypeValidator`, etc.) | `/docs/server/content-validation` |
