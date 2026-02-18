@@ -30,10 +30,28 @@ Notes:
 
 ## Rate Limiting
 
-Set up rate limiting with a store and limits. Users won't be able to exceed `maxRequests` requests per `windowMs`. A store is required to track requests. We provide an in-memory store out of the box. You can implement the `RateLimitStore` interface to use Redis or any other backing store.
+Set up rate limiting with a store and limits. Users won't be able to exceed `maxRequests` requests per `windowMs`. A store is required to track requests.
+
+### Store options
+
+- **In-memory** (`createInMemoryRateLimitStore`) – single instance only; not suitable for distributed deployments.
+- **Redis** (`createRedisRateLimitStore`) – shared state across instances; use with `ioredis` or `redis` (node-redis v4).
+- **Upstash** (`createUpstashRateLimitStore`) – HTTP-based; works in serverless and edge (no Redis client needed).
 
 ```ts
+// Single instance (dev / single server)
 const store = createInMemoryRateLimitStore();
+
+// Distributed (Kubernetes, serverless, multi-instance)
+import Redis from "ioredis";
+const redis = new Redis(process.env.REDIS_URL!);
+const store = createRedisRateLimitStore({ client: redis });
+
+// Serverless / edge (Upstash Redis REST API)
+const store = createUpstashRateLimitStore({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
 createRateLimitMiddleware({
   maxRequests: 100,
@@ -60,6 +78,17 @@ The `x-forwarded-for` header is only trustworthy when the app sits behind a reve
 
 Configure your proxy to strip or overwrite `x-forwarded-for` before it reaches the application.
 </Callout>
+
+### Production deployment patterns
+
+| Deployment | Recommended store | Notes |
+|------------|------------------|-------|
+| Single server | `createInMemoryRateLimitStore` | Simple, no external deps |
+| Kubernetes / multi-instance | `createRedisRateLimitStore` | Shared Redis (e.g. ElastiCache, self-hosted) |
+| Serverless (Lambda, Vercel) | `createUpstashRateLimitStore` | HTTP API; no persistent connections |
+| Edge (Cloudflare Workers) | `createUpstashRateLimitStore` | Same as serverless; fetch-based |
+
+All distributed stores use fixed-window counting with TTL so keys expire automatically.
 
 ## Logging
 
