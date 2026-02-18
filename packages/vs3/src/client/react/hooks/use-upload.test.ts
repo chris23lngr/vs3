@@ -78,7 +78,7 @@ describe("createUseUpload (React)", () => {
 		});
 
 		await act(async () => {
-			await uploadRef.current!(file, {});
+			await uploadRef.current?.(file, {});
 		});
 
 		expect(hookResult.current.state.status).toBe("error");
