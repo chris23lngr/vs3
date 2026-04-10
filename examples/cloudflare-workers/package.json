@@ -9,12 +9,12 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.992.0",
+		"@aws-sdk/client-s3": "^3.1029.0",
 		"vs3": "workspace:*",
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20241127.0",
+		"@cloudflare/workers-types": "^4.20260410.1",
 		"typescript": "^5.8.2",
 		"wrangler": "^3.90.0"
 	}
