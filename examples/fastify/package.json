@@ -10,8 +10,8 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.992.0",
-		"fastify": "^5.0.0",
+		"@aws-sdk/client-s3": "^3.1045.0",
+		"fastify": "^5.8.5",
 		"vs3": "workspace:*",
 		"zod": "^4.3.6"
 	},
